@@ -8,7 +8,7 @@
 			"name": "Godot",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/godot/Godot_v4.0-beta2_win64.exe",
+			"program": "${workspaceFolder}/godot/godot.windows.editor.x86_64.exe",
 			"args": [
 				"-e",
 				"${workspaceFolder}/project/project.godot",
@@ -19,6 +19,10 @@
 			"environment": [],
 			"console": "integratedTerminal",
 			"preLaunchTask": "publish",
+			"requireExactSource": true,
+			"sourceFileMap": {
+				"${workspaceFolder}/project": "${workspaceFolder}/../godot"
+			}
 		},
 	]
 }
