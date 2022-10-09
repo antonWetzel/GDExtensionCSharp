@@ -1,0 +1,24 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Godot",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/godot/Godot_v4.0-beta2_win64.exe",
+			"args": [
+				"-e",
+				"${workspaceFolder}/project/project.godot",
+				//"--quit",
+			],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}/project",
+			"environment": [],
+			"console": "integratedTerminal",
+			"preLaunchTask": "publish",
+		},
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "publish",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"${workspaceFolder}/project/project/project.csproj",
+				"-property:GenerateFullPaths=true",
+				"-consoleloggerparameters:NoSummary",
+				"-p:NativeLib=Shared",
+				"-r=win-x64",
+			],
+			"problemMatcher": "$msCompile"
+		},
+	]
+}

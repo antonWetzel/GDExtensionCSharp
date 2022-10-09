@@ -1,0 +1,12 @@
+[configuration]
+
+entry_symbol = "gd_extension_entry"
+
+[libraries]
+
+# macos.debug = "bin/libgdexample.macos.debug.framework"
+# macos.release = "bin/libgdexample.macos.release.framework"
+windows.debug.x86_64 = "project/bin/Debug/net7.0/win-x64/native/project.dll"
+# windows.release.x86_64 = "..."
+# linux.debug.x86_64 = "bin/libgdexample.linux.debug.x86_64.so"
+# linux.release.x86_64 = "bin/libgdexample.linux.release.x86_64.so"
