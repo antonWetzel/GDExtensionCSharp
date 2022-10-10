@@ -3,8 +3,8 @@
 		//git
 		"**/.git": true,
 		//csharp
-		"**/bin": true,
-		"**/obj": true,
+		//"**/bin": true,
+		//"**/obj": true,
 		//godot
 		"**/.godot": true,
 		"**/*.import": true,

@@ -5,6 +5,20 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Generate",
+			"type": "coreclr",
+			"request": "launch",
+			"preLaunchTask": "build generator",
+			"program": "${workspaceFolder}/Generator/bin/Debug/net7.0/Generator.dll",
+			"args": [],
+			"cwd": "${workspaceFolder}",
+			"stopAtEntry": false,
+			"console": "internalConsole",
+			"logging": {
+				"moduleLoad": false,
+			}
+		},
+		{
 			"name": "Godot",
 			"type": "cppvsdbg",
 			"request": "launch",
@@ -20,9 +34,6 @@
 			"console": "integratedTerminal",
 			"preLaunchTask": "publish",
 			"requireExactSource": true,
-			"sourceFileMap": {
-				"${workspaceFolder}/project": "${workspaceFolder}/../godot"
-			}
 		},
 	]
 }

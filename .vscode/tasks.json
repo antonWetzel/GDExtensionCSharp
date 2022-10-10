@@ -15,5 +15,15 @@
 			],
 			"problemMatcher": "$msCompile"
 		},
+		{
+			"label": "build generator",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/Generator/Generator.csproj",
+			],
+			"problemMatcher": "$msCompile"
+		},
 	]
 }
