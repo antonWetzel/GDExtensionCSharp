@@ -4,9 +4,8 @@ using System.Runtime.InteropServices;
 namespace GDExtension;
 
 public class Test {
-	public ObjectPtr @object = IntPtr.Zero;
+	public IntPtr @object = IntPtr.Zero;
 	public GCHandle handle;
-
 
 	public long test;
 
@@ -52,7 +51,7 @@ public static class Register {
 	}
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe ObjectPtr CreateObject(IntPtr userdata) {
+	public static unsafe IntPtr CreateObject(IntPtr userdata) {
 		var test = new Test();
 		fixed (void* ptr = &test.@object) {
 			Console.WriteLine(new IntPtr(ptr));
@@ -110,16 +109,15 @@ public static class Register {
 	}
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe bool SetFunc(IntPtr instance, StringNamePtr name, VariantPtr variant) {
+	public static unsafe bool SetFunc(IntPtr instance, IntPtr name, IntPtr variant) {
 		//var test = (Test)instance;
 		//var val = (Variant)variant;
 		//test.test = val.AsInt();
-		var a = InternalString.Create(name);
 		return false;
 	}
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe bool GetFunc(IntPtr instance, StringPtr name, VariantPtr variant) {
+	public static unsafe bool GetFunc(IntPtr instance, IntPtr name, IntPtr variant) {
 		var test = (Test)instance;
 		variant = new Variant(test.test);
 		return false;

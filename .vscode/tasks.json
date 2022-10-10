@@ -7,7 +7,7 @@
 			"type": "process",
 			"args": [
 				"publish",
-				"${workspaceFolder}/project/project/project.csproj",
+				"${workspaceFolder}/project/ExampleGame/ExampleGame.csproj",
 				"-property:GenerateFullPaths=true",
 				"-consoleloggerparameters:NoSummary",
 				"-p:NativeLib=Shared",
