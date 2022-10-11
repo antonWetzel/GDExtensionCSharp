@@ -95,7 +95,7 @@ public record struct Api {
 
 	public record struct Enum {
 		public string name { get; set; }
-		[JsonPropertyName("is_bitfield")] public bool? isBitflied { get; set; }
+		[JsonPropertyName("is_bitfield")] public bool? isBitfield { get; set; }
 		public Value[] values { get; set; }
 	}
 
@@ -106,6 +106,16 @@ public record struct Api {
 		[JsonPropertyName("is_vararg")] public bool isVararg { get; set; }
 		public uint hash { get; set; }
 		public Argument[] arguments { get; set; }
+	}
+
+	public record struct BuiltinMethod {
+		public string name { get; set; }
+		[JsonPropertyName("return_type")] public string? returnType { get; set; }
+		[JsonPropertyName("is_vararg")] public bool isVararg { get; set; }
+		[JsonPropertyName("is_const")] public bool isConst { get; set; }
+		[JsonPropertyName("is_static")] public bool isStatic { get; set; }
+		public uint hash { get; set; }
+		public Argument[]? arguments { get; set; }
 	}
 
 	public record struct Method {
@@ -151,7 +161,7 @@ public record struct Api {
 		public Constant[]? constants { get; set; }
 		public Enum[]? enums { get; set; }
 		public Operator[]? operators { get; set; }
-		public Method[]? methods { get; set; }
+		public BuiltinMethod[]? methods { get; set; }
 		public Constructor[]? constructors { get; set; }
 		[JsonPropertyName("has_destructor")] public bool hasDestructor { get; set; }
 	}

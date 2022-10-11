@@ -9,4 +9,6 @@ public unsafe partial struct String {
 			}
 		}
 	}
+
+	public static implicit operator String(string text) => new String(text);
 }

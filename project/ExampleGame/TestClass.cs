@@ -45,6 +45,12 @@ public class TestClass {
 				Initialization.inter.classdb_register_extension_class(Initialization.lib, name, baseClass, &info);
 			}
 		};
+
+		var x = new Vector2i(6, 8);
+		var y = x.abs();
+		Console.WriteLine($"{y.x} {y.y}");
+		var z = new Variant(x);
+		GD.Print(z, z);
 	}
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
@@ -93,11 +99,11 @@ public class TestClass {
 	}
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe bool SetFunc(IntPtr instance, StringName* name, IntPtr variant) {
+	public static unsafe bool SetFunc(IntPtr instance, StringName* name, IntPtr varPtr) {
 		if (*name == new StringName(new GDExtension.String("test"))) {
 			var test = (TestClass)instance;
-			var val = *(Variant*)variant;
-			test.test = val.AsInt();
+			var variant = Variant.InteropFromPointer(varPtr);
+			test.test = variant.AsInt();
 			return true;
 		}
 		return false;
@@ -107,8 +113,7 @@ public class TestClass {
 	public static unsafe bool GetFunc(IntPtr instance, StringName* name, IntPtr variant) {
 		if (*name == new StringName(new GDExtension.String("test"))) {
 			var test = (TestClass)instance;
-			var val = new Variant(test.test);
-			*(Variant*)variant = val;
+			Variant.InteropSaveIntoPointer(test.test, variant);
 			return true;
 		}
 		return false;

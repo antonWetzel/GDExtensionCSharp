@@ -6,5 +6,5 @@
 script = ExtResource("1_7tyed")
 
 [node name="TestClass" type="TestClass" parent="."]
-test = 11
+test = 5
 position = Vector2(370, 196)

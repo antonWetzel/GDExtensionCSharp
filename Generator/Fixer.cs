@@ -14,6 +14,8 @@ public static class Fixer {
 			"base" => "@base",
 			"interface" => "@interface",
 			"class" => "@class",
+			"default" => "@default",
+			"char" => "@char",
 			_ => name,
 		};
 	}
@@ -60,5 +62,13 @@ public static class Fixer {
 			"bool" => "Bool",
 			_ => name,
 		};
+	}
+
+	public static string Value(string value) {
+		if (value.Contains("(")) {
+			value = "new " + value;
+		};
+		value = value.Replace("inf", "double.PositiveInfinity");
+		return value;
 	}
 }
