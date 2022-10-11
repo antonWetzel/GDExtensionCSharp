@@ -134,7 +134,7 @@ public record struct Api {
 
 	public record struct Operator {
 		public string name { get; set; }
-		[JsonPropertyName("right_type")] public string rightType { get; set; }
+		[JsonPropertyName("right_type")] public string? rightType { get; set; }
 		[JsonPropertyName("return_type")] public string returnType { get; set; }
 	}
 
@@ -172,7 +172,7 @@ public record struct Api {
 
 
 	public Header header { get; set; }
-	[JsonPropertyName("builtin_class_sizes")] public BuiltinClassSizes[] buildinClassSizes { get; set; }
+	[JsonPropertyName("builtin_class_sizes")] public BuiltinClassSizes[] builtinClassSizes { get; set; }
 	[JsonPropertyName("builtin_class_member_offsets")] public BuiltinClassMemberOffsets[] builtinClassMemberOffsets { get; set; }
 	[JsonPropertyName("global_constants")] public object[] globalConstants { get; set; }
 	[JsonPropertyName("global_enums")] public Enum[] globalEnums { get; set; }

@@ -3,12 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace ExampleGame;
 
-public static class Entry {
+public static class ExtensionEntry {
 
 	[UnmanagedCallersOnly(EntryPoint = "gd_extension_entry", CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe bool _(Interface* @interface, ExtensionClassLibraryPtr library, Initialization* init) {
-		GDExtension.Entry.@interface = *@interface;
-		GDExtension.Entry.library = library;
+	public static unsafe bool EntryPoint(Interface* @interface, ExtensionClassLibraryPtr library, Initialization* init) {
+		Initialization.inter = *@interface;
+		Initialization.lib = library;
 
 		*init = new Initialization() {
 			minimum_initialization_level = InitializationLevel.Scene,
@@ -29,7 +29,7 @@ public static class Entry {
 		case InitializationLevel.Scene:
 			break;
 		case InitializationLevel.Editor:
-			Register.Test();
+			TestClass.Register();
 			break;
 		}
 	}

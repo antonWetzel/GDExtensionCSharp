@@ -27,7 +27,7 @@ public enum VariantType : uint {
 	Vector4i,
 	Plane,
 	Quaternion,
-	Aabb,
+	AABB,
 	Basis,
 	Transform3D,
 	Projection,
@@ -143,14 +143,14 @@ public unsafe struct MethodInfo {
 
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct ExtensionClassCreationInfo {
-	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, StringNamePtr, VariantPtr, Bool> set_func;
-	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, StringNamePtr, VariantPtr, Bool> get_func;
+	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, StringName*, VariantPtr, bool> set_func;
+	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, StringName*, VariantPtr, bool> get_func;
 	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, uint*, PropertyInfo*> get_property_list_func;
 	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, PropertyInfo*, void> free_property_list_func;
-	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, StringNamePtr, Bool> property_can_revert_func;
-	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, StringNamePtr, VariantPtr, Bool> property_get_revert_func;
+	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, StringName*, bool> property_can_revert_func;
+	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, StringName*, VariantPtr, bool> property_get_revert_func;
 	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, int, void> notification_func;
-	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, InternalString*, void> to_string_func;
+	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, String*, void> to_string_func;
 	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, void> reference_func;
 	public delegate* unmanaged[Cdecl]<ExtensionClassInstancePtr, void> unreference_func;
 	public delegate* unmanaged[Cdecl]<IntPtr, ObjectPtr> create_instance_func; /* this one is mandatory */
@@ -196,11 +196,11 @@ public enum ExtensionClassMethodArgumentMetadata : uint {
 public unsafe struct ExtensionClassMethodInfo {
 	public char* name;
 	public IntPtr method_userdata;
-	public delegate* unmanaged[Cdecl]<IntPtr, ExtensionClassInstancePtr, VariantPtr*, Int, void> call_func;
+	public delegate* unmanaged[Cdecl]<IntPtr, ExtensionClassInstancePtr, VariantPtr*, long, void> call_func;
 	public delegate* unmanaged[Cdecl]<IntPtr, ExtensionClassInstancePtr, TypePtr*, TypePtr, void> ptrcall_func;
 	public uint method_flags; /* ExtensionClassMethodFlags */
 	public uint argument_count;
-	public Bool has_return_value;
+	public bool has_return_value;
 	public delegate* unmanaged[Cdecl]<IntPtr, int, VariantType> get_argument_type_func;
 	public delegate* unmanaged[Cdecl]<IntPtr, int, PropertyInfo, void> get_argument_info_func; /* name and hint information for the argument can be omitted in release builds. Class name should always be present if it applies. */
 	public delegate* unmanaged[Cdecl]<IntPtr, int, ExtensionClassMethodArgumentMetadata> get_argument_metadata_func;
@@ -229,37 +229,37 @@ public unsafe struct ScriptInstancePtr {
 
 [StructLayout(LayoutKind.Sequential)]
 public unsafe struct ExtensionScriptInstanceInfo {
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringNamePtr, VariantPtr, Bool> set_func;
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringNamePtr, VariantPtr, Bool> get_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringName*, VariantPtr, bool> set_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringName*, VariantPtr, bool> get_func;
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, uint*, PropertyInfo*> get_property_list_func;
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, PropertyInfo*, void> free_property_list_func;
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringNamePtr, Bool*, VariantType> get_property_type_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringName*, bool*, VariantType> get_property_type_func;
 
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringNamePtr, Bool> property_can_revert_func;
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringNamePtr, VariantPtr, Bool> property_get_revert_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringName*, bool> property_can_revert_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringName*, VariantPtr, bool> property_get_revert_func;
 
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, ObjectPtr> get_owner_func;
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, delegate* unmanaged[Cdecl]<StringNamePtr, VariantPtr, IntPtr, void>, IntPtr, void> get_property_state_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, delegate* unmanaged[Cdecl]<StringName*, VariantPtr, IntPtr, void>, IntPtr, void> get_property_state_func;
 
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, uint*, MethodInfo*> get_method_list_func;
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, MethodInfo*, void> free_method_list_func;
 
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringNamePtr, Bool> has_method_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringName*, bool> has_method_func;
 
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringNamePtr, VariantPtr*, Int, VariantPtr, CallError*, void> call_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringName*, VariantPtr*, long, VariantPtr, CallError*, void> call_func;
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, int> notification_func;
 
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, Bool*, byte*> to_string_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, bool*, byte*> to_string_func;
 
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, void> refcount_incremented_func;
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, Bool> refcount_decremented_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, bool> refcount_decremented_func;
 
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, ObjectPtr> get_script_func;
 
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, Bool> is_placeholder_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, bool> is_placeholder_func;
 
-	public delegate*<ExtensionScriptInstanceDataPtr, StringNamePtr, VariantPtr, Bool> set_fallback_func;
-	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringNamePtr, VariantPtr, Bool> get_fallback_func;
+	public delegate*<ExtensionScriptInstanceDataPtr, StringName*, VariantPtr, bool> set_fallback_func;
+	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, StringName*, VariantPtr, bool> get_fallback_func;
 
 	public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceDataPtr, ExtensionScriptLanguagePtr> get_language_func;
 
@@ -293,15 +293,15 @@ public unsafe struct Interface {
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, void> variant_destroy;
 
 	/* variant type */
-	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, StringNamePtr, VariantPtr*, long, VariantPtr, CallError*, void> variant_call;
-	public unsafe delegate* unmanaged[Cdecl]<VariantType, StringNamePtr, VariantPtr*, long, VariantPtr, CallError*, void> variant_call_static;
+	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, StringName*, VariantPtr*, long, VariantPtr, CallError*, void> variant_call;
+	public unsafe delegate* unmanaged[Cdecl]<VariantType, StringName*, VariantPtr*, long, VariantPtr, CallError*, void> variant_call_static;
 	public unsafe delegate* unmanaged[Cdecl]<VariantOperator, VariantPtr, VariantPtr, VariantPtr, bool*, void> variant_evaluate;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, VariantPtr, bool*, void> variant_set;
-	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, StringNamePtr, VariantPtr, bool*, void> variant_set_named;
+	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, StringName*, VariantPtr, bool*, void> variant_set_named;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, VariantPtr, bool*, void> variant_set_keyed;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, long, VariantPtr, bool*, bool*, void> variant_set_indexed;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, VariantPtr, bool*, void> variant_get;
-	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, StringNamePtr, VariantPtr, bool*, void> variant_get_named;
+	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, StringName*, VariantPtr, bool*, void> variant_get_named;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, VariantPtr, bool*, void> variant_get_keyed;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, long, VariantPtr, bool*, bool*, void> variant_get_indexed;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, bool*, bool> variant_iter_init;
@@ -312,13 +312,13 @@ public unsafe struct Interface {
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, bool> variant_hash_compare;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, bool> variant_booleanize;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, bool, void> variant_duplicate;
-	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, InternalString*, void> variant_stringify;
+	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, String*, void> variant_stringify;
 
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantType> variant_get_type;
-	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, StringNamePtr, bool> variant_has_method;
-	public unsafe delegate* unmanaged[Cdecl]<VariantType, StringNamePtr, bool> variant_has_member;
+	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, StringName*, bool> variant_has_method;
+	public unsafe delegate* unmanaged[Cdecl]<VariantType, StringName*, bool> variant_has_member;
 	public unsafe delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, bool*, bool> variant_has_key;
-	public unsafe delegate* unmanaged[Cdecl]<VariantType, InternalString*, void> variant_get_type_name;
+	public unsafe delegate* unmanaged[Cdecl]<VariantType, String*, void> variant_get_type_name;
 	public unsafe delegate* unmanaged[Cdecl]<VariantType, VariantType, bool> variant_can_convert;
 	public unsafe delegate* unmanaged[Cdecl]<VariantType, VariantType, bool> variant_can_convert_strict;
 
@@ -332,8 +332,8 @@ public unsafe struct Interface {
 	public unsafe delegate* unmanaged[Cdecl]<VariantType, VariantPtr, VariantPtr*, int, CallError*, void> variant_construct;
 	public unsafe delegate* unmanaged[Cdecl]<VariantType, byte*, delegate* unmanaged[Cdecl]<TypePtr, TypePtr, void>> variant_get_ptr_setter;
 	public unsafe delegate* unmanaged[Cdecl]<VariantType, byte*, delegate* unmanaged[Cdecl]<TypePtr, TypePtr, void>> variant_get_ptr_getter;
-	public unsafe delegate* unmanaged[Cdecl]<VariantType, delegate* unmanaged[Cdecl]<TypePtr, Int, TypePtr, void>> variant_get_ptr_indexed_setter;
-	public unsafe delegate* unmanaged[Cdecl]<VariantType, delegate* unmanaged[Cdecl]<TypePtr, Int, TypePtr, void>> variant_get_ptr_indexed_getter;
+	public unsafe delegate* unmanaged[Cdecl]<VariantType, delegate* unmanaged[Cdecl]<TypePtr, long, TypePtr, void>> variant_get_ptr_indexed_setter;
+	public unsafe delegate* unmanaged[Cdecl]<VariantType, delegate* unmanaged[Cdecl]<TypePtr, long, TypePtr, void>> variant_get_ptr_indexed_getter;
 	public unsafe delegate* unmanaged[Cdecl]<VariantType, delegate* unmanaged[Cdecl]<TypePtr, TypePtr, TypePtr, void>> variant_get_ptr_keyed_setter;
 	public unsafe delegate* unmanaged[Cdecl]<VariantType, delegate* unmanaged[Cdecl]<TypePtr, TypePtr, TypePtr, void>> variant_get_ptr_keyed_getter;
 	public unsafe delegate* unmanaged[Cdecl]<VariantType, delegate* unmanaged[Cdecl]<VariantPtr, VariantPtr, uint>> variant_get_ptr_keyed_checker;
@@ -342,16 +342,16 @@ public unsafe struct Interface {
 
 	/*  extra utilities */
 
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, byte*, void> string_new_with_latin1_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, byte*, void> string_new_with_utf8_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, char*, void> string_new_with_utf16_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, int*, void> string_new_with_utf32_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, char*, void> string_new_with_wide_bytes; //not sure if char is the right size for w_char
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, byte*, long, void> string_new_with_latin1_bytes_and_len;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, byte*, long, void> string_new_with_utf8_bytes_and_len;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, char*, long, void> string_new_with_utf16_bytes_and_len;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, int*, long, void> string_new_with_utf32_bytes_and_len;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, char*, long, void> string_new_with_wide_bytes_and_len; //not sure if char is the right size for w_char
+	public unsafe delegate* unmanaged[Cdecl]<String*, byte*, void> string_new_with_latin1_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, byte*, void> string_new_with_utf8_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, char*, void> string_new_with_utf16_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, int*, void> string_new_with_utf32_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, char*, void> string_new_with_wide_bytes; //not sure if char is the right size for w_char
+	public unsafe delegate* unmanaged[Cdecl]<String*, byte*, long, void> string_new_with_latin1_bytes_and_len;
+	public unsafe delegate* unmanaged[Cdecl]<String*, byte*, long, void> string_new_with_utf8_bytes_and_len;
+	public unsafe delegate* unmanaged[Cdecl]<String*, char*, long, void> string_new_with_utf16_bytes_and_len;
+	public unsafe delegate* unmanaged[Cdecl]<String*, int*, long, void> string_new_with_utf32_bytes_and_len;
+	public unsafe delegate* unmanaged[Cdecl]<String*, char*, long, void> string_new_with_wide_bytes_and_len; //not sure if char is the right size for w_char
 	/* Information about the following functions:
 	 * - The return value is the resulting encoded string length.
 	 * - The length returned is in characters, not in bytes. It also does not include a trailing zero.
@@ -360,13 +360,13 @@ public unsafe struct Interface {
 	 * - p_max_write_length argument is in characters, not bytes. It will be ignored if r_text is NULL.
 	 * - p_max_write_length argument does not affect the return value, it's only to cap write length.
 	 */
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, byte*, long, long> string_to_latin1_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, byte*, long, long> string_to_utf8_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, char*, long, long> string_to_utf16_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, int*, long, long> string_to_utf32_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, char*, long, long> string_to_wide_bytes;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, long, int*> string_operator_index;
-	public unsafe delegate* unmanaged[Cdecl]<InternalString*, long, int*> string_operator_index_;
+	public unsafe delegate* unmanaged[Cdecl]<String*, byte*, long, long> string_to_latin1_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, byte*, long, long> string_to_utf8_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, char*, long, long> string_to_utf16_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, int*, long, long> string_to_utf32_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, char*, long, long> string_to_wide_bytes;
+	public unsafe delegate* unmanaged[Cdecl]<String*, long, int*> string_operator_index;
+	public unsafe delegate* unmanaged[Cdecl]<String*, long, int*> string_operator_index_;
 
 	/* Packed array functions */
 
@@ -386,8 +386,8 @@ public unsafe struct Interface {
 	public unsafe delegate* unmanaged[Cdecl]<TypePtr, long, long*> packed_int64_array_operator_index; // should be a Packedlong32Array
 	public unsafe delegate* unmanaged[Cdecl]<TypePtr, long, long*> packed_int64_array_operator_index_; // should be a Packedlong32Array
 
-	public unsafe delegate* unmanaged[Cdecl]<TypePtr, long, InternalString*> packed_string_array_operator_index; // should be a PackedStringArray
-	public unsafe delegate* unmanaged[Cdecl]<TypePtr, long, InternalString*> packed_string_array_operator_index_; // should be a PackedStringArray
+	public unsafe delegate* unmanaged[Cdecl]<TypePtr, long, String*> packed_string_array_operator_index; // should be a PackedStringArray
+	public unsafe delegate* unmanaged[Cdecl]<TypePtr, long, String*> packed_string_array_operator_index_; // should be a PackedStringArray
 
 	public unsafe delegate* unmanaged[Cdecl]<TypePtr, long, TypePtr> packed_vector2_array_operator_index; // should be a PackedVector2Array, returns Vector2 ptr
 	public unsafe delegate* unmanaged[Cdecl]<TypePtr, long, TypePtr> packed_vector2_array_operator_index_; // should be a PackedVector2Array, returns Vector2 ptr
@@ -438,7 +438,7 @@ public unsafe struct Interface {
 	public unsafe delegate* unmanaged[Cdecl]<ExtensionClassLibraryPtr, byte*, byte*, PropertyInfo*, long, void> classdb_register_extension_class_signal;
 	public unsafe delegate* unmanaged[Cdecl]<ExtensionClassLibraryPtr, byte*, void> classdb_unregister_extension_class; /* Unregistering a parent class before a class that inherits it will result in failure. Inheritors must be unregistered first. */
 
-	public unsafe delegate* unmanaged[Cdecl]<ExtensionClassLibraryPtr, InternalString*, void> get_library_path;
+	public unsafe delegate* unmanaged[Cdecl]<ExtensionClassLibraryPtr, String*, void> get_library_path;
 
 }
 
@@ -458,4 +458,7 @@ public unsafe struct Initialization {
 	public IntPtr userdata;
 	public delegate* unmanaged[Cdecl]<IntPtr, InitializationLevel, void> initialize;
 	public delegate* unmanaged[Cdecl]<IntPtr, InitializationLevel, void> deinitialize;
+
+	public static Interface inter;
+	public static ExtensionClassLibraryPtr lib;
 }
