@@ -3,21 +3,27 @@ using System.Runtime.InteropServices;
 
 namespace ExampleGame;
 
-public class TestClass {
-	public IntPtr @object = IntPtr.Zero;
+public unsafe class TestClass : Node2D {
 	public GCHandle handle;
 
 	public long test;
 
 	public TestClass() {
-		handle = GCHandle.Alloc(this, GCHandleType.Pinned);
+		handle = GCHandle.Alloc(this);
+		fixed (byte* name = System.Text.Encoding.UTF8.GetBytes("TestClass")) {
+			Initialization.inter.object_set_instance(_internal_pointer, name, this);
+		}
 	}
 
 	public static implicit operator IntPtr(TestClass test) => GCHandle.ToIntPtr(test.handle);
 	public static implicit operator TestClass(IntPtr test) => (TestClass)(GCHandle.FromIntPtr(test).Target!);
 
 	public void Notification(int what) {
-		//Console.WriteLine(what);
+		SetProcess(true);
+		if (what == NOTIFICATION_PROCESS) {
+			var delta = GetProcessDeltaTime();
+			position += Vector2.RIGHT * delta * 10f;
+		}
 	}
 
 	public static unsafe void Register() {
@@ -45,24 +51,12 @@ public class TestClass {
 				Initialization.inter.classdb_register_extension_class(Initialization.lib, name, baseClass, &info);
 			}
 		};
-
-		var x = new Vector2i(6, 8);
-		var y = x.abs();
-		Console.WriteLine($"{y.x} {y.y}");
-		var z = new Variant(x);
-		GD.Print(z, z);
 	}
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 	public static unsafe IntPtr CreateObject(IntPtr userdata) {
 		var test = new TestClass();
-		fixed (byte* name = System.Text.Encoding.UTF8.GetBytes("Node2D")) {
-			test.@object = Initialization.inter.classdb_construct_object(name);
-		}
-		fixed (byte* name = System.Text.Encoding.UTF8.GetBytes("TestClass")) {
-			Initialization.inter.object_set_instance(test.@object, name, test);
-		}
-		return test.@object;
+		return test._internal_pointer;
 	}
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
@@ -85,10 +79,10 @@ public class TestClass {
 		ptr[0] = new PropertyInfo() {
 			type = (uint)VariantType.Int,
 			name = (byte*)Marshal.StringToHGlobalAnsi("test"),
-			class_name = (byte*)Marshal.StringToHGlobalAnsi(""),
-			hint = 0,
-			hint_string = (byte*)Marshal.StringToHGlobalAnsi(""),
-			usage = 7,
+			class_name = null,
+			hint = (uint)PropertyHint.PROPERTY_HINT_NONE,
+			hint_string = null,
+			usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
 		};
 		return ptr;
 	}
@@ -100,9 +94,9 @@ public class TestClass {
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 	public static unsafe bool SetFunc(IntPtr instance, StringName* name, IntPtr varPtr) {
-		if (*name == new StringName(new GDExtension.String("test"))) {
+		if (*name == (StringName)"test") {
 			var test = (TestClass)instance;
-			var variant = Variant.InteropFromPointer(varPtr);
+			var variant = new Variant(varPtr);
 			test.test = variant.AsInt();
 			return true;
 		}
@@ -111,7 +105,7 @@ public class TestClass {
 
 	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 	public static unsafe bool GetFunc(IntPtr instance, StringName* name, IntPtr variant) {
-		if (*name == new StringName(new GDExtension.String("test"))) {
+		if (*name == (StringName)"test") {
 			var test = (TestClass)instance;
 			Variant.InteropSaveIntoPointer(test.test, variant);
 			return true;

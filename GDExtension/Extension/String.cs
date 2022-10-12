@@ -11,4 +11,5 @@ public unsafe partial struct String {
 	}
 
 	public static implicit operator String(string text) => new String(text);
+	public static implicit operator String(StringName text) => new String(text);
 }

@@ -8,7 +8,7 @@ public unsafe static class GD {
 			var print = Initialization.inter.variant_get_ptr_utility_function(ptr, 2648703342);
 			var args = stackalloc IntPtr[variants.Length];
 			for (var i = 0; i < variants.Length; i++) {
-				args[i] = Variant.InteropToPointer(variants[i]);
+				args[i] = variants[i]._internal_pointer;
 			}
 			print(IntPtr.Zero, args, variants.Length);
 		}

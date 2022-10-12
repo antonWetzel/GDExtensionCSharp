@@ -27,9 +27,9 @@ public static class ExtensionEntry {
 		case InitializationLevel.Servers:
 			break;
 		case InitializationLevel.Scene:
+			TestClass.Register();
 			break;
 		case InitializationLevel.Editor:
-			TestClass.Register();
 			break;
 		}
 	}

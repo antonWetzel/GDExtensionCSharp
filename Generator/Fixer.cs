@@ -1,11 +1,28 @@
 public static class Fixer {
 
 	public static string Type(string name) {
-		return name switch {
-			"int" => "long",
-			"float" => "double",
-			_ => name,
-		};
+		if (name.StartsWith("enum::")) {
+			name = name.Substring(6);
+		}
+		name = name.Replace("const ", "");
+		if (name.Contains("typedarray::")) {
+			return "Array";
+		}
+		name = name.Replace("::", ".");
+		if (name.Contains("VariantType.")) {
+			return "Variant";
+		}
+		if (name.StartsWith("bitfield.")) { name = name.Replace("bitfield.", ""); }
+		if (name.StartsWith("uint64_t")) { name = name.Replace("uint64_t", "UInt64"); }
+		if (name.StartsWith("uint16_t")) { name = name.Replace("uint16_t", "UInt16"); }
+		if (name.StartsWith("uint8_t")) { name = name.Replace("uint8_t", "byte"); }
+		if (name.StartsWith("int32_t")) { name = name.Replace("int32_t", "int"); }
+		if (name.StartsWith("real_t")) { name = name.Replace("real_t", "float"); }
+		if (name.StartsWith("float")) { name = name.Replace("float", "double"); }
+		if (name.StartsWith("int")) { name = name.Replace("int", "long"); }
+		if (name.StartsWith("Variant.Type")) { name = name.Replace("Variant.Type", "VariantType"); }
+
+		return name;
 	}
 
 	public static string Name(string name) {
@@ -16,6 +33,19 @@ public static class Fixer {
 			"class" => "@class",
 			"default" => "@default",
 			"char" => "@char",
+			"string" => "@string",
+			"event" => "@event",
+			"lock" => "@lock",
+			"operator" => "@operator",
+			"enum" => "@enum",
+			"in" => "@in",
+			"out" => "@out",
+			"checked" => "@checked",
+			"override" => "@override",
+			"new" => "@new",
+			"params" => "@params",
+			"internal" => "@internal",
+			"bool" => "@bool",
 			_ => name,
 		};
 	}
@@ -70,5 +100,17 @@ public static class Fixer {
 		};
 		value = value.Replace("inf", "double.PositiveInfinity");
 		return value;
+	}
+
+	public static string SnakeToPascal(string name) {
+		var res = "";
+		foreach (var w in name.Split('_')) {
+			if (w.Length == 0) {
+				res += "_";
+			} else {
+				res += w[0].ToString().ToUpper() + w.Substring(1);
+			}
+		}
+		return res;
 	}
 }
