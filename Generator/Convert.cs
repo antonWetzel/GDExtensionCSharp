@@ -10,12 +10,10 @@ public static class Convert {
 		BuiltinClasses(api, dir, configName);
 		Classes(api, dir);
 
-
 		Directory.CreateDirectory(dir + "/Enums");
 		foreach (var e in api.globalEnums) {
 			GlobalEnum(e, dir + "/Enums");
 		}
-
 
 		Directory.CreateDirectory(dir + "/NativeStructures");
 		foreach (var native in api.nativeStructures) {
@@ -28,7 +26,7 @@ public static class Convert {
 				var name = Fixer.Name(pair[1]);
 				var type = Fixer.Type(pair[0]);
 				if (name.Contains("*")) {
-					type = "IntPtr";
+					type = "IntPtr"; //pointer to `'Object', which is managed in bindings
 					name = name.Replace("*", "");
 				}
 				if (name.Contains("[")) {
@@ -41,6 +39,22 @@ public static class Convert {
 				}
 				file.WriteLine($"\t{type} {name};");
 			}
+			file.WriteLine("}");
+			file.Close();
+		}
+		Directory.CreateDirectory(dir + "/UtilityFunctions");
+		var files = new Dictionary<string, StreamWriter>();
+		foreach (var f in api.untilityFunction) {
+			var cat = f.category![0].ToString().ToUpper() + f.category.Substring(1);
+			if (files.TryGetValue(cat, out var file) == false) {
+				file = File.CreateText(dir + "/UtilityFunctions/" + cat + ".cs");
+				files.Add(cat, file);
+				file.WriteLine("namespace GDExtension;");
+				file.WriteLine($"public static unsafe class {cat} {{");
+			}
+			Method(f, "", file, MethodType.Utility);
+		}
+		foreach (var (_, file) in files) {
 			file.WriteLine("}");
 			file.Close();
 		}
@@ -136,7 +150,7 @@ public static class Convert {
 
 		if (c.methods != null) {
 			foreach (var meth in c.methods) {
-				Method(meth, c.name, file, false);
+				Method(meth, c.name, file, MethodType.Native);
 			}
 		}
 		EqualAndHash(c.name, file);
@@ -273,10 +287,16 @@ public static class Convert {
 		}
 	}
 
-	static void Method(Api.Method meth, string className, StreamWriter file, bool classMethod) {
+	enum MethodType {
+		Class,
+		Native,
+		Utility,
+	}
+
+	static void Method(Api.Method meth, string className, StreamWriter file, MethodType type) {
 		var ret = meth.returnType ?? meth.returnValue?.type ?? "";
 		file.Write("\tpublic ");
-		if (meth.isStatic) {
+		if (meth.isStatic || type == MethodType.Utility) {
 			file.Write("static ");
 		}
 		if (ret != "") {
@@ -311,25 +331,42 @@ public static class Convert {
 			}
 		}
 		file.WriteLine(") {");
-		if (classMethod) {
+		switch (type) {
+		case MethodType.Class:
 			file.WriteLine($"\t\tvar __m = Initialization.inter.classdb_get_method_bind((byte*)Marshal.StringToHGlobalAnsi(\"{className}\"), (byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
-		} else {
+			break;
+		case MethodType.Native:
 			file.WriteLine($"\t\tvar __m = Initialization.inter.variant_get_ptr_builtin_method(VariantType.{className}, (byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
+			break;
+		case MethodType.Utility:
+			file.WriteLine($"\t\tvar __m = Initialization.inter.variant_get_ptr_utility_function((byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
+			break;
 		}
 
 		if (meth.arguments != null) {
 			if (meth.isVararg) {
 				var v = meth.arguments.Last();
-				file.WriteLine($"\t\tfixed ({Fixer.Type(v.type)}* {v.name}_ptr = {Fixer.Name(v.name)}) {{");
-				file.WriteLine($"\t\tvar __args = stackalloc IntPtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
-				file.WriteLine($"\t\tvar __v_args = (IntPtr*)(void*){v.name}_ptr;");
-				for (var i = 0; i < meth.arguments.Length - 1; i++) {
-					var arg = meth.arguments[i];
-					file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
+				if (objectTypes.Contains(v.type)) {
+					file.WriteLine($"\t\tvar __args = stackalloc IntPtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
+					for (var i = 0; i < meth.arguments.Length - 1; i++) {
+						var arg = meth.arguments[i];
+						file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
+					}
+					file.WriteLine($"\t\tfor (var i = 0; i < {Fixer.Name(v.name)}.Length; i++) {{");
+					file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = {v.name}[i]._internal_pointer;");
+					file.WriteLine("\t\t};");
+				} else {
+					file.WriteLine($"\t\tfixed ({Fixer.Type(v.type)}* {v.name}_ptr = {Fixer.Name(v.name)}) {{");
+					file.WriteLine($"\t\tvar __args = stackalloc IntPtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
+					file.WriteLine($"\t\tvar __v_args = (IntPtr*)(void*){v.name}_ptr;");
+					for (var i = 0; i < meth.arguments.Length - 1; i++) {
+						var arg = meth.arguments[i];
+						file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
+					}
+					file.WriteLine($"\t\tfor (var i = 0; i < {Fixer.Name(v.name)}.Length; i++) {{");
+					file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = __v_args[i];");
+					file.WriteLine("\t\t};");
 				}
-				file.WriteLine($"\t\tfor (var i = 0; i < {Fixer.Name(v.name)}.Length; i++) {{");
-				file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = __v_args[i];");
-				file.WriteLine("\t\t};");
 			} else {
 				file.WriteLine($"\t\tvar __args = stackalloc IntPtr[{meth.arguments.Length}];");
 				for (var i = 0; i < meth.arguments.Length; i++) {
@@ -341,17 +378,23 @@ public static class Convert {
 		if (ret != "") {
 			file.WriteLine($"\t\t{ReturnLocationType(ret)} __res;");
 		}
-		if (meth.isStatic == false && classMethod == false) {
+		if (meth.isStatic == false && type == MethodType.Native) {
 			file.WriteLine($"\t\tvar __temp = this;");
 		}
-		if (classMethod) {
+		if (type == MethodType.Class) {
 			file.Write("\t\tInitialization.inter.object_method_bind_ptrcall(__m, ");
 		} else {
 			file.Write("\t\t__m(");
 		}
-		if (meth.isStatic) {
+		if (type == MethodType.Utility) {
+			if (ret != "") {
+				file.Write("new IntPtr(&__res)");
+			} else {
+				file.Write("IntPtr.Zero");
+			}
+		} else if (meth.isStatic) {
 			file.Write("IntPtr.Zero");
-		} else if (classMethod) {
+		} else if (type == MethodType.Class) {
 			file.Write("this._internal_pointer");
 		} else {
 			file.Write("new IntPtr(&__temp)");
@@ -361,14 +404,20 @@ public static class Convert {
 		} else {
 			file.Write(", null");
 		}
-		if (ret != "") {
+		if (type == MethodType.Utility) {
+			//pass
+		} else if (ret != "") {
 			file.Write($", new IntPtr(&__res)");
 		} else {
 			file.Write(", IntPtr.Zero");
 		}
-		if (classMethod == false) {
+		if (type != MethodType.Class) {
 			if (meth.arguments != null) {
-				file.Write($", {meth.arguments.Length}");
+				if (meth.isVararg) {
+					file.Write($", {meth.arguments.Length - 1} + {meth.arguments.Last().name}.Length");
+				} else {
+					file.Write($", {meth.arguments.Length}");
+				}
 			} else {
 				file.Write(", 0");
 			}
@@ -377,9 +426,10 @@ public static class Convert {
 		if (ret != "") {
 			file.WriteLine($"\t\treturn {ReturnStatementValue(ret)};");
 		}
-		if (meth.arguments != null && meth.isVararg) {
+		if (meth.arguments != null && meth.isVararg && objectTypes.Contains(meth.arguments.Last().type) == false) {
 			file.WriteLine("\t}");
 		}
+
 		file.WriteLine("\t}");
 		file.WriteLine();
 	}
@@ -470,7 +520,7 @@ public static class Convert {
 				var setter = GetMethod(api, c.name, prop.setter);
 
 				if (getter == null && setter == null) {
-					Console.WriteLine($"setter {prop.setter} and getter {prop.getter} not found");
+					Console.WriteLine($"{c.name} setter {prop.setter} and getter {prop.getter} not found");
 					continue;
 				}
 				if (getter != null) { type = getter.Value.returnValue!.Value.type; } else { type = setter!.Value.arguments![0].type; }
@@ -503,7 +553,7 @@ public static class Convert {
 
 		if (c.methods != null) {
 			foreach (var meth in c.methods) {
-				Method(meth, c.name, file, true);
+				Method(meth, c.name, file, MethodType.Class);
 			}
 		}
 

@@ -9,17 +9,13 @@ public unsafe class Variant {
 	public static void InteropSaveIntoPointer(String value, IntPtr _internal_pointer) => Initialization.inter.get_variant_from_type_constructor(VariantType.String)(_internal_pointer, new IntPtr(&value));
 	public static void InteropSaveIntoPointer(StringName value, IntPtr _internal_pointer) => Initialization.inter.get_variant_from_type_constructor(VariantType.StringName)(_internal_pointer, new IntPtr(&value));
 	public static void InteropSaveIntoPointer(Vector3 value, IntPtr _internal_pointer) => Initialization.inter.get_variant_from_type_constructor(VariantType.Vector3)(_internal_pointer, new IntPtr(&value));
-
 	public static void InteropSaveIntoPointer(Object value, IntPtr _internal_pointer) {
 		fixed (IntPtr* ptr = &value._internal_pointer) {
 			Initialization.inter.get_variant_from_type_constructor(VariantType.Object)(_internal_pointer, new IntPtr(ptr));
 		}
 	}
 
-
 	internal IntPtr _internal_pointer;
-
-	public VariantType type => Initialization.inter.variant_get_type(_internal_pointer);
 
 	private Variant() => _internal_pointer = Initialization.inter.mem_alloc(24);
 	public Variant(IntPtr data) => _internal_pointer = data;
@@ -44,4 +40,11 @@ public unsafe class Variant {
 		Initialization.inter.get_variant_to_type_constructor(VariantType.Int)(new IntPtr(&v), _internal_pointer);
 		return v;
 	}
+
+	public VariantType type => Initialization.inter.variant_get_type(_internal_pointer);
+
+	public static implicit operator Variant(int value) => new Variant(value);
+	public static implicit operator Variant(long value) => new Variant(value);
+	public static implicit operator Variant(float value) => new Variant(value);
+	public static implicit operator Variant(double value) => new Variant(value);
 }

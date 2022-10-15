@@ -99,15 +99,6 @@ public record struct Api {
 		public Value[] values { get; set; }
 	}
 
-	public record struct UtilityFunction {
-		public string name { get; set; }
-		[JsonPropertyName("return_type")] public string returnType { get; set; }
-		public string category { get; set; }
-		[JsonPropertyName("is_vararg")] public bool isVararg { get; set; }
-		public uint hash { get; set; }
-		public Argument[] arguments { get; set; }
-	}
-
 	public record struct Method {
 		public string name { get; set; }
 		[JsonPropertyName("return_type")] public string returnType { get; set; }
@@ -118,6 +109,8 @@ public record struct Api {
 		public uint hash { get; set; }
 		[JsonPropertyName("return_value")] public ReturnValue? returnValue { get; set; }
 		public Argument[]? arguments { get; set; }
+
+		public string? category { get; set; }
 	}
 
 	public record struct Operator {
@@ -164,7 +157,7 @@ public record struct Api {
 	[JsonPropertyName("builtin_class_member_offsets")] public BuiltinClassMemberOffsets[] builtinClassMemberOffsets { get; set; }
 	[JsonPropertyName("global_constants")] public object[] globalConstants { get; set; }
 	[JsonPropertyName("global_enums")] public Enum[] globalEnums { get; set; }
-	[JsonPropertyName("utility_functions")] public UtilityFunction[] untilityFunction { get; set; }
+	[JsonPropertyName("utility_functions")] public Method[] untilityFunction { get; set; }
 	[JsonPropertyName("builtin_classes")] public BuiltinClass[] builtinClasses { get; set; }
 	public Class[] classes { get; set; }
 	public Singleton[] singletons { get; set; }

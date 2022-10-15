@@ -23,6 +23,7 @@ public unsafe class TestClass : Node2D {
 		if (what == NOTIFICATION_PROCESS) {
 			var delta = GetProcessDeltaTime();
 			position += Vector2.RIGHT * delta * 10f;
+			General.Prints(1, 1.3);
 		}
 	}
 
