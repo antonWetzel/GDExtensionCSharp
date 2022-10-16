@@ -11,37 +11,44 @@ public unsafe class TestClass : Node2D {
 	public TestClass() {
 		handle = GCHandle.Alloc(this);
 		fixed (byte* name = System.Text.Encoding.UTF8.GetBytes("TestClass")) {
-			Initialization.inter.object_set_instance(_internal_pointer, name, this);
+			Native.gdInterface.object_set_instance.Call(_internal_pointer, name, this);
 		}
 	}
 
-	public static implicit operator IntPtr(TestClass test) => GCHandle.ToIntPtr(test.handle);
-	public static implicit operator TestClass(IntPtr test) => (TestClass)(GCHandle.FromIntPtr(test).Target!);
+	public static implicit operator Native.GDExtensionClassInstancePtr(TestClass test) => new(GCHandle.ToIntPtr(test.handle));
+	public static implicit operator TestClass(Native.GDExtensionClassInstancePtr test) => (TestClass)(GCHandle.FromIntPtr(test.data).Target!);
 
+	//attribute to create notification function
+	//maybe [Notify(NOTIFICATION_PROCESS, new [] { "GetProcessDeltaTime()" })]
+	//or short "alias" [Process]
+	public void Process(double delta) {
+		position += Vector2.RIGHT * delta * 10f;
+	}
+
+	//automate
 	public void Notification(int what) {
-		SetProcess(true);
-		if (what == NOTIFICATION_PROCESS) {
-			var delta = GetProcessDeltaTime();
-			position += Vector2.RIGHT * delta * 10f;
-			General.Prints(1, 1.3);
+		switch (what) {
+		case NOTIFICATION_PROCESS:
+			Process(GetProcessDeltaTime());
+			break;
 		}
 	}
 
 	public static unsafe void Register() {
 
-		var info = new ExtensionClassCreationInfo() {
-			set_func = &SetFunc,
-			get_func = &GetFunc,
-			get_property_list_func = &GetPropertyList,
-			free_property_list_func = &FreePropertyList,
+		var info = new Native.ExtensionClassCreationInfo() {
+			set_func = new(SetFunc),
+			get_func = new(GetFunc),
+			get_property_list_func = new(GetPropertyList),
+			free_property_list_func = new(FreePropertyList),
 			//property_can_revert_func = &PropertyCanConvert,
 			//property_get_revert_func = &PropertyGetRevert,
-			notification_func = &Notification,
+			notification_func = new(Notification),
 			//to_string_func = &ToString,
 			//reference_func = &Reference,
 			//unreference_func = &Unreference,
-			create_instance_func = &CreateObject,
-			free_instance_func = &FreeObject,
+			create_instance_func = new(CreateObject),
+			free_instance_func = new(FreeObject),
 			//get_virtual_func = &GetVirtual,
 			//get_rid_func = &GetRid,
 			//class_userdata = IntPtr.Zero,
@@ -49,36 +56,34 @@ public unsafe class TestClass : Node2D {
 
 		fixed (byte* name = System.Text.Encoding.UTF8.GetBytes("TestClass")) {
 			fixed (byte* baseClass = System.Text.Encoding.UTF8.GetBytes("Node2D")) {
-				Initialization.inter.classdb_register_extension_class(Initialization.lib, name, baseClass, &info);
+				Native.gdInterface.classdb_register_extension_class.Call(Native.gdLibrary, name, baseClass, &info);
 			}
-		};
+		}
+		//Native.gdInterface.print_error.Call("abc", "def", "ghi", 3);
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe IntPtr CreateObject(IntPtr userdata) {
+	public static unsafe Native.ObjectPtr CreateObject(IntPtr userdata) {
 		var test = new TestClass();
+		test.SetProcess(true);
 		return test._internal_pointer;
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe void FreeObject(IntPtr userdata, IntPtr instance) {
+	public static unsafe void FreeObject(IntPtr userdata, Native.GDExtensionClassInstancePtr instance) {
 		var test = (TestClass)instance;
 		test.handle.Free();
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe void Notification(IntPtr instance, int what) {
+	public static unsafe void Notification(Native.GDExtensionClassInstancePtr instance, int what) {
 		var test = (TestClass)instance;
 		test.Notification(what);
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe PropertyInfo* GetPropertyList(IntPtr instance, uint* count) {
-		var ptr = (PropertyInfo*)Initialization.inter.mem_alloc(sizeof(PropertyInfo) * 1);
+	public static unsafe Native.PropertyInfo* GetPropertyList(Native.GDExtensionClassInstancePtr instance, uint* count) {
+		var ptr = (Native.PropertyInfo*)Native.gdInterface.mem_alloc.Call((nuint)sizeof(Native.PropertyInfo) * 1);
 		*count = 1;
 
-		ptr[0] = new PropertyInfo() {
-			type = (uint)VariantType.Int,
+		ptr[0] = new Native.PropertyInfo() {
+			type = (uint)Native.VariantType.Int,
 			name = (byte*)Marshal.StringToHGlobalAnsi("test"),
 			class_name = null,
 			hint = (uint)PropertyHint.PROPERTY_HINT_NONE,
@@ -88,29 +93,30 @@ public unsafe class TestClass : Node2D {
 		return ptr;
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe void FreePropertyList(IntPtr instance, PropertyInfo* infos) {
-		Initialization.inter.mem_free(new IntPtr(infos));
+	public static unsafe void FreePropertyList(Native.GDExtensionClassInstancePtr instance, Native.PropertyInfo* infos) {
+		for (var i = 0; i < 1; i++) {
+			var info = infos[i];
+			Marshal.FreeHGlobal(new IntPtr(info.name));
+		}
+		Native.gdInterface.mem_free.Call(new IntPtr(infos));
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe bool SetFunc(IntPtr instance, StringName* name, IntPtr varPtr) {
-		if (*name == (StringName)"test") {
+	public static unsafe Native.Bool SetFunc(Native.GDExtensionClassInstancePtr instance, Native.StringNamePtr name, Native.VariantPtr varPtr) {
+		/*if (*name == (StringName)"test") {
 			var test = (TestClass)instance;
 			var variant = new Variant(varPtr);
 			test.test = variant.AsInt();
 			return true;
-		}
+		}*/
 		return false;
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe bool GetFunc(IntPtr instance, StringName* name, IntPtr variant) {
-		if (*name == (StringName)"test") {
+	public static unsafe Native.Bool GetFunc(Native.GDExtensionClassInstancePtr instance, Native.StringNamePtr name, Native.VariantPtr variant) {
+		/*if (*name == (StringName)"test") {
 			var test = (TestClass)instance;
 			Variant.InteropSaveIntoPointer(test.test, variant);
 			return true;
-		}
+		}*/
 		return false;
 	}
 }

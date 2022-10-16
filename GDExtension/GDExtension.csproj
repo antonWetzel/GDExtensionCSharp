@@ -6,6 +6,12 @@
     <Nullable>enable</Nullable>
     <PublishAot>true</PublishAot>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!--IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <IlcTrimMetadata>true</IlcTrimMetadata>
+    <IlcDisableReflection>true</IlcDisableReflection>
+    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies-->
   </PropertyGroup>
 
 </Project>

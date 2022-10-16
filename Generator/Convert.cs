@@ -199,10 +199,10 @@ public static class Convert {
 			file.Write(value: $"{Fixer.Type(a.type)} {Fixer.Name(a.name)}");
 		}
 		file.WriteLine(") {");
-		file.WriteLine($"\t\tvar constructor = Initialization.inter.variant_get_ptr_constructor(VariantType.{Fixer.Type(c.name)}, {constructor.index});");
+		file.WriteLine($"\t\tvar constructor = gdInterface.variant_get_ptr_constructor.Call(VariantType.{Fixer.Type(c.name)}, {constructor.index});");
 
 		if (constructor.arguments != null) {
-			file.WriteLine($"\t\tvar args = stackalloc IntPtr[{constructor.arguments.Length}];");
+			file.WriteLine($"\t\tvar args = stackalloc TypePtr[{constructor.arguments.Length}];");
 			for (var i = 0; i < constructor.arguments.Length; i++) {
 				var arg = constructor.arguments[i];
 				file.WriteLine($"\t\targs[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
@@ -212,7 +212,7 @@ public static class Convert {
 		if (constructor.arguments != null) {
 			file.WriteLine("\t\t\tconstructor(new IntPtr(ptr), args);");
 		} else {
-			file.WriteLine("\t\t\tconstructor(new IntPtr(ptr), (IntPtr*)(void*)IntPtr.Zero);");
+			file.WriteLine("\t\t\tconstructor(new IntPtr(ptr), (TypePtr*)(void*)IntPtr.Zero);");
 		}
 		file.WriteLine("\t\t}");
 		file.WriteLine("\t}");
@@ -230,7 +230,7 @@ public static class Convert {
 				_ => $"operator {op.name}",
 			};
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} left, {Fixer.Type(op.rightType)} right) {{");
-			file.WriteLine($"\t\tvar __op = Initialization.inter.variant_get_ptr_operator_evaluator(VariantOperator.{Fixer.VariantOperator(op.name)}, VariantType.{className}, VariantType.{Fixer.VariantName(op.rightType)});");
+			file.WriteLine($"\t\tvar __op = gdInterface.variant_get_ptr_operator_evaluator.Call(VariantOperator.{Fixer.VariantOperator(op.name)}, VariantType.{className}, VariantType.{Fixer.VariantName(op.rightType)});");
 			file.WriteLine($"\t\t{Fixer.Type(op.returnType)} __res;");
 			file.WriteLine($"\t\t__op(new IntPtr(&left), {ValueToPointer("right", op.rightType)}, new IntPtr(&__res));");
 			file.WriteLine("\t\treturn __res;");
@@ -242,7 +242,7 @@ public static class Convert {
 				_ => $"operator {op.name}",
 			};
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} value) {{");
-			file.WriteLine($"\t\tvar __op = Initialization.inter.variant_get_ptr_operator_evaluator(VariantOperator.{Fixer.VariantOperator(op.name)}, VariantType.{className}, VariantType.Nil);");
+			file.WriteLine($"\t\tvar __op = gdInterface.variant_get_ptr_operator_evaluator.Call(VariantOperator.{Fixer.VariantOperator(op.name)}, VariantType.{className}, VariantType.Nil);");
 			file.WriteLine($"\t\t{Fixer.Type(op.returnType)} __res;");
 			file.WriteLine($"\t\t__op(new IntPtr(&value), IntPtr.Zero, new IntPtr(&__res));");
 			file.WriteLine("\t\treturn __res;");
@@ -333,13 +333,13 @@ public static class Convert {
 		file.WriteLine(") {");
 		switch (type) {
 		case MethodType.Class:
-			file.WriteLine($"\t\tvar __m = Initialization.inter.classdb_get_method_bind((byte*)Marshal.StringToHGlobalAnsi(\"{className}\"), (byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
+			file.WriteLine($"\t\tvar __m = gdInterface.classdb_get_method_bind.Call((byte*)Marshal.StringToHGlobalAnsi(\"{className}\"), (byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
 			break;
 		case MethodType.Native:
-			file.WriteLine($"\t\tvar __m = Initialization.inter.variant_get_ptr_builtin_method(VariantType.{className}, (byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
+			file.WriteLine($"\t\tvar __m = gdInterface.variant_get_ptr_builtin_method.Call(VariantType.{className}, (byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
 			break;
 		case MethodType.Utility:
-			file.WriteLine($"\t\tvar __m = Initialization.inter.variant_get_ptr_utility_function((byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
+			file.WriteLine($"\t\tvar __m = gdInterface.variant_get_ptr_utility_function.Call((byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
 			break;
 		}
 
@@ -347,7 +347,7 @@ public static class Convert {
 			if (meth.isVararg) {
 				var v = meth.arguments.Last();
 				if (objectTypes.Contains(v.type)) {
-					file.WriteLine($"\t\tvar __args = stackalloc IntPtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
+					file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
 					for (var i = 0; i < meth.arguments.Length - 1; i++) {
 						var arg = meth.arguments[i];
 						file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
@@ -357,7 +357,7 @@ public static class Convert {
 					file.WriteLine("\t\t};");
 				} else {
 					file.WriteLine($"\t\tfixed ({Fixer.Type(v.type)}* {v.name}_ptr = {Fixer.Name(v.name)}) {{");
-					file.WriteLine($"\t\tvar __args = stackalloc IntPtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
+					file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
 					file.WriteLine($"\t\tvar __v_args = (IntPtr*)(void*){v.name}_ptr;");
 					for (var i = 0; i < meth.arguments.Length - 1; i++) {
 						var arg = meth.arguments[i];
@@ -368,7 +368,7 @@ public static class Convert {
 					file.WriteLine("\t\t};");
 				}
 			} else {
-				file.WriteLine($"\t\tvar __args = stackalloc IntPtr[{meth.arguments.Length}];");
+				file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length}];");
 				for (var i = 0; i < meth.arguments.Length; i++) {
 					var arg = meth.arguments[i];
 					file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
@@ -382,7 +382,7 @@ public static class Convert {
 			file.WriteLine($"\t\tvar __temp = this;");
 		}
 		if (type == MethodType.Class) {
-			file.Write("\t\tInitialization.inter.object_method_bind_ptrcall(__m, ");
+			file.Write("\t\tgdInterface.object_method_bind_ptrcall.Call(__m, ");
 		} else {
 			file.Write("\t\t__m(");
 		}
@@ -559,8 +559,8 @@ public static class Convert {
 
 		EqualAndHash(c.name, file);
 
-		file.WriteLine($"\tpublic {c.name}() : base(Initialization.inter.classdb_construct_object((byte*)Marshal.StringToHGlobalAnsi(\"{c.name}\"))) {{ }}");
-		file.WriteLine($"\tpublic {c.name}(IntPtr ptr) : base(ptr) {{ }}");
+		file.WriteLine($"\tpublic {c.name}() : base(gdInterface.classdb_construct_object.Call((byte*)Marshal.StringToHGlobalAnsi(\"{c.name}\"))) {{ }}");
+		file.WriteLine($"\tpublic {c.name}(ObjectPtr ptr) : base(ptr) {{ }}");
 
 		file.WriteLine("}");
 		file.Close();

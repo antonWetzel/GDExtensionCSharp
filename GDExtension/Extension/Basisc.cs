@@ -7,11 +7,11 @@ public unsafe partial struct Basis {
 		double yAxisX, double yAxisY, double yAxisZ,
 		double zAxisX, double zAxisY, double zAxisZ
 	) {
-		var constructor = Initialization.inter.variant_get_ptr_constructor(VariantType.Basis, 4);
+		var constructor = gdInterface.variant_get_ptr_constructor.Call(VariantType.Basis, 4);
 		var x = new Vector3(xAxisX, xAxisY, xAxisZ);
 		var y = new Vector3(yAxisX, yAxisY, yAxisZ);
 		var z = new Vector3(zAxisX, zAxisY, zAxisZ);
-		var args = stackalloc IntPtr[3];
+		var args = stackalloc TypePtr[3];
 		args[0] = new IntPtr(&x);
 		args[1] = new IntPtr(&y);
 		args[2] = new IntPtr(&z);

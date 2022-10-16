@@ -12,8 +12,8 @@ public unsafe partial struct Transform3D {
 		var y = new Vector3(yAxisX, yAxisY, yAxisZ);
 		var z = new Vector3(zAxisX, zAxisY, zAxisZ);
 		var o = new Vector3(originX, originY, originZ);
-		var constructor = Initialization.inter.variant_get_ptr_constructor(VariantType.Transform3D, 3);
-		var args = stackalloc IntPtr[4];
+		var constructor = gdInterface.variant_get_ptr_constructor.Call(VariantType.Transform3D, 3);
+		var args = stackalloc TypePtr[4];
 		args[0] = new IntPtr(&x);
 		args[1] = new IntPtr(&y);
 		args[2] = new IntPtr(&z);

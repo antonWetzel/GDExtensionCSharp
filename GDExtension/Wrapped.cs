@@ -2,9 +2,9 @@ namespace GDExtension;
 
 public abstract unsafe class Wrapped {
 
-	public static IntPtr InteropToPointer(Wrapped variant) => variant._internal_pointer;
+	public static ObjectPtr InteropToPointer(Wrapped wrapped) => wrapped._internal_pointer;
 
-	public IntPtr _internal_pointer;
+	public ObjectPtr _internal_pointer;
 
-	protected Wrapped(IntPtr data) => this._internal_pointer = data;
+	protected Wrapped(ObjectPtr data) => this._internal_pointer = data;
 }

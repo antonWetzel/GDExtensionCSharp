@@ -6,36 +6,33 @@ namespace ExampleGame;
 public static class ExtensionEntry {
 
 	[UnmanagedCallersOnly(EntryPoint = "gd_extension_entry", CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe bool EntryPoint(Interface* @interface, ExtensionClassLibraryPtr library, Initialization* init) {
-		Initialization.inter = *@interface;
-		Initialization.lib = library;
+	public static unsafe bool EntryPoint(Native.Interface* @interface, Native.ExtensionClassLibraryPtr library, Native.Initialization* init) {
+		Native.gdInterface = *@interface;
+		Native.gdLibrary = library;
 
-		*init = new Initialization() {
-			minimum_initialization_level = InitializationLevel.Scene,
-			initialize = &Initialize,
-			deinitialize = &Deinitialize,
+		*init = new Native.Initialization() {
+			minimum_initialization_level = Native.InitializationLevel.Scene,
+			initialize = new(Initialize),
+			deinitialize = new(Deinitialize),
 		};
 		return true;
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe void Initialize(IntPtr userdata, InitializationLevel level) {
-
+	public static unsafe void Initialize(IntPtr userdata, Native.InitializationLevel level) {
 		switch (level) {
-		case InitializationLevel.Core:
+		case Native.InitializationLevel.Core:
 			break;
-		case InitializationLevel.Servers:
+		case Native.InitializationLevel.Servers:
 			break;
-		case InitializationLevel.Scene:
+		case Native.InitializationLevel.Scene:
 			TestClass.Register();
 			break;
-		case InitializationLevel.Editor:
+		case Native.InitializationLevel.Editor:
 			break;
 		}
 	}
 
-	[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe void Deinitialize(IntPtr userdata, InitializationLevel level) {
+	public static unsafe void Deinitialize(IntPtr userdata, Native.InitializationLevel level) {
 
 	}
 }

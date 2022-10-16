@@ -19,3 +19,4 @@ Work maybe in Progress
 	- String, StrinName, Dictionary, ...
 	- Variant
 	- char\*
+- look at `ICustomMarshaler`
