@@ -5,11 +5,11 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Generate",
+			"name": "Generate Bindings",
 			"type": "coreclr",
 			"request": "launch",
-			"preLaunchTask": "build generator",
-			"program": "${workspaceFolder}/Generator/bin/Debug/net7.0/Generator.dll",
+			"preLaunchTask": "build binding generator",
+			"program": "${workspaceFolder}/BindingGenerator/bin/Debug/net7.0/BindingGenerator.dll",
 			"args": [],
 			"cwd": "${workspaceFolder}",
 			"stopAtEntry": false,
@@ -29,7 +29,7 @@
 				//"--quit",
 			],
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}/project",
+			"cwd": "${workspaceFolder}/Example",
 			"environment": [],
 			"console": "integratedTerminal",
 			"preLaunchTask": "publish",

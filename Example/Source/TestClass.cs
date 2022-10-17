@@ -95,23 +95,25 @@ public unsafe class TestClass : Node2D {
 	}
 
 	public static unsafe Native.Bool SetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr varPtr) {
-		var y = (string)*name;
-		Console.WriteLine($"Set: {y}");
-		if (*name == "test") {
+		switch ((string)*name) {
+		case "test":
 			var test = (TestClass)instance;
 			var variant = new Variant(varPtr.data);
 			test.test = variant.AsInt();
 			return true;
+		default:
+			return false;
 		}
-		return false;
 	}
 
 	public static unsafe Native.Bool GetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr variant) {
-		if (*name == "test") {
+		switch ((string)*name) {
+		case "test":
 			var test = (TestClass)instance;
 			Variant.InteropSaveIntoPointer(test.test, variant.data);
 			return true;
+		default:
+			return false;
 		}
-		return false;
 	}
 }

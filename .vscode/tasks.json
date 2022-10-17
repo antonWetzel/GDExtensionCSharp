@@ -7,7 +7,7 @@
 			"type": "process",
 			"args": [
 				"publish",
-				"${workspaceFolder}/project/ExampleGame/ExampleGame.csproj",
+				"${workspaceFolder}/Example/Source/Source.csproj",
 				"-property:GenerateFullPaths=true",
 				"-consoleloggerparameters:NoSummary",
 				"-p:NativeLib=Shared",
@@ -16,12 +16,12 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "build generator",
+			"label": "build binding generator",
 			"command": "dotnet",
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/Generator/Generator.csproj",
+				"${workspaceFolder}/BindingGenerator/BindingGenerator.csproj",
 			],
 			"problemMatcher": "$msCompile"
 		},

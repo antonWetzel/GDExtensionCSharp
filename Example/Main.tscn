@@ -8,7 +8,7 @@ script = ExtResource("1_7tyed")
 
 [node name="TestClass" type="TestClass" parent="."]
 test = 5
-position = Vector2(812.642, 208)
+position = Vector2(835.072, 208)
 
 [node name="Sprite2d" type="Sprite2D" parent="TestClass"]
 texture = ExtResource("2_vmdxq")
