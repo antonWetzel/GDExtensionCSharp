@@ -20,6 +20,7 @@ public static class Fixer {
 		if (name.StartsWith("real_t")) { name = name.Replace("real_t", "float"); }
 		if (name.StartsWith("float")) { name = name.Replace("float", "double"); }
 		if (name.StartsWith("int")) { name = name.Replace("int", "long"); }
+		if (name.StartsWith("String")) { name = name.Replace("int", "string"); }
 		if (name.StartsWith("Variant.Type")) { name = name.Replace("Variant.Type", "VariantType"); }
 
 		return name;

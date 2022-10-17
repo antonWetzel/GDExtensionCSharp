@@ -6,8 +6,8 @@ namespace ExampleGame;
 public static class ExtensionEntry {
 
 	[UnmanagedCallersOnly(EntryPoint = "gd_extension_entry", CallConvs = new[] { typeof(CallConvCdecl) })]
-	public static unsafe bool EntryPoint(Native.Interface* @interface, Native.ExtensionClassLibraryPtr library, Native.Initialization* init) {
-		Native.gdInterface = *@interface;
+	public static unsafe bool EntryPoint(Native.Interface @interface, Native.ExtensionClassLibraryPtr library, Native.Initialization* init) {
+		Native.gdInterface = @interface;
 		Native.gdLibrary = library;
 
 		*init = new Native.Initialization() {
@@ -15,6 +15,7 @@ public static class ExtensionEntry {
 			initialize = new(Initialize),
 			deinitialize = new(Deinitialize),
 		};
+
 		return true;
 	}
 

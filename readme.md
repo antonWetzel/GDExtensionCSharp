@@ -16,7 +16,5 @@ Work maybe in Progress
 - Code-Generators
 	- Automatic register
 - Memory management
-	- String, StrinName, Dictionary, ...
+	- Dictionary, Array ...
 	- Variant
-	- char\*
-- look at `ICustomMarshaler`

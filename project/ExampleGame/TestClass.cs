@@ -10,9 +10,7 @@ public unsafe class TestClass : Node2D {
 
 	public TestClass() {
 		handle = GCHandle.Alloc(this);
-		fixed (byte* name = System.Text.Encoding.UTF8.GetBytes("TestClass")) {
-			Native.gdInterface.object_set_instance.Call(_internal_pointer, name, this);
-		}
+		Native.gdInterface.object_set_instance.Call(_internal_pointer, "TestClass", this);
 	}
 
 	public static implicit operator Native.GDExtensionClassInstancePtr(TestClass test) => new(GCHandle.ToIntPtr(test.handle));
@@ -54,12 +52,7 @@ public unsafe class TestClass : Node2D {
 			//class_userdata = IntPtr.Zero,
 		};
 
-		fixed (byte* name = System.Text.Encoding.UTF8.GetBytes("TestClass")) {
-			fixed (byte* baseClass = System.Text.Encoding.UTF8.GetBytes("Node2D")) {
-				Native.gdInterface.classdb_register_extension_class.Call(Native.gdLibrary, name, baseClass, &info);
-			}
-		}
-		//Native.gdInterface.print_error.Call("abc", "def", "ghi", 3);
+		Native.gdInterface.classdb_register_extension_class.Call(Native.gdLibrary, "TestClass", "Node2D", &info);
 	}
 
 	public static unsafe Native.ObjectPtr CreateObject(IntPtr userdata) {
@@ -101,22 +94,24 @@ public unsafe class TestClass : Node2D {
 		Native.gdInterface.mem_free.Call(new IntPtr(infos));
 	}
 
-	public static unsafe Native.Bool SetFunc(Native.GDExtensionClassInstancePtr instance, Native.StringNamePtr name, Native.VariantPtr varPtr) {
-		/*if (*name == (StringName)"test") {
+	public static unsafe Native.Bool SetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr varPtr) {
+		var y = (string)*name;
+		Console.WriteLine($"Set: {y}");
+		if (*name == "test") {
 			var test = (TestClass)instance;
-			var variant = new Variant(varPtr);
+			var variant = new Variant(varPtr.data);
 			test.test = variant.AsInt();
 			return true;
-		}*/
+		}
 		return false;
 	}
 
-	public static unsafe Native.Bool GetFunc(Native.GDExtensionClassInstancePtr instance, Native.StringNamePtr name, Native.VariantPtr variant) {
-		/*if (*name == (StringName)"test") {
+	public static unsafe Native.Bool GetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr variant) {
+		if (*name == "test") {
 			var test = (TestClass)instance;
-			Variant.InteropSaveIntoPointer(test.test, variant);
+			Variant.InteropSaveIntoPointer(test.test, variant.data);
 			return true;
-		}*/
+		}
 		return false;
 	}
 }

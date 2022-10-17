@@ -78,6 +78,7 @@ public static class Convert {
 			case "int":
 			case "float":
 			case "bool":
+			case "String":
 				break;
 			default:
 				BuildinClass(api, c, dir, configName);
@@ -264,7 +265,9 @@ public static class Convert {
 	}
 
 	static string ValueToPointer(string name, string type) {
-		if (objectTypes.Contains(type)) {
+		if (type == "String") {
+			return $"StringMarshall.ToNative({name})";
+		} else if (objectTypes.Contains(type)) {
 			return $"{name}._internal_pointer";
 		} else {
 			return $"new IntPtr(&{Fixer.Name(name)})";
@@ -272,7 +275,7 @@ public static class Convert {
 	}
 
 	static string ReturnLocationType(string type) {
-		if (objectTypes.Contains(type)) {
+		if (objectTypes.Contains(type) || type == "String") {
 			return "IntPtr";
 		} else {
 			return $"{Fixer.Type(type)}";
@@ -280,7 +283,9 @@ public static class Convert {
 	}
 
 	static string ReturnStatementValue(string type) {
-		if (objectTypes.Contains(type)) {
+		if (type == "String") {
+			return "StringMarshall.ToManaged(__res)";
+		} else if (objectTypes.Contains(type)) {
 			return $"new {type}(__res)";
 		} else {
 			return $"__res";
@@ -333,27 +338,27 @@ public static class Convert {
 		file.WriteLine(") {");
 		switch (type) {
 		case MethodType.Class:
-			file.WriteLine($"\t\tvar __m = gdInterface.classdb_get_method_bind.Call((byte*)Marshal.StringToHGlobalAnsi(\"{className}\"), (byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
+			file.WriteLine($"\t\tvar __m = gdInterface.classdb_get_method_bind.Call(\"{className}\", \"{meth.name}\", {meth.hash});");
 			break;
 		case MethodType.Native:
-			file.WriteLine($"\t\tvar __m = gdInterface.variant_get_ptr_builtin_method.Call(VariantType.{className}, (byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
+			file.WriteLine(value: $"\t\tvar __m = gdInterface.variant_get_ptr_builtin_method.Call(VariantType.{className}, \"{meth.name}\", {meth.hash});");
 			break;
 		case MethodType.Utility:
-			file.WriteLine($"\t\tvar __m = gdInterface.variant_get_ptr_utility_function.Call((byte*)Marshal.StringToHGlobalAnsi(\"{meth.name}\"), {meth.hash});");
+			file.WriteLine($"\t\tvar __m = gdInterface.variant_get_ptr_utility_function.Call(\"{meth.name}\", {meth.hash});");
 			break;
 		}
 
 		if (meth.arguments != null) {
 			if (meth.isVararg) {
 				var v = meth.arguments.Last();
-				if (objectTypes.Contains(v.type)) {
+				if (objectTypes.Contains(v.type) || v.type == "String") {
 					file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
 					for (var i = 0; i < meth.arguments.Length - 1; i++) {
 						var arg = meth.arguments[i];
 						file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
 					}
 					file.WriteLine($"\t\tfor (var i = 0; i < {Fixer.Name(v.name)}.Length; i++) {{");
-					file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = {v.name}[i]._internal_pointer;");
+					file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = {ValueToPointer($"{Fixer.Name(v.name)}[i]", v.type)};");
 					file.WriteLine("\t\t};");
 				} else {
 					file.WriteLine($"\t\tfixed ({Fixer.Type(v.type)}* {v.name}_ptr = {Fixer.Name(v.name)}) {{");
@@ -366,7 +371,7 @@ public static class Convert {
 					file.WriteLine($"\t\tfor (var i = 0; i < {Fixer.Name(v.name)}.Length; i++) {{");
 					file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = __v_args[i];");
 					file.WriteLine("\t\t};");
-				}
+				} 
 			} else {
 				file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length}];");
 				for (var i = 0; i < meth.arguments.Length; i++) {
@@ -426,8 +431,11 @@ public static class Convert {
 		if (ret != "") {
 			file.WriteLine($"\t\treturn {ReturnStatementValue(ret)};");
 		}
-		if (meth.arguments != null && meth.isVararg && objectTypes.Contains(meth.arguments.Last().type) == false) {
-			file.WriteLine("\t}");
+		if (meth.arguments != null && meth.isVararg) {
+			var t = meth.arguments.Last().type;
+			if (objectTypes.Contains(t) == false && t != "String") {
+				file.WriteLine("\t}");
+			}
 		}
 
 		file.WriteLine("\t}");
@@ -559,7 +567,7 @@ public static class Convert {
 
 		EqualAndHash(c.name, file);
 
-		file.WriteLine($"\tpublic {c.name}() : base(gdInterface.classdb_construct_object.Call((byte*)Marshal.StringToHGlobalAnsi(\"{c.name}\"))) {{ }}");
+		file.WriteLine($"\tpublic {c.name}() : base(gdInterface.classdb_construct_object.Call(\"{c.name}\")) {{ }}");
 		file.WriteLine($"\tpublic {c.name}(ObjectPtr ptr) : base(ptr) {{ }}");
 
 		file.WriteLine("}");
