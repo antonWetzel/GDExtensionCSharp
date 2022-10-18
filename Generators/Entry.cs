@@ -1,14 +1,20 @@
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
 namespace Generators {
-	[Generator]
-	public class EntryGenerator : ISourceGenerator {
 
-		public void Execute(GeneratorExecutionContext context) {
-			var registrations = "TestClass.Register();\n";
+	public class Entry {
+
+		public static void Execute(GeneratorExecutionContext context, List<string> classes) {
+			var registrations = "";
+			foreach (var c in classes) {
+				registrations += $"{c}.Register();\n";
+			}
 			var source = $$"""
+				using System;
 				using System.Runtime.CompilerServices;
 				using System.Runtime.InteropServices;
+				using GDExtension;
 
 				namespace ExampleGame;
 
@@ -47,11 +53,7 @@ namespace Generators {
 					}
 				}
 			""";
-			context.AddSource("entry.gen.cs", source);
-		}
-
-		public void Initialize(GeneratorInitializationContext context) {
-			//todo: see what classes must be registered
+			context.AddSource("ExtensionEntry.gen.cs", source);
 		}
 	}
 }

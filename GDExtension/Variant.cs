@@ -32,11 +32,16 @@ public unsafe class Variant {
 	public Variant(float value) : this((double)value) { }
 
 	public long AsInt() {
-		if (type != VariantType.Int) {
-			throw new Exception($"{type}");
-		}
+		if (type != VariantType.Int) { throw new Exception($"{type}"); }
 		long v;
 		gdInterface.get_variant_to_type_constructor.Call(VariantType.Int)(new IntPtr(&v), _internal_pointer);
+		return v;
+	}
+
+	public double AsFloat() {
+		if (type != VariantType.Float) { throw new Exception($"{type}"); }
+		double v;
+		gdInterface.get_variant_to_type_constructor.Call(VariantType.Float)(new IntPtr(&v), _internal_pointer);
 		return v;
 	}
 
