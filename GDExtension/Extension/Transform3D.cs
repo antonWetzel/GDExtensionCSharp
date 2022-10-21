@@ -7,19 +7,10 @@ public unsafe partial struct Transform3D {
 		double yAxisX, double yAxisY, double yAxisZ,
 		double zAxisX, double zAxisY, double zAxisZ,
 		double originX, double originY, double originZ
-	) {
-		var x = new Vector3(xAxisX, xAxisY, xAxisZ);
-		var y = new Vector3(yAxisX, yAxisY, yAxisZ);
-		var z = new Vector3(zAxisX, zAxisY, zAxisZ);
-		var o = new Vector3(originX, originY, originZ);
-		var constructor = gdInterface.variant_get_ptr_constructor.Call(VariantType.Transform3D, 3);
-		var args = stackalloc TypePtr[4];
-		args[0] = new IntPtr(&x);
-		args[1] = new IntPtr(&y);
-		args[2] = new IntPtr(&z);
-		args[3] = new IntPtr(&o);
-		fixed (Transform3D* ptr = &this) {
-			constructor(new IntPtr(ptr), args);
-		}
-	}
+	) : this(
+		new Vector3(xAxisX, xAxisY, xAxisZ),
+		new Vector3(yAxisX, yAxisY, yAxisZ),
+		new Vector3(zAxisX, zAxisY, zAxisZ),
+		new Vector3(originX, originY, originZ)
+	) { }
 }
