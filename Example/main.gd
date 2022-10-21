@@ -1,6 +1,6 @@
 extends Node
 
-@onready var test: Test = $"Test"
+@onready var test: Walker = $"Walker"
 
 func _ready():
 	print(test)

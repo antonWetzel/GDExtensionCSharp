@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Generators {
 
-	public class Entry {
+	public static class Entry {
 
 		public static void Execute(GeneratorExecutionContext context, List<string> classes) {
 			var registrations = "";

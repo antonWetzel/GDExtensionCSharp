@@ -5,6 +5,9 @@ public unsafe class Variant {
 	public static void InteropSaveIntoPointer<T>(T value, IntPtr _internal_pointer, VariantType t) where T : unmanaged {
 		gdInterface.get_variant_from_type_constructor.Call(t)(_internal_pointer, new IntPtr(&value));
 	}
+	public static void InteropSaveIntoPointer(string value, IntPtr _internal_pointer) {
+		gdInterface.get_variant_from_type_constructor.Call(VariantType.String)(_internal_pointer, StringMarshall.ToNative(value));
+	}
 
 	public static T InteropGetFromPointer<T>(IntPtr _internal_pointer, VariantType t) where T : unmanaged {
 		var rT = gdInterface.variant_get_type.Call(_internal_pointer);
@@ -19,7 +22,7 @@ public unsafe class Variant {
 	internal IntPtr _internal_pointer;
 
 	private Variant() => _internal_pointer = gdInterface.mem_alloc.Call(24);
-	//public Variant(IntPtr data) => _internal_pointer = data;
+	internal Variant(IntPtr data) => _internal_pointer = data;
 
 	public static Variant Nil {
 		get { var v = new Variant(); gdInterface.variant_new_nil.Call(v._internal_pointer); return v; }
@@ -28,7 +31,7 @@ public unsafe class Variant {
 	public Variant(bool value) : this() => InteropSaveIntoPointer(value, _internal_pointer, VariantType.Bool);
 	public Variant(long value) : this() => InteropSaveIntoPointer(value, _internal_pointer, VariantType.Int);
 	public Variant(double value) : this() => InteropSaveIntoPointer(value, _internal_pointer, VariantType.Float);
-	public Variant(string value) : this() => InteropSaveIntoPointer(StringMarshall.ToNative(value), _internal_pointer, VariantType.String);
+	public Variant(string value) : this() => InteropSaveIntoPointer(value, _internal_pointer);
 
 	public Variant(Vector2 value) : this() => InteropSaveIntoPointer(value, _internal_pointer, VariantType.Vector2);
 	public Variant(Vector2i value) : this() => InteropSaveIntoPointer(value, _internal_pointer, VariantType.Vector2i);

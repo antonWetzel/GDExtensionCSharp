@@ -26,6 +26,10 @@
     <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies-->
 
+    <!-- uncomment to see / debug generators output -->
+    <!--EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>../Generated</CompilerGeneratedFilesOutputPath-->
+
   </PropertyGroup>
 
 </Project>
