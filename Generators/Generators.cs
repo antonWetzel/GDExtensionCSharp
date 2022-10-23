@@ -11,7 +11,7 @@ namespace Generators {
 		public void Execute(GeneratorExecutionContext context) {
 			var rec = (SyntaxReciever)context.SyntaxReceiver!;
 
-			var classes = new List<string>();
+			var classes = new List<(string, string)>();
 
 			foreach (var c in rec.names) {
 
@@ -22,8 +22,6 @@ namespace Generators {
 				var source = $$"""
 				using System.Runtime.CompilerServices;
 				using System.Runtime.InteropServices;
-
-				//test
 
 				namespace {{s.ContainingNamespace}};
 
@@ -59,13 +57,13 @@ namespace Generators {
 						Native.gdInterface.classdb_register_extension_class.Call(Native.gdLibrary, "{{gdName}}", "{{s.BaseType.Name}}", &info);
 					}
 
-					public static unsafe Native.ObjectPtr CreateObject(IntPtr userdata) {
+					static unsafe Native.ObjectPtr CreateObject(IntPtr userdata) {
 						var test = new {{s.Name}}();
 						test.SetProcess(true);
 						return test._internal_pointer;
 					}
 
-					public static unsafe void FreeObject(IntPtr userdata, Native.GDExtensionClassInstancePtr instance) {
+					static unsafe void FreeObject(IntPtr userdata, Native.GDExtensionClassInstancePtr instance) {
 						var test = ({{s.Name}})instance;
 						test.handle.Free();
 					}
@@ -76,7 +74,7 @@ namespace Generators {
 				Notification.Generate(context, s);
 				Export.Generate(context, s);
 
-				classes.Add(s.Name);
+				classes.Add((s.Name, s.BaseType.Name));
 			}
 			Entry.Execute(context, classes);
 		}

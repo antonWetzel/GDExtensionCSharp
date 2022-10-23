@@ -58,7 +58,7 @@ namespace Generators {
 				""";
 			}
 			code += $$"""
-				public static unsafe void __Notification(Native.GDExtensionClassInstancePtr instance, int what) {
+				static unsafe void __Notification(Native.GDExtensionClassInstancePtr instance, int what) {
 					var inst = ({{c.Name}})instance;
 					inst.{{notificationName}}(what);
 				}

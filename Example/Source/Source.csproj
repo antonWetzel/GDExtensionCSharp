@@ -27,8 +27,8 @@
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies-->
 
     <!-- uncomment to see / debug generators output -->
-    <!--EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>../Generated</CompilerGeneratedFilesOutputPath-->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>../Generated</CompilerGeneratedFilesOutputPath>
 
   </PropertyGroup>
 

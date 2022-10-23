@@ -26,7 +26,7 @@ namespace Generators {
 			""";
 
 			code += $$"""
-				public static unsafe Native.PropertyInfo* GetPropertyList(Native.GDExtensionClassInstancePtr instance, uint* count) {
+				static unsafe Native.PropertyInfo* GetPropertyList(Native.GDExtensionClassInstancePtr instance, uint* count) {
 					var ptr = (Native.PropertyInfo*)Native.gdInterface.mem_alloc.Call((nuint)sizeof(Native.PropertyInfo) * {{members.Length}});
 					*count = {{members.Length}};
 
@@ -51,7 +51,7 @@ namespace Generators {
 					return ptr;
 				}
 
-				public static unsafe void FreePropertyList(Native.GDExtensionClassInstancePtr instance, Native.PropertyInfo* infos) {
+				static unsafe void FreePropertyList(Native.GDExtensionClassInstancePtr instance, Native.PropertyInfo* infos) {
 					for (var i = 0; i < {{members.Length}}; i++) {
 						var info = infos[i];
 						Marshal.FreeHGlobal(new IntPtr(info.name));
@@ -59,7 +59,7 @@ namespace Generators {
 					Native.gdInterface.mem_free.Call(new IntPtr(infos));
 				}
 
-				public static unsafe Native.Bool SetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr varPtr) {
+				static unsafe Native.Bool SetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr varPtr) {
 					var inst = ({{c.Name}})instance;
 					switch ((string)*name) {
 
@@ -82,7 +82,7 @@ namespace Generators {
 					}
 				}
 
-				public static unsafe Native.Bool GetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr variant) {
+				static unsafe Native.Bool GetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr variant) {
 					var inst = ({{c.Name}})instance;
 					switch ((string)*name) {
 
