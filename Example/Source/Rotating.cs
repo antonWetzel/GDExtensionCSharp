@@ -3,7 +3,7 @@ namespace ExampleGame;
 [Register]
 public unsafe partial class Rotating : Node2D {
 
-	[Export] public double rotationSpeed;
+	[Export] public double rotationSpeed { get; set; }
 
 	[Notify(NOTIFICATION_READY)]
 	void Ready() {

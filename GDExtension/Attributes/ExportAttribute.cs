@@ -1,6 +1,6 @@
 namespace GDExtension;
 
-[System.AttributeUsage(System.AttributeTargets.Field, AllowMultiple = false)]
+[System.AttributeUsage(System.AttributeTargets.Property, AllowMultiple = false)]
 public class ExportAttribute : System.Attribute {
 
 	public ExportAttribute() { }

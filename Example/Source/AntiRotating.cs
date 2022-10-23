@@ -3,7 +3,7 @@ namespace ExampleGame;
 [Register]
 public unsafe partial class AntiRotating : Rotating {
 
-	[Export] public double antiRotationSpeed;
+	[Export] public double antiRotationSpeed { get; set; }
 
 	[Notify(NOTIFICATION_READY)]
 	void Ready() {

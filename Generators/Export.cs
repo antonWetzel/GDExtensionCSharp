@@ -10,8 +10,8 @@ namespace Generators {
 
 		public static void Generate(GeneratorExecutionContext context, INamedTypeSymbol c) {
 			var members = c.GetMembers().
-				Where(x => x is IFieldSymbol).
-				Select(x => (IFieldSymbol)x).
+				Where(x => x is IPropertySymbol).
+				Select(x => (IPropertySymbol)x).
 				Where(x => x.GetAttributes().Where(x => x.AttributeClass.ToString() == "GDExtension.ExportAttribute").Count() > 0)
 				.ToArray();
 
@@ -24,87 +24,167 @@ namespace Generators {
 			public unsafe partial class {{c.Name}} : {{c.BaseType.Name}} {
 
 			""";
+			for (var i = 0; i < members.Length; i++) {
+				var member = members[i];
+				code += $$"""
+					static Native.PropertyInfo __{{member.Name}}Info = new Native.PropertyInfo() {
+						type = (uint)Native.VariantType.{{TypeToVariantType(member.Type.Name)}},
+						name = (byte*)Marshal.StringToHGlobalAnsi("{{member.Name}}"),
+						class_name = null,
+						hint = (uint)PropertyHint.PROPERTY_HINT_NONE,
+						hint_string = null,
+						usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
+					};
+
+
+				""";
+			}
 
 			code += $$"""
-				static unsafe Native.PropertyInfo* GetPropertyList(Native.GDExtensionClassInstancePtr instance, uint* count) {
-					var ptr = (Native.PropertyInfo*)Native.gdInterface.mem_alloc.Call((nuint)sizeof(Native.PropertyInfo) * {{members.Length}});
-					*count = {{members.Length}};
+				static unsafe void RegisterExports() {
+					Native.ExtensionClassMethodInfo info;
 
 			""";
 
 			for (var i = 0; i < members.Length; i++) {
 				var member = members[i];
 				code += $$"""
-						ptr[{{i}}] = new Native.PropertyInfo() {
-							type = (uint)Native.VariantType.{{TypeToVariantType(member.Type.ToString())}},
-							name = (byte*)Marshal.StringToHGlobalAnsi("{{member.Name}}"),
-							class_name = null,
-							hint = (uint)PropertyHint.PROPERTY_HINT_NONE,
-							hint_string = null,
-							usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
+						info = new Native.ExtensionClassMethodInfo() {
+							name = (byte*)Marshal.StringToHGlobalAnsi("{{member.SetMethod.Name}}"),
+							method_userdata = new IntPtr({{i * 2}}),
+							call_func = new(CallFunc),
+							ptrcall_func = new(CallFuncPtr),
+							method_flags = (uint)Native.ExtensionClassMethodFlags.Default,
+							argument_count = 1,
+							has_return_value = false,
+							get_argument_type_func = new(ArgumentType),
+							get_argument_info_func = new(ArgumentInfo),
+							get_argument_metadata_func = new(ArgumentMetadata),
+							default_argument_count = 0,
+							default_arguments = null,
 						};
+						Native.gdInterface.classdb_register_extension_class_method.Call(Native.gdLibrary, "{{c.Name}}", &info);
+
+						info = new Native.ExtensionClassMethodInfo() {
+							name = (byte*)Marshal.StringToHGlobalAnsi("{{member.GetMethod.Name}}"),
+							method_userdata = new IntPtr({{i * 2 + 1}}),
+							call_func = new(CallFunc),
+							ptrcall_func = new(CallFuncPtr),
+							method_flags = (uint)Native.ExtensionClassMethodFlags.Default,
+							argument_count = 0,
+							has_return_value = true,
+							get_argument_type_func = new(ArgumentType),
+							get_argument_info_func = new(ArgumentInfo),
+							get_argument_metadata_func = new(ArgumentMetadata),
+							default_argument_count = 0,
+							default_arguments = null,
+						};
+						Native.gdInterface.classdb_register_extension_class_method.Call(Native.gdLibrary, "{{c.Name}}", &info);
+
+						fixed (Native.PropertyInfo* infoPtr = &__{{member.Name}}Info) {
+							Native.gdInterface.classdb_register_extension_class_property.Call(
+								Native.gdLibrary,
+								"{{c.Name}}",
+								infoPtr,
+								"{{member.SetMethod.Name}}",
+								"{{member.GetMethod.Name}}"
+							);
+						}
 
 				""";
 			}
 
 			code += $$"""
-					return ptr;
 				}
 
-				static unsafe void FreePropertyList(Native.GDExtensionClassInstancePtr instance, Native.PropertyInfo* infos) {
-					for (var i = 0; i < {{members.Length}}; i++) {
-						var info = infos[i];
-						Marshal.FreeHGlobal(new IntPtr(info.name));
-					}
-					Native.gdInterface.mem_free.Call(new IntPtr(infos));
+				static void CallFuncPtr(IntPtr method_userdata, Native.GDExtensionClassInstancePtr p_instance, Native.TypePtr* p_args, Native.TypePtr r_ret) {
+					throw new NotImplementedException();
 				}
 
-				static unsafe Native.Bool SetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr varPtr) {
-					var inst = ({{c.Name}})instance;
-					switch ((string)*name) {
+				static void CallFunc(
+					IntPtr method_userdata,
+					Native.GDExtensionClassInstancePtr p_instance,
+					Native.VariantPtr* p_args,
+					Native.Int p_argument_count,
+					Native.VariantPtr r_return,
+					Native.CallError* r_error
+				) {
+					var instance = ({{c.Name}})p_instance;
+					switch ((int)method_userdata) {
 
 			""";
-
-			foreach (var member in members) {
-				var t = member.Type.ToString();
+			for (var i = 0; i < members.Length; i++) {
+				var member = members[i];
+				var vt = TypeToVariantType(member.Type.Name);
 				code += $$"""
-						case "{{member.Name}}":
-							inst.{{member.Name}} = Variant.InteropGetFromPointer<{{t}}>(varPtr.data, Native.VariantType.{{TypeToVariantType(t)}});
-							return true;
+						case {{i * 2 + 0}}:
+							instance.{{member.Name}} = Variant.InteropGetFromPointer<{{member.Type.Name}}>(p_args[0].data, Native.VariantType.{{vt}});
+							break;
+						case {{i * 2 + 1}}:
+							Variant.InteropSaveIntoPointer(instance.{{member.Name}}, r_return.data, Native.VariantType.{{vt}});
+							break;
 
 				""";
 			}
 
-
 			code += $$"""
-					default:
-						return false;
 					}
 				}
 
-				static unsafe Native.Bool GetFunc(Native.GDExtensionClassInstancePtr instance, StringName* name, Native.VariantPtr variant) {
-					var inst = ({{c.Name}})instance;
-					switch ((string)*name) {
+				static Native.VariantType ArgumentType(IntPtr p_method_userdata, int p_argument) {
+					return (int)p_method_userdata switch {
 
 			""";
-
-			foreach (var member in members) {
+			for (var i = 0; i < members.Length; i++) {
+				var member = members[i];
 				var t = member.Type.ToString();
+				var vt = TypeToVariantType(member.Type.Name);
 				code += $$"""
-						case "{{member.Name}}":
-							Variant.InteropSaveIntoPointer(inst.{{member.Name}}, variant.data, Native.VariantType.{{TypeToVariantType(t)}});
-							return true;
+						{{i * 2 + 0}} => p_argument switch {
+							0 => Native.VariantType.{{vt}},
+							_ => Native.VariantType.Nil,
+						},
+						{{i * 2 + 1}} => p_argument switch {
+							-1 => Native.VariantType.{{vt}},
+							_ => Native.VariantType.Nil,
+						},
 
 				""";
 			}
-
 			code += $$"""
-					default:
-						return false;
-					}
+						_ => Native.VariantType.Nil,
+					};
+				}
+
+				static void ArgumentInfo(IntPtr p_method_userdata, int p_argument, Native.PropertyInfo* r_info) {
+					*r_info = (int)p_method_userdata switch {
+
+			""";
+			for (var i = 0; i < members.Length; i++) {
+				var member = members[i];
+				var t = member.Type.ToString();
+				var vt = TypeToVariantType(member.Type.Name);
+				code += $$"""
+						{{i * 2 + 0}} => p_argument switch {
+							0 => __{{member.Name}}Info,
+							_ => default,
+						},
+						{{i * 2 + 1}} => p_argument switch {
+							-1 => __{{member.Name}}Info,
+							_ => default,
+						},
+
+				""";
+			}
+			code += $$"""
+						_ => default,
+					};
+				}
+
+				static Native.ExtensionClassMethodArgumentMetadata ArgumentMetadata(IntPtr p_method_userdata, int p_argument) {
+					return Native.ExtensionClassMethodArgumentMetadata.None;
 				}
 			}
-
 			""";
 
 			context.AddSource($"{c.Name}.export.gen.cs", code);
@@ -112,8 +192,8 @@ namespace Generators {
 
 		static string TypeToVariantType(string t) {
 			return t switch {
-				"double" => "Float",
-				"long" => "Int",
+				"Double" => "Float",
+				"Long" => "Int",
 				_ => "Todo throw error",
 			};
 		}

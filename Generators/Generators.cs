@@ -36,12 +36,12 @@ namespace Generators {
 					public static implicit operator Native.GDExtensionClassInstancePtr({{s.Name}} instance) => new(GCHandle.ToIntPtr(instance.handle));
 					public static implicit operator {{s.Name}}(Native.GDExtensionClassInstancePtr ptr) => ({{s.Name}})(GCHandle.FromIntPtr(ptr.data).Target!);
 
-					public static unsafe void Register() {
+					public static unsafe new void Register() {
 						var info = new Native.ExtensionClassCreationInfo() {
-							set_func = new(SetFunc),
-							get_func = new(GetFunc),
-							get_property_list_func = new(GetPropertyList),
-							free_property_list_func = new(FreePropertyList),
+							//set_func = new(SetFunc),
+							//get_func = new(GetFunc),
+							//get_property_list_func = new(GetPropertyList),
+							//free_property_list_func = new(FreePropertyList),
 							//property_can_revert_func = &PropertyCanConvert,
 							//property_get_revert_func = &PropertyGetRevert,
 							notification_func = new(__Notification),
@@ -55,6 +55,7 @@ namespace Generators {
 							//class_userdata = IntPtr.Zero,
 						};
 						Native.gdInterface.classdb_register_extension_class.Call(Native.gdLibrary, "{{gdName}}", "{{s.BaseType.Name}}", &info);
+						RegisterExports();
 					}
 
 					static unsafe Native.ObjectPtr CreateObject(IntPtr userdata) {

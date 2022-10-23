@@ -32,7 +32,7 @@ namespace Generators {
 				notificationName = "_Notification";
 
 				code += $$"""
-					public void {{notificationName}}(int what) {
+					void {{notificationName}}(int what) {
 						switch (what) {
 
 				""";
@@ -58,8 +58,9 @@ namespace Generators {
 				""";
 			}
 			code += $$"""
-				static unsafe void __Notification(Native.GDExtensionClassInstancePtr instance, int what) {
+				public static unsafe new void __Notification(Native.GDExtensionClassInstancePtr instance, int what) {
 					var inst = ({{c.Name}})instance;
+					{{c.BaseType.Name}}.__Notification(instance, what);
 					inst.{{notificationName}}(what);
 				}
 			}

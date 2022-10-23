@@ -20,7 +20,8 @@ namespace Generators {
 						}
 					}
 					if (valid) {
-						registrations += $"{classes[i].Item1}.Register();\n\t\t\t";
+						var n = classes[i].Item1;
+						registrations += $"{n}.Register();\n\t\t\t";
 						unregistrations = $"Native.gdInterface.classdb_unregister_extension_class.Call(Native.gdLibrary, \"{classes[i].Item1}\");\n\t\t\t" + unregistrations;
 						classes[i] = classes.Last();
 						classes.RemoveAt(classes.Count - 1);
@@ -60,9 +61,9 @@ namespace Generators {
 					case Native.InitializationLevel.Servers:
 						break;
 					case Native.InitializationLevel.Scene:
-						{{registrations}}break;
-					case Native.InitializationLevel.Editor:
 						break;
+					case Native.InitializationLevel.Editor:
+						{{registrations}}break;
 					}
 				}
 
@@ -73,9 +74,9 @@ namespace Generators {
 					case Native.InitializationLevel.Servers:
 						break;
 					case Native.InitializationLevel.Scene:
-						{{unregistrations}}break;
-					case Native.InitializationLevel.Editor:
 						break;
+					case Native.InitializationLevel.Editor:
+						{{unregistrations}}break;
 					}
 				}
 			}
