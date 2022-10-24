@@ -200,7 +200,7 @@ public static class Convert {
 			file.Write(value: $"{Fixer.Type(a.type)} {Fixer.Name(a.name)}");
 		}
 		file.WriteLine(") {");
-		file.WriteLine($"\t\tvar constructor = gdInterface.variant_get_ptr_constructor.Call(VariantType.{Fixer.Type(c.name)}, {constructor.index});");
+		file.WriteLine($"\t\tvar constructor = gdInterface.variant_get_ptr_constructor.Call(Variant.Type.{Fixer.Type(c.name)}, {constructor.index});");
 
 		if (constructor.arguments != null) {
 			file.WriteLine($"\t\tvar args = stackalloc TypePtr[{constructor.arguments.Length}];");
@@ -231,7 +231,7 @@ public static class Convert {
 				_ => $"operator {op.name}",
 			};
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} left, {Fixer.Type(op.rightType)} right) {{");
-			file.WriteLine($"\t\tvar __op = gdInterface.variant_get_ptr_operator_evaluator.Call(VariantOperator.{Fixer.VariantOperator(op.name)}, VariantType.{className}, VariantType.{Fixer.VariantName(op.rightType)});");
+			file.WriteLine($"\t\tvar __op = gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.{Fixer.VariantName(op.rightType)});");
 			file.WriteLine($"\t\t{Fixer.Type(op.returnType)} __res;");
 			file.WriteLine($"\t\t__op(new IntPtr(&left), {ValueToPointer("right", op.rightType)}, new IntPtr(&__res));");
 			file.WriteLine("\t\treturn __res;");
@@ -243,7 +243,7 @@ public static class Convert {
 				_ => $"operator {op.name}",
 			};
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} value) {{");
-			file.WriteLine($"\t\tvar __op = gdInterface.variant_get_ptr_operator_evaluator.Call(VariantOperator.{Fixer.VariantOperator(op.name)}, VariantType.{className}, VariantType.Nil);");
+			file.WriteLine($"\t\tvar __op = gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.Nil);");
 			file.WriteLine($"\t\t{Fixer.Type(op.returnType)} __res;");
 			file.WriteLine($"\t\t__op(new IntPtr(&value), IntPtr.Zero, new IntPtr(&__res));");
 			file.WriteLine("\t\treturn __res;");
@@ -341,7 +341,7 @@ public static class Convert {
 			file.WriteLine($"\t\tvar __m = gdInterface.classdb_get_method_bind.Call(\"{className}\", \"{meth.name}\", {meth.hash});");
 			break;
 		case MethodType.Native:
-			file.WriteLine(value: $"\t\tvar __m = gdInterface.variant_get_ptr_builtin_method.Call(VariantType.{className}, \"{meth.name}\", {meth.hash});");
+			file.WriteLine(value: $"\t\tvar __m = gdInterface.variant_get_ptr_builtin_method.Call(Variant.Type.{className}, \"{meth.name}\", {meth.hash});");
 			break;
 		case MethodType.Utility:
 			file.WriteLine($"\t\tvar __m = gdInterface.variant_get_ptr_utility_function.Call(\"{meth.name}\", {meth.hash});");
@@ -371,7 +371,7 @@ public static class Convert {
 					file.WriteLine($"\t\tfor (var i = 0; i < {Fixer.Name(v.name)}.Length; i++) {{");
 					file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = __v_args[i];");
 					file.WriteLine("\t\t};");
-				} 
+				}
 			} else {
 				file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length}];");
 				for (var i = 0; i < meth.arguments.Length; i++) {

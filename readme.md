@@ -20,10 +20,8 @@ Work maybe in Progress
 	- ...
 - Memory management
 	- Dictionary, Array ...
-	- Variant
 - Others
-	- auto-generate or manual complete variant
 	- maybe move to-do/done to GitHub issues
-	- manage process enable / disable
+	- manage `Process` enable / disable
 	- fix warning
 		- missing / unnecessary new

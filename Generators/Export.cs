@@ -28,7 +28,7 @@ namespace Generators {
 				var member = members[i];
 				code += $$"""
 					static Native.PropertyInfo __{{member.Name}}Info = new Native.PropertyInfo() {
-						type = (uint)Native.VariantType.{{TypeToVariantType(member.Type.Name)}},
+						type = (uint)Variant.Type.{{TypeToVariantType(member.Type.Name)}},
 						name = (byte*)Marshal.StringToHGlobalAnsi("{{member.Name}}"),
 						class_name = null,
 						hint = (uint)PropertyHint.PROPERTY_HINT_NONE,
@@ -118,10 +118,10 @@ namespace Generators {
 				var vt = TypeToVariantType(member.Type.Name);
 				code += $$"""
 						case {{i * 2 + 0}}:
-							instance.{{member.Name}} = Variant.InteropGetFromPointer<{{member.Type.Name}}>(p_args[0].data, Native.VariantType.{{vt}});
+							instance.{{member.Name}} = Variant.InteropGetFromPointer<{{member.Type.Name}}>(p_args[0].data, Variant.Type.{{vt}});
 							break;
 						case {{i * 2 + 1}}:
-							Variant.InteropSaveIntoPointer(instance.{{member.Name}}, r_return.data, Native.VariantType.{{vt}});
+							Variant.InteropSaveIntoPointer(instance.{{member.Name}}, r_return.data, Variant.Type.{{vt}});
 							break;
 
 				""";
@@ -131,7 +131,7 @@ namespace Generators {
 					}
 				}
 
-				static Native.VariantType ArgumentType(IntPtr p_method_userdata, int p_argument) {
+				static Variant.Type ArgumentType(IntPtr p_method_userdata, int p_argument) {
 					return (int)p_method_userdata switch {
 
 			""";
@@ -141,18 +141,18 @@ namespace Generators {
 				var vt = TypeToVariantType(member.Type.Name);
 				code += $$"""
 						{{i * 2 + 0}} => p_argument switch {
-							0 => Native.VariantType.{{vt}},
-							_ => Native.VariantType.Nil,
+							0 => Variant.Type.{{vt}},
+							_ => Variant.Type.Nil,
 						},
 						{{i * 2 + 1}} => p_argument switch {
-							-1 => Native.VariantType.{{vt}},
-							_ => Native.VariantType.Nil,
+							-1 => Variant.Type.{{vt}},
+							_ => Variant.Type.Nil,
 						},
 
 				""";
 			}
 			code += $$"""
-						_ => Native.VariantType.Nil,
+						_ => Variant.Type.Nil,
 					};
 				}
 

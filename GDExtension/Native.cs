@@ -5,92 +5,6 @@ public static partial class Native {
 	public static Interface gdInterface;
 	public static ExtensionClassLibraryPtr gdLibrary;
 
-	public enum VariantType {
-		Nil,
-
-		/*  atomic types */
-		Bool,
-		Int,
-		Float,
-		String,
-
-		/* math types */
-		Vector2,
-		Vector2i,
-		Rect2,
-		Rect2i,
-		Vector3,
-		Vector3i,
-		Transform2D,
-		Vector4,
-		Vector4i,
-		Plane,
-		Quaternion,
-		AABB,
-		Basis,
-		Transform3D,
-		Projection,
-
-		/* misc types */
-		Color,
-		StringName,
-		NodePath,
-		RID,
-		Object,
-		Callable,
-		Signal,
-		Dictionary,
-		Array,
-
-		/* typed arrays */
-		PackedByteArray,
-		PackedInt32Array,
-		PackedInt64Array,
-		PackedFloat32Array,
-		PackedFloat64Array,
-		PackedStringArray,
-		PackedVector2Array,
-		PackedVector3Array,
-		PackedColorArray,
-
-		MAX
-	}
-
-
-	public enum VariantOperator {
-		/* comparison */
-		Equal,
-		NotEqual,
-		Less,
-		LessEqual,
-		Greater,
-		GreaterEqual,
-		/* mathematic */
-		Add,
-		Subtract,
-		Multiply,
-		Divide,
-		Negate,
-		Positive,
-		Module,
-		Power,
-		/* bitwise */
-		ShiftLeft,
-		ShiftRight,
-		BitAnd,
-		BitOr,
-		BitXor,
-		BitNegate,
-		/* logic */
-		And,
-		Or,
-		Xor,
-		Not,
-		/* containment */
-		In,
-		MAX
-	}
-
 	[StructLayout(LayoutKind.Sequential)]
 	public record struct VariantPtr(IntPtr data) {
 		public static implicit operator VariantPtr(IntPtr ptr) => new(ptr);
@@ -274,7 +188,7 @@ public static partial class Native {
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionClassMethodPtrCall(IntPtr method_userdata, GDExtensionClassInstancePtr p_instance, TypePtr* p_args, TypePtr r_ret);
 
 	/* passing -1 as argument in the following functions refers to the return type */
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate VariantType ExtensionClassMethodGetArgumentType(IntPtr p_method_userdata, int p_argument);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Variant.Type ExtensionClassMethodGetArgumentType(IntPtr p_method_userdata, int p_argument);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionClassMethodGetArgumentInfo(IntPtr p_method_userdata, int p_argument, PropertyInfo* r_info);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate ExtensionClassMethodArgumentMetadata ExtensionClassMethodGetArgumentMetadata(IntPtr p_method_userdata, int p_argument);
 
@@ -302,7 +216,7 @@ public static partial class Native {
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstanceGet(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name, VariantPtr r_ret);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PropertyInfo* ExtensionScriptInstanceGetPropertyList(ExtensionScriptInstanceDataPtr p_instance, uint* r_count);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstanceFreePropertyList(ExtensionScriptInstanceDataPtr p_instance, PropertyInfo* p_list);
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate VariantType ExtensionScriptInstanceGetPropertyType(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name, Bool* r_is_valid);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Variant.Type ExtensionScriptInstanceGetPropertyType(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name, Bool* r_is_valid);
 
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstancePropertyCanRevert(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstancePropertyGetRevert(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name, VariantPtr r_ret);
@@ -413,9 +327,9 @@ public static partial class Native {
 		/* variant type */
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantCall(VariantPtr p_self, StringName* p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
 		public FuncPtr<VariantCall> variant_call;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantCallStatic(VariantType p_type, StringName* p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantCallStatic(Variant.Type p_type, StringName* p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
 		public FuncPtr<VariantCallStatic> variant_call_static;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantEvaluate(VariantOperator p_op, VariantPtr p_a, VariantPtr p_b, VariantPtr r_return, Bool* r_valid);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantEvaluate(Variant.Operator p_op, VariantPtr p_a, VariantPtr p_b, VariantPtr r_return, Bool* r_valid);
 		public FuncPtr<VariantEvaluate> variant_evaluate;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantSet(VariantPtr p_self, VariantPtr p_key, VariantPtr p_value, Bool* r_valid);
 		public FuncPtr<VariantSet> variant_set;
@@ -452,51 +366,51 @@ public static partial class Native {
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantStringify(VariantPtr p_self, StringPtr r_ret);
 		public FuncPtr<VariantStringify> variant_stringify;
 
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate VariantType VariantGetType(VariantPtr p_self);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Variant.Type VariantGetType(VariantPtr p_self);
 		public FuncPtr<VariantGetType> variant_get_type;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasMethod(VariantPtr p_self, StringName* p_method);
 		public FuncPtr<VariantHasMethod> variant_has_method;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasMember(VariantType p_type, StringName* p_member);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasMember(Variant.Type p_type, StringName* p_member);
 		public FuncPtr<VariantHasMember> variant_has_member;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasKey(VariantPtr p_self, VariantPtr p_key, Bool* r_valid);
 		public FuncPtr<VariantHasKey> variant_has_key;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantGetTypeName(VariantType p_type, StringPtr r_name);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantGetTypeName(Variant.Type p_type, StringPtr r_name);
 		public FuncPtr<VariantGetTypeName> variant_get_type_name;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantCanConvert(VariantType p_from, VariantType p_to);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantCanConvert(Variant.Type p_from, Variant.Type p_to);
 		public FuncPtr<VariantCanConvert> variant_can_convert;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantCanConvertStrict(VariantType p_from, VariantType p_to);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantCanConvertStrict(Variant.Type p_from, Variant.Type p_to);
 		public FuncPtr<VariantCanConvertStrict> variant_can_convert_strict;
 
 		/* ptrcalls */
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate VariantFromTypeConstructorFunc GetVariantFromTypeConstructor(VariantType p_type);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate VariantFromTypeConstructorFunc GetVariantFromTypeConstructor(Variant.Type p_type);
 		public FuncPtr<GetVariantFromTypeConstructor> get_variant_from_type_constructor;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate TypeFromVariantConstructorFunc GetVariantToTypeConstructor(VariantType p_type);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate TypeFromVariantConstructorFunc GetVariantToTypeConstructor(Variant.Type p_type);
 		public FuncPtr<GetVariantToTypeConstructor> get_variant_to_type_constructor;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrOperatorEvaluator VariantGetPtrOperatorEvaluator(VariantOperator p_operator, VariantType p_type_a, VariantType p_type_b);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrOperatorEvaluator VariantGetPtrOperatorEvaluator(Variant.Operator p_operator, Variant.Type p_type_a, Variant.Type p_type_b);
 		public FuncPtr<VariantGetPtrOperatorEvaluator> variant_get_ptr_operator_evaluator;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrBuiltInMethod VariantGetPtrBuiltinMethod(VariantType p_type, [MarshalAs(UnmanagedType.LPUTF8Str)] string p_method, Int p_hash);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrBuiltInMethod VariantGetPtrBuiltinMethod(Variant.Type p_type, [MarshalAs(UnmanagedType.LPUTF8Str)] string p_method, Int p_hash);
 		public FuncPtr<VariantGetPtrBuiltinMethod> variant_get_ptr_builtin_method;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrConstructor VariantGetPtrConstructor(VariantType p_type, int p_constructor);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrConstructor VariantGetPtrConstructor(Variant.Type p_type, int p_constructor);
 		public FuncPtr<VariantGetPtrConstructor> variant_get_ptr_constructor;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrDestructor VariantGetPtrDestructor(VariantType p_type);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrDestructor VariantGetPtrDestructor(Variant.Type p_type);
 		public FuncPtr<VariantGetPtrDestructor> variant_get_ptr_destructor;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantConstruct(VariantType p_type, VariantPtr p_base, VariantPtr* p_args, int p_argument_count, CallError* r_error);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantConstruct(Variant.Type p_type, VariantPtr p_base, VariantPtr* p_args, int p_argument_count, CallError* r_error);
 		public FuncPtr<VariantConstruct> variant_construct;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrSetter VariantGetPtrSetter(VariantType p_type, [MarshalAs(UnmanagedType.LPUTF8Str)] string p_member);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrSetter VariantGetPtrSetter(Variant.Type p_type, [MarshalAs(UnmanagedType.LPUTF8Str)] string p_member);
 		public FuncPtr<VariantGetPtrSetter> variant_get_ptr_setter;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrGetter VariantGetPtrGetter(VariantType p_type, [MarshalAs(UnmanagedType.LPUTF8Str)] string p_member);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrGetter VariantGetPtrGetter(Variant.Type p_type, [MarshalAs(UnmanagedType.LPUTF8Str)] string p_member);
 		public FuncPtr<VariantGetPtrGetter> variant_get_ptr_getter;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrIndexedSetter VariantGetPtrIndexedSetter(VariantType p_type);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrIndexedSetter VariantGetPtrIndexedSetter(Variant.Type p_type);
 		public FuncPtr<VariantGetPtrIndexedSetter> variant_get_ptr_indexed_setter;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrIndexedGetter VariantGetPtrIndexedGetter(VariantType p_type);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrIndexedGetter VariantGetPtrIndexedGetter(Variant.Type p_type);
 		public FuncPtr<VariantGetPtrIndexedGetter> variant_get_ptr_indexed_getter;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrKeyedSetter VariantGetPtrKeyedSetter(VariantType p_type);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrKeyedSetter VariantGetPtrKeyedSetter(Variant.Type p_type);
 		public FuncPtr<VariantGetPtrKeyedSetter> variant_get_ptr_keyed_setter;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrKeyedGetter VariantGetPtrKeyedGetter(VariantType p_type);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrKeyedGetter VariantGetPtrKeyedGetter(Variant.Type p_type);
 		public FuncPtr<VariantGetPtrKeyedGetter> variant_get_ptr_keyed_getter;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrKeyedChecker VariantGetPtrKeyedChecker(VariantType p_type);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrKeyedChecker VariantGetPtrKeyedChecker(Variant.Type p_type);
 		public FuncPtr<VariantGetPtrKeyedChecker> variant_get_ptr_keyed_checker;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantGetConstantValue(VariantType p_type, [MarshalAs(UnmanagedType.LPUTF8Str)] string p_constant, VariantPtr r_ret);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantGetConstantValue(Variant.Type p_type, [MarshalAs(UnmanagedType.LPUTF8Str)] string p_constant, VariantPtr r_ret);
 		public FuncPtr<VariantGetConstantValue> variant_get_constant_value;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PtrUtilityFunction VariantGetPtrUtilityFunction([MarshalAs(UnmanagedType.LPUTF8Str)] string p_function, Int p_hash);
 		public FuncPtr<VariantGetPtrUtilityFunction> variant_get_ptr_utility_function;

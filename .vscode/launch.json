@@ -25,7 +25,7 @@
 			"program": "${workspaceFolder}/godot/godot.windows.editor.x86_64.exe",
 			"args": [
 				"-e",
-				"${workspaceFolder}/project/project.godot",
+				"${workspaceFolder}/Example/project.godot",
 				//"--quit",
 			],
 			"stopAtEntry": false,
