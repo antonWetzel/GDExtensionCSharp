@@ -1,6 +1,6 @@
 namespace GDExtension;
 
-public abstract unsafe class Wrapped {
+public unsafe class Wrapped {
 
 	public static ObjectPtr InteropToPointer(Wrapped wrapped) => wrapped._internal_pointer;
 

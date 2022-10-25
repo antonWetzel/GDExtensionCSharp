@@ -17,13 +17,14 @@ Work maybe in Progress
 	- fix naming
 - Code-Generators
 	- signals
-	- methods
 	- clean-up
+	- hints
 	- ...
 - Memory management?
-	- Dictionary, Array ...
+	- Dictionary, Array, RefCounted, Variant ...
 - Others
 	- maybe move to-do/done to GitHub issues
-	- manage `Process` enable / disable
+	- automatic manage `Process` enable / disable
 	- fix warning
 		- missing / unnecessary new
+	- Godot as submodule (is there an official build repository?)

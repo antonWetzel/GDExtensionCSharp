@@ -2,6 +2,7 @@ namespace GDExtension;
 
 public unsafe partial struct NodePath {
 
+	public static implicit operator NodePath(string text) => new NodePath(text);
 
 	public static implicit operator string(NodePath from) {
 		var constructor = gdInterface.variant_get_ptr_constructor.Call(Variant.Type.String, 3);

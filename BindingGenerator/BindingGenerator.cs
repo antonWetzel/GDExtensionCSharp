@@ -1,4 +1,4 @@
-var api = Api.Create("./godot/extension_api.json");
+var api = Api.Create("./godot-headers/extension_api.json");
 
 var dir = "./GDExtension/Generated";
 

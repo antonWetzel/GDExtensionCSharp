@@ -90,12 +90,16 @@ public unsafe class Variant {
 	public static void InteropSaveIntoPointer<T>(T value, IntPtr _internal_pointer, Variant.Type t) where T : unmanaged {
 		gdInterface.get_variant_from_type_constructor.Call(t)(_internal_pointer, new IntPtr(&value));
 	}
+
 	public static void InteropSaveIntoPointer(string value, IntPtr _internal_pointer) {
 		gdInterface.get_variant_from_type_constructor.Call(Variant.Type.String)(_internal_pointer, StringMarshall.ToNative(value));
 	}
 
 	public static T InteropGetFromPointer<T>(IntPtr _internal_pointer, Variant.Type t) where T : unmanaged {
 		var rT = gdInterface.variant_get_type.Call(_internal_pointer);
+		if (rT == Type.Nil) {
+			return default; //probatly bad idea
+		}
 		if (rT != t) {
 			throw new Exception($"variant contains {rT}, tried to get {t}");
 		}
@@ -140,7 +144,7 @@ public unsafe class Variant {
 	public Variant(StringName value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.StringName);
 	public Variant(NodePath value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.NodePath);
 	public Variant(RID value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.RID);
-	public Variant(Object value) : this() => InteropSaveIntoPointer(value._internal_pointer, _internal_pointer, Variant.Type.Object);
+	public Variant(Object value) : this() => InteropSaveIntoPointer(value != null ? value._internal_pointer : IntPtr.Zero, _internal_pointer, Variant.Type.Object);
 	public Variant(Callable value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Callable);
 	public Variant(Signal value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Signal);
 	public Variant(Dictionary value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Dictionary);
@@ -274,7 +278,8 @@ public unsafe class Variant {
 	public static explicit operator PackedColorArray(Variant value) => value.AsPackedColorArray();
 
 	~Variant() {
-		gdInterface.variant_destroy.Call(_internal_pointer);
-		gdInterface.mem_free.Call(_internal_pointer);
+		//not right
+		//gdInterface.variant_destroy.Call(_internal_pointer);
+		//gdInterface.mem_free.Call(_internal_pointer);
 	}
 }

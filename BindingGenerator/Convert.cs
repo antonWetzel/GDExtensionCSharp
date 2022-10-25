@@ -79,6 +79,7 @@ public static class Convert {
 			case "float":
 			case "bool":
 			case "String":
+			case "Nil":
 				break;
 			default:
 				BuiltinClass(api, c, dir, configName);
@@ -222,7 +223,9 @@ public static class Convert {
 	}
 
 	static void Operator(Api.Operator op, string className, StreamWriter file) {
+
 		if (op.rightType != null) {
+			if (op.rightType == "Variant") { return; }
 			var name = op.name switch {
 				"or" => "operator |",
 				"and" => "operator &",
@@ -231,6 +234,7 @@ public static class Convert {
 				"in" => "OperatorIn",
 				_ => $"operator {op.name}",
 			};
+
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} left, {Fixer.Type(op.rightType)} right) {{");
 			file.WriteLine($"\t\tvar __op = gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.{Fixer.VariantName(op.rightType)});");
 			file.WriteLine($"\t\t{Fixer.Type(op.returnType)} __res;");
@@ -314,11 +318,7 @@ public static class Convert {
 		if (meth.arguments != null) {
 			for (var i = 0; i < meth.arguments.Length; i++) {
 				var arg = meth.arguments[i];
-				if (i == meth.arguments.Length - 1 && meth.isVararg) {
-					file.Write($"params {Fixer.Type(arg.type)}[] {Fixer.Name(arg.name)}");
-				} else {
-					file.Write($"{Fixer.Type(arg.type)} {Fixer.Name(arg.name)}");
-				}
+				file.Write($"{Fixer.Type(arg.type)} {Fixer.Name(arg.name)}");
 				/*if (arg.defaultValue != null) {
 					var def = arg.defaultValue;
 					if (def.Contains('(')) { goto skip; }
@@ -336,6 +336,12 @@ public static class Convert {
 				}
 			}
 		}
+		if (meth.isVararg) {
+			if (meth.arguments != null) {
+				file.Write(", ");
+			}
+			file.Write("params Variant[] arguments");
+		}
 		file.WriteLine(") {");
 		switch (type) {
 		case MethodType.Class:
@@ -348,38 +354,26 @@ public static class Convert {
 			file.WriteLine($"\t\tvar __m = gdInterface.variant_get_ptr_utility_function.Call(\"{meth.name}\", {meth.hash});");
 			break;
 		}
-
-		if (meth.arguments != null) {
-			if (meth.isVararg) {
-				var v = meth.arguments.Last();
-				if (objectTypes.Contains(v.type) || v.type == "String") {
-					file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
-					for (var i = 0; i < meth.arguments.Length - 1; i++) {
-						var arg = meth.arguments[i];
-						file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
-					}
-					file.WriteLine($"\t\tfor (var i = 0; i < {Fixer.Name(v.name)}.Length; i++) {{");
-					file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = {ValueToPointer($"{Fixer.Name(v.name)}[i]", v.type)};");
-					file.WriteLine("\t\t};");
-				} else {
-					file.WriteLine($"\t\tfixed ({Fixer.Type(v.type)}* {v.name}_ptr = {Fixer.Name(v.name)}) {{");
-					file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length - 1} + {Fixer.Name(v.name)}.Length];");
-					file.WriteLine($"\t\tvar __v_args = (IntPtr*)(void*){v.name}_ptr;");
-					for (var i = 0; i < meth.arguments.Length - 1; i++) {
-						var arg = meth.arguments[i];
-						file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
-					}
-					file.WriteLine($"\t\tfor (var i = 0; i < {Fixer.Name(v.name)}.Length; i++) {{");
-					file.WriteLine($"\t\t\t__args[{meth.arguments.Length - 1} + i] = __v_args[i];");
-					file.WriteLine("\t\t};");
-				}
+		if (meth.isVararg) {
+			if (meth.arguments != null) {
+				file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length} + arguments.Length];");
 			} else {
-				file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length}];");
-				for (var i = 0; i < meth.arguments.Length; i++) {
-					var arg = meth.arguments[i];
-					file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
-				}
+				file.WriteLine($"\t\tvar __args = stackalloc TypePtr[arguments.Length];");
 			}
+		} else if (meth.arguments != null) {
+			file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length}];");
+		}
+		if (meth.arguments != null) {
+			for (var i = 0; i < meth.arguments.Length; i++) {
+				var arg = meth.arguments[i];
+				file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
+			}
+		}
+		if (meth.isVararg) {
+			var offset = meth.arguments != null ? $"{meth.arguments.Length} + " : "";
+			file.WriteLine($"\t\tfor (var i = 0; i < arguments.Length; i++) {{");
+			file.WriteLine($"\t\t\t__args[{offset}i] = arguments[i]._internal_pointer;");
+			file.WriteLine("\t\t};");
 		}
 		if (ret != "") {
 			file.WriteLine($"\t\t{ReturnLocationType(ret)} __res;");
@@ -405,7 +399,7 @@ public static class Convert {
 		} else {
 			file.Write("new IntPtr(&__temp)");
 		}
-		if (meth.arguments != null) {
+		if (meth.arguments != null || meth.isVararg) {
 			file.Write(", __args");
 		} else {
 			file.Write(", null");
@@ -418,27 +412,19 @@ public static class Convert {
 			file.Write(", IntPtr.Zero");
 		}
 		if (type != MethodType.Class) {
-			if (meth.arguments != null) {
-				if (meth.isVararg) {
-					file.Write($", {meth.arguments.Length - 1} + {meth.arguments.Last().name}.Length");
-				} else {
-					file.Write($", {meth.arguments.Length}");
-				}
+			file.Write(", ");
+			if (meth.isVararg) {
+				file.Write($"{(meth.arguments != null ? $"{meth.arguments.Length} + " : "")}arguments.Length");
+			} else if (meth.arguments != null) {
+				file.Write($"{meth.arguments.Length}");
 			} else {
-				file.Write(", 0");
+				file.Write("0");
 			}
 		}
 		file.WriteLine(");");
 		if (ret != "") {
 			file.WriteLine($"\t\treturn {ReturnStatementValue(ret)};");
 		}
-		if (meth.arguments != null && meth.isVararg) {
-			var t = meth.arguments.Last().type;
-			if (objectTypes.Contains(t) == false && t != "String") {
-				file.WriteLine("\t}");
-			}
-		}
-
 		file.WriteLine("\t}");
 		file.WriteLine();
 	}
@@ -502,7 +488,7 @@ public static class Convert {
 			//file.Write("abstract ");
 		}
 
-		file.WriteLine($"class {c.name} : {(c.inherits == null ? "Wrapped" : c.inherits)} {{");
+		file.WriteLine($"partial class {c.name} : {(c.inherits == null ? "Wrapped" : c.inherits)} {{");
 		file.WriteLine();
 
 		var isSingleton = api.singletons.Any(x => x.type == c.name);
@@ -578,8 +564,9 @@ public static class Convert {
 
 		EqualAndHash(c.name, file);
 
-		file.WriteLine($"\tpublic {c.name}() : base(gdInterface.classdb_construct_object.Call(\"{c.name}\")) {{ }}");
-		file.WriteLine($"\tpublic {c.name}(ObjectPtr ptr) : base(ptr) {{ }}");
+		var content = c.name == "RefCounted" ? " Reference(); " : " ";
+		file.WriteLine($"\tpublic {c.name}() : base(gdInterface.classdb_construct_object.Call(\"{c.name}\")) {{{content}}}");
+		file.WriteLine($"\tpublic {c.name}(ObjectPtr ptr) : base(ptr) {{{content}}}");
 
 		file.WriteLine("}");
 		file.Close();

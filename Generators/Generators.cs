@@ -9,17 +9,19 @@ namespace Generators {
 	public class Generators : ISourceGenerator {
 
 		public void Execute(GeneratorExecutionContext context) {
-			var rec = (SyntaxReciever)context.SyntaxReceiver!;
+			try {
 
-			var classes = new List<(string, string)>();
+				var rec = (SyntaxReciever)context.SyntaxReceiver!;
 
-			foreach (var c in rec.names) {
+				var classes = new List<INamedTypeSymbol>();
 
-				var s = (INamedTypeSymbol)context.Compilation.GetSemanticModel(c.SyntaxTree).GetDeclaredSymbol(c);
+				foreach (var c in rec.names) {
 
-				var gdName = s.GetAttributes().SingleOrDefault(x => x.AttributeClass.Name == "RegisterAttribute").NamedArguments.SingleOrDefault(x => x.Key == "name").Value.Value ?? s.Name;
+					var s = (INamedTypeSymbol)context.Compilation.GetSemanticModel(c.SyntaxTree).GetDeclaredSymbol(c);
 
-				var source = $$"""
+					var gdName = s.GetAttributes().SingleOrDefault(x => x.AttributeClass.Name == "RegisterAttribute").NamedArguments.SingleOrDefault(x => x.Key == "name").Value.Value ?? s.Name;
+
+					var source = $$"""
 				using System.Runtime.CompilerServices;
 				using System.Runtime.InteropServices;
 
@@ -38,13 +40,15 @@ namespace Generators {
 
 					public static unsafe new void Register() {
 						var info = new Native.ExtensionClassCreationInfo() {
+							is_virtual = false,
+							is_abstract = false,
 							//set_func = new(SetFunc),
 							//get_func = new(GetFunc),
 							//get_property_list_func = new(GetPropertyList),
 							//free_property_list_func = new(FreePropertyList),
 							//property_can_revert_func = &PropertyCanConvert,
 							//property_get_revert_func = &PropertyGetRevert,
-							notification_func = new(__Notification),
+							notification_func = Engine.IsEditorHint()? default : new(__Notification),
 							//to_string_func = &ToString,
 							//reference_func = &Reference,
 							//unreference_func = &Unreference,
@@ -55,12 +59,13 @@ namespace Generators {
 							//class_userdata = IntPtr.Zero,
 						};
 						Native.gdInterface.classdb_register_extension_class.Call(Native.gdLibrary, "{{gdName}}", "{{s.BaseType.Name}}", &info);
+						RegisterMethods();
 						RegisterExports();
+						RegisterSignals();
 					}
 
 					static unsafe Native.ObjectPtr CreateObject(IntPtr userdata) {
 						var test = new {{s.Name}}();
-						test.SetProcess(true);
 						return test._internal_pointer;
 					}
 
@@ -70,14 +75,29 @@ namespace Generators {
 					}
 				}
 				""";
-				context.AddSource($"{s.Name}.gen.cs", source);
+					context.AddSource($"{s.Name}.gen.cs", source);
 
-				Notification.Generate(context, s);
-				Export.Generate(context, s);
+					var methods = new Methods();
 
-				classes.Add((s.Name, s.BaseType.Name));
+					Notification.Generate(context, s);
+					Export.Generate(context, s, methods);
+					Signal.Generate(context, s);
+
+					methods.Generate(context, s);
+
+					classes.Add(s);
+				}
+				Entry.Execute(context, classes);
+			} catch (System.Exception e) {
+				context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor(
+					"godot",
+					"godotError",
+					e.Message,
+					"location",
+					DiagnosticSeverity.Error,
+					true
+				), null));
 			}
-			Entry.Execute(context, classes);
 		}
 
 		public void Initialize(GeneratorInitializationContext context) {

@@ -9,7 +9,10 @@ public unsafe static class StringMarshall {
 	}
 
 	public static string ToManaged(IntPtr native) {
-		var str = new StringPtr(new IntPtr(&native));
+		return ToManaged(new StringPtr(new IntPtr(&native)));
+	}
+
+	public static string ToManaged(StringPtr str) {
 		var l = (int)gdInterface.string_to_utf16_chars.Call(str, null, 0).value;
 		var b = new System.Text.StringBuilder(l);
 		gdInterface.string_to_utf16_chars.Call(str, b, l);

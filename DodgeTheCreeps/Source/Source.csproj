@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\GDExtension\GDExtension.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference
+      Include="..\..\Generators\Generators.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PublishAot>true</PublishAot>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!--optimizations-->
+    <!--IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <IlcTrimMetadata>true</IlcTrimMetadata>
+    <IlcDisableReflection>true</IlcDisableReflection>
+    <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies-->
+
+    <!-- uncomment to see / debug generators output -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>../Generated</CompilerGeneratedFilesOutputPath>
+
+  </PropertyGroup>
+
+</Project>

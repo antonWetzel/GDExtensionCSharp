@@ -10,7 +10,4 @@
 		"**/*.import": true,
 	},
 	"omnisharp.enableRoslynAnalyzers": false,
-	"files.associations": {
-		"*.ein": "gdscript",
-	}
 }

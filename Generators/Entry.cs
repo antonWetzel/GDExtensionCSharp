@@ -6,23 +6,23 @@ namespace Generators {
 
 	public static class Entry {
 
-		public static void Execute(GeneratorExecutionContext context, List<(string, string)> classes) {
+		public static void Execute(GeneratorExecutionContext context, List<INamedTypeSymbol> classes) {
 			var registrations = "";
 			var unregistrations = "";
 			while (classes.Count > 0) {
 				for (var i = 0; i < classes.Count; i++) {
-					var b = classes[i].Item2;
+					var b = classes[i].BaseType.Name;
 					var valid = true;
 					foreach (var o in classes) {
-						if (o.Item1 == b) {
+						if (o.Name == b) {
 							valid = false;
 							break;
 						}
 					}
 					if (valid) {
-						var n = classes[i].Item1;
-						registrations += $"{n}.Register();\n\t\t\t";
-						unregistrations = $"Native.gdInterface.classdb_unregister_extension_class.Call(Native.gdLibrary, \"{classes[i].Item1}\");\n\t\t\t" + unregistrations;
+						var n = classes[i];
+						registrations += $"{n.ContainingNamespace}.{n.Name}.Register();\n\t\t\t";
+						unregistrations = $"Native.gdInterface.classdb_unregister_extension_class.Call(Native.gdLibrary, \"{n.Name}\");\n\t\t\t" + unregistrations;
 						classes[i] = classes.Last();
 						classes.RemoveAt(classes.Count - 1);
 						break;
@@ -35,8 +35,6 @@ namespace Generators {
 			using System.Runtime.CompilerServices;
 			using System.Runtime.InteropServices;
 			using GDExtension;
-
-			namespace ExampleGame;
 
 			public static class ExtensionEntry {
 
@@ -61,9 +59,9 @@ namespace Generators {
 					case Native.InitializationLevel.Servers:
 						break;
 					case Native.InitializationLevel.Scene:
-						break;
-					case Native.InitializationLevel.Editor:
 						{{registrations}}break;
+					case Native.InitializationLevel.Editor:
+						break;
 					}
 				}
 

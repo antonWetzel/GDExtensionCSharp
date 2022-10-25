@@ -19,21 +19,19 @@
 			}
 		},
 		{
-			"name": "Godot",
+			"name": "Dodge the Creeps",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/godot/godot.windows.editor.x86_64.exe",
+			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
 			"args": [
 				"-e",
-				"${workspaceFolder}/Example/project.godot",
+				"${workspaceFolder}/DodgeTheCreeps/project.godot",
 				//"--quit",
 			],
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}/Example",
-			"environment": [],
+			"cwd": "${workspaceFolder}/DodgeTheCreeps",
 			"console": "integratedTerminal",
-			"preLaunchTask": "publish",
-			"requireExactSource": true,
+			"preLaunchTask": "build Dodge the Creeps",
 		},
 	]
 }

@@ -138,6 +138,8 @@ public static partial class Native {
 
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct ExtensionClassCreationInfo {
+		public Bool is_virtual;
+		public Bool is_abstract;
 		public FuncPtr<ExtensionClassSet> set_func;
 		public FuncPtr<ExtensionClassGet> get_func;
 		public FuncPtr<ExtensionClassGetPropertyList> get_property_list_func;
