@@ -524,7 +524,7 @@ public static partial class Native {
 		public FuncPtr<ObjectMethodBindPtrcall> object_method_bind_ptrcall;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ObjectDestroy(ObjectPtr p_o);
 		public FuncPtr<ObjectDestroy> object_destroy;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate ObjectPtr GlobalGetSingleton(byte* p_name);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate ObjectPtr GlobalGetSingleton([MarshalAs(UnmanagedType.LPUTF8Str)] string p_name);
 		public FuncPtr<GlobalGetSingleton> global_get_singleton;
 
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate IntPtr ObjectGetInstanceBinding(ObjectPtr p_o, IntPtr p_token, InstanceBindingCallbacks* p_callbacks);

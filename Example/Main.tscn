@@ -10,7 +10,7 @@ script = ExtResource("1_7tyed")
 antiRotationSpeed = 4.0
 rotationSpeed = 3.0
 position = Vector2(246, 205)
-rotation = -278.561
+rotation = -280.356
 
 [node name="Sprite2d" type="Sprite2D" parent="AntiRotating"]
 texture = ExtResource("2_vmdxq")
@@ -19,7 +19,7 @@ metadata/_edit_lock_ = true
 [node name="Rotating" type="Rotating" parent="."]
 rotationSpeed = 3.0
 position = Vector2(578, 205)
-rotation = 52.4493
+rotation = 57.8438
 
 [node name="Sprite2d" type="Sprite2D" parent="Rotating"]
 texture = ExtResource("2_vmdxq")

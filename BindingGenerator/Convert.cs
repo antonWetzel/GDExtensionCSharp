@@ -81,13 +81,13 @@ public static class Convert {
 			case "String":
 				break;
 			default:
-				BuildinClass(api, c, dir, configName);
+				BuiltinClass(api, c, dir, configName);
 				break;
 			}
 		}
 	}
 
-	static void BuildinClass(Api api, Api.BuiltinClass c, string dir, string configName) {
+	static void BuiltinClass(Api api, Api.BuiltinClass c, string dir, string configName) {
 
 		var file = File.CreateText(dir + "/" + Fixer.Type(c.name) + ".cs");
 
@@ -154,6 +154,7 @@ public static class Convert {
 				Method(meth, c.name, file, MethodType.Native);
 			}
 		}
+
 		EqualAndHash(c.name, file);
 
 		file.WriteLine("}");
@@ -298,10 +299,10 @@ public static class Convert {
 		Utility,
 	}
 
-	static void Method(Api.Method meth, string className, StreamWriter file, MethodType type) {
+	static void Method(Api.Method meth, string className, StreamWriter file, MethodType type, bool isSingleton = false) {
 		var ret = meth.returnType ?? meth.returnValue?.type ?? "";
 		file.Write("\tpublic ");
-		if (meth.isStatic || type == MethodType.Utility) {
+		if (meth.isStatic || type == MethodType.Utility || isSingleton) {
 			file.Write("static ");
 		}
 		if (ret != "") {
@@ -400,7 +401,7 @@ public static class Convert {
 		} else if (meth.isStatic) {
 			file.Write("IntPtr.Zero");
 		} else if (type == MethodType.Class) {
-			file.Write("this._internal_pointer");
+			file.Write($"{(isSingleton ? "Singleton" : "this")}._internal_pointer");
 		} else {
 			file.Write("new IntPtr(&__temp)");
 		}
@@ -500,11 +501,15 @@ public static class Convert {
 		if (c.isInstantiable == false) {
 			//file.Write("abstract ");
 		}
+
 		file.WriteLine($"class {c.name} : {(c.inherits == null ? "Wrapped" : c.inherits)} {{");
 		file.WriteLine();
 
-
-
+		var isSingleton = api.singletons.Any(x => x.type == c.name);
+		if (isSingleton) {
+			file.WriteLine($"\tpublic static {c.name} Singleton => new {c.name}(gdInterface.global_get_singleton.Call(\"{c.name}\"));");
+			file.WriteLine();
+		}
 
 		if (c.constants != null) {
 			foreach (var con in c.constants) {
@@ -561,7 +566,13 @@ public static class Convert {
 
 		if (c.methods != null) {
 			foreach (var meth in c.methods) {
-				Method(meth, c.name, file, MethodType.Class);
+				Method(meth, c.name, file, MethodType.Class, isSingleton);
+			}
+		}
+
+		if (c.signals != null) {
+			foreach (var sig in c.signals) {
+
 			}
 		}
 

@@ -12,13 +12,15 @@ Work maybe in Progress
 - Bindings
 	- finish
 	- clean-up
+	- cache functions
+	- signals (no clue how to convert delegate to callable)
 	- fix naming
 - Code-Generators
 	- signals
 	- methods
 	- clean-up
 	- ...
-- Memory management
+- Memory management?
 	- Dictionary, Array ...
 - Others
 	- maybe move to-do/done to GitHub issues
