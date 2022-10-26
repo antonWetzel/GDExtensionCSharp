@@ -1,0 +1,70 @@
+[gd_scene load_steps=4 format=3 uid="uid://r8cupuo8h04r"]
+
+[ext_resource type="FontFile" uid="uid://tpt57qyyjcdk" path="res://Fonts/Xolonium-Regular.ttf" id="1_ck6f8"]
+
+[sub_resource type="InputEventAction" id="InputEventAction_r4107"]
+action = &"start_game"
+
+[sub_resource type="Shortcut" id="Shortcut_dcw8k"]
+events = [SubResource("InputEventAction_r4107")]
+
+[node name="Hud" type="Hud"]
+
+[node name="ScoreLabel" type="Label" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 78.0
+grow_horizontal = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_fonts/font = ExtResource("1_ck6f8")
+theme_override_font_sizes/font_size = 64
+text = "0"
+horizontal_alignment = 1
+
+[node name="Message" type="Label" parent="."]
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -10.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("1_ck6f8")
+theme_override_font_sizes/font_size = 64
+text = "Dodge the Creeps!"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="StartButton" type="Button" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -64.0
+offset_top = -200.0
+offset_right = 64.0
+offset_bottom = -100.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("1_ck6f8")
+theme_override_font_sizes/font_size = 64
+shortcut = SubResource("Shortcut_dcw8k")
+text = "Start"
+
+[node name="StartMessageTimer" type="Timer" parent="."]
+wait_time = 2.0
+one_shot = true
+
+[node name="GetReadyMessageTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="StartButtonTimer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="button_down" from="StartButton" to="." method="OnStartButtonPressed"]
+[connection signal="timeout" from="StartMessageTimer" to="." method="OnStartMessageTimerTimeout"]
+[connection signal="timeout" from="GetReadyMessageTimer" to="." method="OnGetReadyMessageTimerTimeout"]
+[connection signal="timeout" from="StartButtonTimer" to="." method="OnStartButtonTimer"]

@@ -5,31 +5,55 @@ public unsafe partial class Main : Node {
 
 	[Export] PackedScene mobScene { get; set; }
 
-	public int score;
+	public long score;
 
 	[Notify(NOTIFICATION_READY)]
 	void Ready() {
 		GDExtension.Random.Randomize();
-		NewGame();
 	}
 
+	[Method]
 	public void GameOver() {
 		GetNode<Timer>("MobTimer").Stop();
 		GetNode<Timer>("ScoreTimer").Stop();
+		var hud = GetNode<Hud>("Hud");
+		hud.ShowGameOver();
+		var mobs = GetTree().GetNodesInGroup("mobs");
+		for (var i = 0; i < mobs.Size(); i++) {
+			var test = mobs[i];
+			var node = new Node(test.AsObject()._internal_pointer);
+			node.QueueFree();
+		}
+		//GetTree().CallGroup("mobs", "queue_free"); //crashes (probatly problems with vararg)
+
+		var music = GetNode<AudioStreamPlayer>("Music");
+		music.Stop();
+
+		var deathSound = GetNode<AudioStreamPlayer>("DeathSound");
+		deathSound.Play(0.0);
 	}
 
+	[Method]
 	public void NewGame() {
 		score = 0;
 		var player = GetNode<Player>("Player");
 		var startPosition = GetNode<Marker2D>("StartPosition");
 		player.Start(startPosition.position);
 		GetNode<Timer>("StartTimer").Start(-1.0);
+
+		var hud = GetNode<Hud>("Hud");
+		hud.UpdateScore(score);
+		hud.ShowGetReady();
+
+		var music = GetNode<AudioStreamPlayer>("Music");
+		music.Play(0.0);
 	}
 
 	[Method]
 	public void OnScoreTimerTimeout() {
 		score += 1;
-		General.Prints("score", score);
+		var hud = GetNode<Hud>("Hud");
+		hud.UpdateScore(score);
 	}
 
 	[Method]
@@ -54,7 +78,7 @@ public unsafe partial class Main : Node {
 		mob.position = mobSpawnLocation.position;
 
 		// Add some randomness to the direction.
-		direction += GDExtension.Random.RandfRange(System.Math.PI / 4.0, System.Math.PI / 4.0);
+		direction += GDExtension.Random.RandfRange(-System.Math.PI / 4.0, System.Math.PI / 4.0);
 		mob.rotation = direction;
 
 		// Choose the velocity.

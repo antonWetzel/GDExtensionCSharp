@@ -33,5 +33,19 @@
 			"console": "integratedTerminal",
 			"preLaunchTask": "build Dodge the Creeps",
 		},
+		{
+			"name": "Dodge the Creeps Ingame",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"args": [
+				//"${workspaceFolder}/DodgeTheCreeps/project.godot",
+				//"--quit",
+			],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}/DodgeTheCreeps",
+			"console": "integratedTerminal",
+			"preLaunchTask": "build Dodge the Creeps",
+		},
 	]
 }

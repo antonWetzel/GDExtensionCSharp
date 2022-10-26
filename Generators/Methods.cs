@@ -134,7 +134,9 @@ namespace Generators {
 				var args = "";
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
-					if (TypeToVariantType(arg.Item1) == "Object") {
+					if (arg.Item1 == "String") {
+						args += $"StringMarshall.ToManaged(p_args[{j}].data)";
+					} else if (TypeToVariantType(arg.Item1) == "Object") {
 						args += $" new {arg.Item1}(*(IntPtr*)(void*)p_args[{j}].data)";
 					} else {
 						args += $"*({arg.Item1}*)(void*)p_args[{j}].data";
@@ -185,7 +187,9 @@ namespace Generators {
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
 					var t = TypeToVariantType(arg.Item1);
-					if (t == "Object") {
+					if (arg.Item1 == "String") {
+						args += $"StringMarshall.ToManaged(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}].data, Variant.Type.String))";
+					} else if (t == "Object") {
 						args += $"new {arg.Item1}(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}].data, Variant.Type.{t}))";
 					} else {
 						args += $"Variant.InteropGetFromPointer<{arg.Item1}>(p_args[{j}].data, Variant.Type.{t})";

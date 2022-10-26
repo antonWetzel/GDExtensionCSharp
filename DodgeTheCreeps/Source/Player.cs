@@ -43,10 +43,10 @@ public unsafe partial class Player : Area2D {
 
 		position += velocity * delta;
 		position = new Vector2(
+			//GDExtension.Math.Clamp(position.x, 0.0, screenSize.x).AsFloat(), //does not work
+			//GDExtension.Math.Clamp(position.y, 0.0, screenSize.y).AsFloat()
 			System.Math.Clamp(position.x, 0.0, screenSize.x),
 			System.Math.Clamp(position.y, 0.0, screenSize.y)
-		//GDExtension.Math.Clamp(position.x, 0.0, screenSize.x).AsFloat(), //does not work
-		//GDExtension.Math.Clamp(position.y, 0.0, screenSize.y).AsFloat()
 		);
 
 		if (velocity.x != 0f) {
@@ -68,7 +68,7 @@ public unsafe partial class Player : Area2D {
 	[Method]
 	void OnPlayerBodyEntered(PhysicsBody2D body) {
 		Hide();
-		EmitSignal(nameof(hit));
-		//GetNode<CollisionShape2D>("CollisionShape2d").SetDeferred("disabled", true);
+		EmitSignal("hit");
+		GetNode<CollisionShape2D>("CollisionShape2d").SetDeferred("disabled", true);
 	}
 }

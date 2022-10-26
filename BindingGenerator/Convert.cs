@@ -355,10 +355,11 @@ public static class Convert {
 			break;
 		}
 		if (meth.isVararg) {
+			var t = type == MethodType.Class ? "VariantPtr" : "TypePtr";
 			if (meth.arguments != null) {
-				file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length} + arguments.Length];");
+				file.WriteLine($"\t\tvar __args = stackalloc {t}[{meth.arguments.Length} + arguments.Length];");
 			} else {
-				file.WriteLine($"\t\tvar __args = stackalloc TypePtr[arguments.Length];");
+				file.WriteLine($"\t\tvar __args = stackalloc {t}[arguments.Length];");
 			}
 		} else if (meth.arguments != null) {
 			file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length}];");
@@ -366,7 +367,13 @@ public static class Convert {
 		if (meth.arguments != null) {
 			for (var i = 0; i < meth.arguments.Length; i++) {
 				var arg = meth.arguments[i];
-				file.WriteLine($"\t\t__args[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
+				file.Write($"\t\t__args[{i}] = ");
+				if (meth.isVararg) {
+					var val = arg.type != "Variant" ? $"new Variant({Fixer.Name(arg.name)})" : Fixer.Name(arg.name);
+					file.WriteLine($"{val}._internal_pointer;");
+				} else {
+					file.WriteLine($"{ValueToPointer(Fixer.Name(arg.name), arg.type)};");
+				}
 			}
 		}
 		if (meth.isVararg) {
@@ -378,11 +385,18 @@ public static class Convert {
 		if (ret != "") {
 			file.WriteLine($"\t\t{ReturnLocationType(ret)} __res;");
 		}
+		if (type == MethodType.Class && meth.isVararg) {
+			file.WriteLine("\t\tCallError __err;");
+		}
 		if (meth.isStatic == false && type == MethodType.Native) {
 			file.WriteLine($"\t\tvar __temp = this;");
 		}
 		if (type == MethodType.Class) {
-			file.Write("\t\tgdInterface.object_method_bind_ptrcall.Call(__m, ");
+			if (meth.isVararg) {
+				file.Write("\t\tgdInterface.object_method_bind_call.Call(__m, ");
+			} else {
+				file.Write("\t\tgdInterface.object_method_bind_ptrcall.Call(__m, ");
+			}
 		} else {
 			file.Write("\t\t__m(");
 		}
@@ -404,6 +418,9 @@ public static class Convert {
 		} else {
 			file.Write(", null");
 		}
+		if (type == MethodType.Class && meth.isVararg) {
+			file.Write($", {(meth.arguments != null ? $"{meth.arguments.Length} + " : "")}arguments.Length");
+		}
 		if (type == MethodType.Utility) {
 			//pass
 		} else if (ret != "") {
@@ -420,6 +437,9 @@ public static class Convert {
 			} else {
 				file.Write("0");
 			}
+		}
+		if (type == MethodType.Class && meth.isVararg) {
+			file.Write(", &__err");
 		}
 		file.WriteLine(");");
 		if (ret != "") {

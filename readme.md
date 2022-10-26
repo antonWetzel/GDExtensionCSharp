@@ -16,13 +16,13 @@ Work maybe in Progress
 	- signals (no clue how to convert delegate to callable)
 	- fix naming
 - Code-Generators
-	- signals
 	- clean-up
 	- hints
 	- ...
 - Memory management?
 	- Dictionary, Array, RefCounted, Variant ...
 - Others
+	- instancing / casting from Object / Node to extended types
 	- maybe move to-do/done to GitHub issues
 	- automatic manage `Process` enable / disable
 	- fix warning
