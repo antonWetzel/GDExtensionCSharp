@@ -26,7 +26,7 @@ namespace Generators {
 			""";
 			for (var i = 0; i < members.Length; i++) {
 				var member = members[i];
-				code += Methods.CreatePropertyInfo(member.Type, member.Name, $"{member.Name}Info");
+				code += $"static Native.PropertyInfo __{member.Name}Info = " + Methods.CreatePropertyInfo(member.Type, member.Name);
 			}
 
 			code += $$"""

@@ -56,8 +56,8 @@ volume_db = -10.0
 [node name="DeathSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("5_fcq3x")
 
-[connection signal="hit" from="Player" to="." method="GameOver"]
+[connection signal="Hit" from="Player" to="." method="GameOver"]
 [connection signal="timeout" from="MobTimer" to="." method="OnMobTimerTimeout"]
 [connection signal="timeout" from="ScoreTimer" to="." method="OnScoreTimerTimeout"]
 [connection signal="timeout" from="StartTimer" to="." method="OnStartTimerTimeout"]
-[connection signal="startGame" from="Hud" to="." method="NewGame"]
+[connection signal="StartGame" from="Hud" to="." method="NewGame"]

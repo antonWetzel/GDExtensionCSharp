@@ -3,7 +3,7 @@ namespace DodgeTheCreeps;
 [Register]
 public partial class Hud : CanvasLayer {
 
-	[Signal] public event Action startGame;
+	[Signal] public delegate void StartGame();
 	[Export] Label messageLabel { get; set; }
 	[Export] Label scoreLabel { get; set; }
 	[Export] Button startButton { get; set; }
@@ -33,7 +33,7 @@ public partial class Hud : CanvasLayer {
 	[Method]
 	void OnStartButtonPressed() {
 		startButton.Hide();
-		EmitSignal(nameof(startGame));
+		EmitSignalStartGame();
 	}
 
 	[Method]
@@ -44,8 +44,10 @@ public partial class Hud : CanvasLayer {
 	}
 
 	[Method]
-	void OnGetReadyMessageTimerTimeout() {
+	unsafe void OnGetReadyMessageTimerTimeout() {
 		messageLabel.Hide();
+		var test = stackalloc Native.PropertyInfo[3];
+
 	}
 
 	[Method]

@@ -3,13 +3,13 @@ namespace DodgeTheCreeps;
 [Register]
 public unsafe partial class Player : Area2D {
 
+	[Signal] public delegate void Hit();
 	[Export] long speed { get; set; } = 400;
 	[Export] AnimatedSprite2D animatedSprite2D { get; set; }
 	[Export] CollisionShape2D collisionShape { get; set; }
 
 	public Vector2 screenSize;
 
-	[Signal] public event Action hit;
 
 	[Notify(NOTIFICATION_READY)]
 	void Ready() {
@@ -69,7 +69,7 @@ public unsafe partial class Player : Area2D {
 	[Method]
 	void OnPlayerBodyEntered(PhysicsBody2D body) {
 		Hide();
-		EmitSignal("hit");
+		EmitSignalHit();
 		collisionShape.SetDeferred("disabled", true);
 	}
 }

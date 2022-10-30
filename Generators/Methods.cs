@@ -314,11 +314,11 @@ namespace Generators {
 			};
 		}
 
-		public static string CreatePropertyInfo(ITypeSymbol type, string name, string infoName) {
+		public static string CreatePropertyInfo(ITypeSymbol type, string name) {
 			var sBase = GetSpecialBase(type);
 
 			return $$"""
-				static Native.PropertyInfo __{{infoName}}= new Native.PropertyInfo() {
+			new Native.PropertyInfo() {
 					type = (uint)Variant.Type.{{TypeToVariantType(type, sBase)}},
 					name = (byte*)Marshal.StringToHGlobalAnsi("{{name}}"),
 					class_name = null,
@@ -326,7 +326,6 @@ namespace Generators {
 					hint_string = {{TypeToHintString(type, sBase)}},
 					usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
 				};
-
 
 			""";
 		}

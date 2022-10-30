@@ -1,6 +1,6 @@
 namespace GDExtension;
 
-[System.AttributeUsage(System.AttributeTargets.Event, AllowMultiple = false)]
+[System.AttributeUsage(System.AttributeTargets.Delegate, AllowMultiple = false)]
 public class SignalAttribute : System.Attribute {
 
 	public SignalAttribute() { }
