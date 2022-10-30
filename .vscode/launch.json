@@ -25,27 +25,24 @@
 			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
 			"args": [
 				"-e",
-				"${workspaceFolder}/DodgeTheCreeps/project.godot",
-				//"--quit",
 			],
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}/DodgeTheCreeps",
+			"cwd": "${workspaceFolder}/Examples/DodgeTheCreeps",
 			"console": "integratedTerminal",
 			"preLaunchTask": "build Dodge the Creeps",
 		},
 		{
-			"name": "Dodge the Creeps Ingame",
+			"name": "Summator",
 			"type": "cppvsdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
 			"args": [
-				//"${workspaceFolder}/DodgeTheCreeps/project.godot",
-				//"--quit",
+				"-e",
 			],
 			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}/DodgeTheCreeps",
+			"cwd": "${workspaceFolder}/Examples/Summator",
 			"console": "integratedTerminal",
-			"preLaunchTask": "build Dodge the Creeps",
+			"preLaunchTask": "build Summator",
 		},
 	]
 }

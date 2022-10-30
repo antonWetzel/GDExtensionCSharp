@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\GDExtension\GDExtension.csproj" />
+    <ProjectReference Include="..\..\..\GDExtension\GDExtension.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference
-      Include="..\..\Generators\Generators.csproj"
+      Include="..\..\..\Generators\Generators.csproj"
       OutputItemType="Analyzer"
       ReferenceOutputAssembly="false"
     />

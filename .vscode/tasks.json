@@ -7,7 +7,7 @@
 			"type": "process",
 			"args": [
 				"publish",
-				"${workspaceFolder}/DodgeTheCreeps/Source/Source.csproj",
+				"${workspaceFolder}/Examples/DodgeTheCreeps/Source/Source.csproj",
 				"-property:GenerateFullPaths=true",
 				"-consoleloggerparameters:NoSummary",
 				"-p:NativeLib=Shared",
@@ -22,6 +22,20 @@
 			"args": [
 				"build",
 				"${workspaceFolder}/BindingGenerator/BindingGenerator.csproj",
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "build Summator",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"${workspaceFolder}/Examples/Summator/Source/Source.csproj",
+				"-property:GenerateFullPaths=true",
+				"-consoleloggerparameters:NoSummary",
+				"-p:NativeLib=Shared",
+				"-r=win-x64",
 			],
 			"problemMatcher": "$msCompile"
 		},
