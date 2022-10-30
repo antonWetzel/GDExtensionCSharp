@@ -22,7 +22,9 @@ animations = [{
 radius = 27.0
 height = 68.0
 
-[node name="Player" type="Player"]
+[node name="Player" type="Player" node_paths=PackedStringArray("animatedSprite2D", "collisionShape")]
+animatedSprite2D = NodePath("AnimatedSprite2d")
+collisionShape = NodePath("CollisionShape2d")
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2d" type="AnimatedSprite2D" parent="."]

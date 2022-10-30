@@ -4,9 +4,19 @@ public static class Convert {
 
 	public static void Api(Api api, string dir, string configName) {
 
+		var register = File.CreateText(dir + "/Register.cs");
+		register.WriteLine("namespace GDExtension;");
+		register.WriteLine("public static class Register {");
+		register.WriteLine("\tpublic static void RegisterAll() {");
+
 		foreach (var c in api.classes) {
 			objectTypes.Add(c.name);
+			register.WriteLine($"\t\t{c.name}.Register();");
 		}
+		register.WriteLine("\t}");
+		register.WriteLine("}");
+		register.Close();
+
 		BuiltinClasses(api, dir, configName);
 		Classes(api, dir);
 
@@ -291,7 +301,7 @@ public static class Convert {
 		if (type == "String") {
 			return "StringMarshall.ToManaged(__res)";
 		} else if (objectTypes.Contains(type)) {
-			return $"new {type}(__res)";
+			return $"({type})Object.ConstructUnknown(__res)";
 		} else {
 			return $"__res";
 		}
@@ -517,6 +527,8 @@ public static class Convert {
 			file.WriteLine();
 		}
 
+		file.WriteLine($"\tpublic static new void Register() => Object.RegisterConstructor(\"{c.name}\", Construct);");
+
 		if (c.constants != null) {
 			foreach (var con in c.constants) {
 				file.WriteLine($"\tpublic const int {con.name} = {con.value};");
@@ -586,7 +598,8 @@ public static class Convert {
 
 		var content = c.name == "RefCounted" ? " Reference(); " : " ";
 		file.WriteLine($"\tpublic {c.name}() : base(gdInterface.classdb_construct_object.Call(\"{c.name}\")) {{{content}}}");
-		file.WriteLine($"\tpublic {c.name}(ObjectPtr ptr) : base(ptr) {{{content}}}");
+		file.WriteLine($"\tprotected {c.name}(ObjectPtr ptr) : base(ptr) {{{content}}}");
+		file.WriteLine($"\tprivate static {c.name} Construct(ObjectPtr ptr) => new {c.name}(ptr);");
 
 		file.WriteLine("}");
 		file.Close();

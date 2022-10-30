@@ -29,7 +29,8 @@ animations = [{
 radius = 36.0
 height = 98.0
 
-[node name="Mob" type="Mob" groups=["mobs"]]
+[node name="Mob" type="Mob" node_paths=PackedStringArray("animSprite2D") groups=["mobs"]]
+animSprite2D = NodePath("AnimatedSprite2d")
 collision_mask = 0
 gravity_scale = 0.0
 metadata/_edit_group_ = true
@@ -38,7 +39,6 @@ metadata/_edit_group_ = true
 scale = Vector2(0.75, 0.75)
 frames = SubResource("SpriteFrames_bkppa")
 animation = &"walk"
-playing = true
 
 [node name="CollisionShape2d" type="CollisionShape2D" parent="."]
 rotation = 1.5708

@@ -186,7 +186,7 @@ public unsafe class Variant {
 	public StringName AsStringName() => InteropGetFromPointer<StringName>(_internal_pointer, Variant.Type.StringName);
 	public NodePath AsNodePath() => InteropGetFromPointer<NodePath>(_internal_pointer, Variant.Type.NodePath);
 	public RID AsRID() => InteropGetFromPointer<RID>(_internal_pointer, Variant.Type.RID);
-	public Object AsObject() => new Object(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.Object));
+	public Object AsObject() => Object.ConstructUnknown(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.Object));
 	public Callable AsCallable() => InteropGetFromPointer<Callable>(_internal_pointer, Variant.Type.Callable);
 	public Signal AsSignal() => InteropGetFromPointer<Signal>(_internal_pointer, Variant.Type.Signal);
 	public Dictionary AsDictionary() => InteropGetFromPointer<Dictionary>(_internal_pointer, Variant.Type.Dictionary);

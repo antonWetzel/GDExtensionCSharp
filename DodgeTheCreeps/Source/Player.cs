@@ -3,7 +3,10 @@ namespace DodgeTheCreeps;
 [Register]
 public unsafe partial class Player : Area2D {
 
-	[Export] public long speed { get; set; } = 400;
+	[Export] long speed { get; set; } = 400;
+	[Export] AnimatedSprite2D animatedSprite2D { get; set; }
+	[Export] CollisionShape2D collisionShape { get; set; }
+
 	public Vector2 screenSize;
 
 	[Signal] public event Action hit;
@@ -31,9 +34,6 @@ public unsafe partial class Player : Area2D {
 			velocity.x += 1f;
 		}
 
-
-		var animatedSprite2D = GetNode<AnimatedSprite2D>("AnimatedSprite2d");
-
 		if (velocity.Length() > 0.0) {
 			velocity = velocity.Normalized() * speed;
 			animatedSprite2D.Play("", false);
@@ -58,17 +58,18 @@ public unsafe partial class Player : Area2D {
 			animatedSprite2D.flip_v = velocity.y > 0f;
 		}
 	}
+
 	[Method]
 	public void Start(Vector2 pos) {
 		position = pos;
 		Show();
-		GetNode<CollisionShape2D>("CollisionShape2d").disabled = false;
+		collisionShape.disabled = false;
 	}
 
 	[Method]
 	void OnPlayerBodyEntered(PhysicsBody2D body) {
 		Hide();
 		EmitSignal("hit");
-		GetNode<CollisionShape2D>("CollisionShape2d").SetDeferred("disabled", true);
+		collisionShape.SetDeferred("disabled", true);
 	}
 }

@@ -4,8 +4,9 @@ Work maybe in Progress
 
 ## Done
 
-- Bindings (usable?)
-- register Class and Members (usable?)
+- Working Dodge the Creeps game
+	- probably leaks memory
+	- not performant
 
 ## To-do
 
@@ -17,14 +18,12 @@ Work maybe in Progress
 	- fix naming
 - Code-Generators
 	- clean-up
-	- hints
+	- avoid name conflicts
 	- ...
 - Memory management?
 	- Dictionary, Array, RefCounted, Variant ...
 - Others
-	- instancing / casting from Object / Node to extended types
 	- maybe move to-do/done to GitHub issues
 	- automatic manage `Process` enable / disable
-	- fix warning
-		- missing / unnecessary new
+	- fix warnings
 	- Godot as submodule (is there an official build repository?)

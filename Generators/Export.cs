@@ -26,18 +26,7 @@ namespace Generators {
 			""";
 			for (var i = 0; i < members.Length; i++) {
 				var member = members[i];
-				code += $$"""
-					static Native.PropertyInfo __{{member.Name}}Info = new Native.PropertyInfo() {
-						type = (uint)Variant.Type.{{Methods.TypeToVariantType(member.Type.Name)}},
-						name = (byte*)Marshal.StringToHGlobalAnsi("{{member.Name}}"),
-						class_name = null,
-						hint = (uint)PropertyHint.PROPERTY_HINT_NONE,
-						hint_string = null,
-						usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
-					};
-
-
-				""";
+				code += Methods.CreatePropertyInfo(member.Type, member.Name, $"{member.Name}Info");
 			}
 
 			code += $$"""
@@ -50,13 +39,13 @@ namespace Generators {
 				var member = members[i];
 				methods.AddMethod(new Methods.Info() {
 					name = member.SetMethod.Name,
-					arguments = new (string, string)[] { (member.Type.Name, "value") },
+					arguments = new (ITypeSymbol, string)[] { (member.Type, "value") },
 					ret = null,
 					property = member.Name,
 				});
 				methods.AddMethod(new Methods.Info() {
 					name = member.GetMethod.Name,
-					arguments = new (string, string)[] { },
+					arguments = new (ITypeSymbol, string)[] { },
 					ret = member.Type.Name,
 					property = member.Name,
 				});
@@ -76,7 +65,7 @@ namespace Generators {
 			code += """
 				}
 			}
-			
+
 			""";
 			context.AddSource($"{c.Name}.export.gen.cs", code);
 		}

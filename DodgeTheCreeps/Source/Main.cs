@@ -4,8 +4,12 @@ namespace DodgeTheCreeps;
 public unsafe partial class Main : Node {
 
 	[Export] PackedScene mobScene { get; set; }
+	[Export] Timer mobTimer { get; set; }
+	[Export] Timer scoreTimer { get; set; }
+	[Export] Hud hud { get; set; }
+	[Export] Player player { get; set; }
 
-	public long score;
+	long score;
 
 	[Notify(NOTIFICATION_READY)]
 	void Ready() {
@@ -14,18 +18,16 @@ public unsafe partial class Main : Node {
 
 	[Method]
 	public void GameOver() {
-		GetNode<Timer>("MobTimer").Stop();
-		GetNode<Timer>("ScoreTimer").Stop();
-		var hud = GetNode<Hud>("Hud");
+		mobTimer.Stop();
+		scoreTimer.Stop();
 		hud.ShowGameOver();
 		var mobs = GetTree().GetNodesInGroup("mobs");
 		for (var i = 0; i < mobs.Size(); i++) {
 			var test = mobs[i];
-			var node = new Node(test.AsObject()._internal_pointer);
-			node.QueueFree();
+			var mob = (Mob)(test.AsObject());
+			mob.QueueFree();
 		}
-		//GetTree().CallGroup("mobs", "queue_free"); //crashes (probatly problems with vararg)
-
+		//GetTree().CallGroup("mobs", "queue_free"); //crashes (probably problems with vararg)
 		var music = GetNode<AudioStreamPlayer>("Music");
 		music.Stop();
 
@@ -33,15 +35,15 @@ public unsafe partial class Main : Node {
 		deathSound.Play(0.0);
 	}
 
+
 	[Method]
 	public void NewGame() {
 		score = 0;
-		var player = GetNode<Player>("Player");
+
 		var startPosition = GetNode<Marker2D>("StartPosition");
 		player.Start(startPosition.position);
 		GetNode<Timer>("StartTimer").Start(-1.0);
 
-		var hud = GetNode<Hud>("Hud");
 		hud.UpdateScore(score);
 		hud.ShowGetReady();
 
@@ -52,14 +54,13 @@ public unsafe partial class Main : Node {
 	[Method]
 	public void OnScoreTimerTimeout() {
 		score += 1;
-		var hud = GetNode<Hud>("Hud");
 		hud.UpdateScore(score);
 	}
 
 	[Method]
 	public void OnStartTimerTimeout() {
-		GetNode<Timer>("MobTimer").Start(-1.0);
-		GetNode<Timer>("ScoreTimer").Start(-1.0);
+		mobTimer.Start(-1.0);
+		scoreTimer.Start(-1.0);
 	}
 
 	[Method]

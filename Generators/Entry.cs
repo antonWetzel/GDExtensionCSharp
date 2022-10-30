@@ -59,6 +59,7 @@ namespace Generators {
 					case Native.InitializationLevel.Servers:
 						break;
 					case Native.InitializationLevel.Scene:
+						Register.RegisterAll();
 						{{registrations}}break;
 					case Native.InitializationLevel.Editor:
 						break;

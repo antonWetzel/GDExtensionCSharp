@@ -4,55 +4,52 @@ namespace DodgeTheCreeps;
 public partial class Hud : CanvasLayer {
 
 	[Signal] public event Action startGame;
-
-	[Notify(NOTIFICATION_READY)]
-	void Ready() {
-	}
+	[Export] Label messageLabel { get; set; }
+	[Export] Label scoreLabel { get; set; }
+	[Export] Button startButton { get; set; }
+	[Export] Timer startButtonTimer { get; set; }
+	[Export] Timer startReadyMessageTimer { get; set; }
+	[Export] Timer startMessageTimer { get; set; }
 
 	[Method]
 	public void ShowGetReady() {
-		var message = GetNode<Label>("Message");
-		message.text = "Get Ready";
-		message.Show();
-		GetNode<Timer>("GetReadyMessageTimer").Start(-1.0);
+		messageLabel.text = "Get Ready";
+		messageLabel.Show();
+		startReadyMessageTimer.Start(-1.0);
 	}
 
 	[Method]
 	public void ShowGameOver() {
-		var message = GetNode<Label>("Message");
-		message.text = "Game Over";
-		message.Show();
-		GetNode<Timer>("StartMessageTimer").Start(-1.0);
+		messageLabel.text = "Game Over";
+		messageLabel.Show();
+		startMessageTimer.Start(-1.0);
 	}
 
 	[Method]
 	public void UpdateScore(long score) {
-		var l = GetNode<Label>("ScoreLabel");
-		l.text = $"{score}";
+		scoreLabel.text = $"{score}";
 	}
 
 	[Method]
 	void OnStartButtonPressed() {
-		GetNode<Button>("StartButton").Hide();
+		startButton.Hide();
 		EmitSignal(nameof(startGame));
 	}
 
 	[Method]
 	void OnStartMessageTimerTimeout() {
-		var message = GetNode<Label>("Message");
-		message.text = "Dodge the Creeps!";
-		message.Show();
-		GetNode<Timer>("StartButtonTimer").Start(-1.0);
+		messageLabel.text = "Dodge the Creeps!";
+		messageLabel.Show();
+		startButtonTimer.Start(-1.0);
 	}
 
 	[Method]
 	void OnGetReadyMessageTimerTimeout() {
-		var message = GetNode<Label>("Message");
-		message.Hide();
+		messageLabel.Hide();
 	}
 
 	[Method]
 	void OnStartButtonTimer() {
-		GetNode<Button>("StartButton").Show();
+		startButton.Show();
 	}
 }

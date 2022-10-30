@@ -8,7 +8,13 @@ action = &"start_game"
 [sub_resource type="Shortcut" id="Shortcut_dcw8k"]
 events = [SubResource("InputEventAction_r4107")]
 
-[node name="Hud" type="Hud"]
+[node name="Hud" type="Hud" node_paths=PackedStringArray("messageLabel", "scoreLabel", "startButton", "startButtonTimer", "startReadyMessageTimer", "startMessageTimer")]
+messageLabel = NodePath("Message")
+scoreLabel = NodePath("ScoreLabel")
+startButton = NodePath("StartButton")
+startButtonTimer = NodePath("StartButtonTimer")
+startReadyMessageTimer = NodePath("GetReadyMessageTimer")
+startMessageTimer = NodePath("StartMessageTimer")
 
 [node name="ScoreLabel" type="Label" parent="."]
 anchors_preset = 10

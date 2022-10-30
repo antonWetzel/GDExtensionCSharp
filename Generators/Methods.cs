@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Generators {
 
 		public struct Info {
 			public string name;
-			public (string, string)[] arguments;
+			public (ITypeSymbol, string)[] arguments;
 			public string ret;
 			public string property;
 		}
@@ -35,7 +36,7 @@ namespace Generators {
 			foreach (var method in ms) {
 				var info = new Info() {
 					name = method.Name,
-					arguments = method.Parameters.Select(x => (x.Type.Name, x.Name)).ToArray(),
+					arguments = method.Parameters.Select(x => (x.Type, x.Name)).ToArray(),
 					ret = method.ReturnsVoid ? null : method.ReturnType.Name,
 					property = null,
 				};
@@ -74,7 +75,7 @@ namespace Generators {
 				}
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
-					var t = TypeToVariantType(arg.Item1);
+					var t = TypeToVariantType(arg.Item1.Name);
 					code += $$"""
 					static Native.PropertyInfo __{{method.name}}_{{arg.Item2}}Info = new Native.PropertyInfo() {
 						type = (uint)Variant.Type.{{t}},
@@ -134,12 +135,12 @@ namespace Generators {
 				var args = "";
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
-					if (arg.Item1 == "String") {
+					if (arg.Item1.Name == "String") {
 						args += $"StringMarshall.ToManaged(p_args[{j}].data)";
-					} else if (TypeToVariantType(arg.Item1) == "Object") {
-						args += $" new {arg.Item1}(*(IntPtr*)(void*)p_args[{j}].data)";
+					} else if (TypeToVariantType(arg.Item1.Name) == "Object") {
+						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(*(IntPtr*)(void*)p_args[{j}].data)";
 					} else {
-						args += $"*({arg.Item1}*)(void*)p_args[{j}].data";
+						args += $"*({arg.Item1.Name}*)(void*)p_args[{j}].data";
 					}
 					if (j < method.arguments.Length - 1) {
 						args += ", ";
@@ -186,11 +187,11 @@ namespace Generators {
 				var args = "";
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
-					var t = TypeToVariantType(arg.Item1);
-					if (arg.Item1 == "String") {
+					var t = TypeToVariantType(arg.Item1.Name);
+					if (arg.Item1.Name == "String") {
 						args += $"StringMarshall.ToManaged(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}].data, Variant.Type.String))";
 					} else if (t == "Object") {
-						args += $"new {arg.Item1}(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}].data, Variant.Type.{t}))";
+						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}].data, Variant.Type.{t}))";
 					} else {
 						args += $"Variant.InteropGetFromPointer<{arg.Item1}>(p_args[{j}].data, Variant.Type.{t})";
 					}
@@ -198,7 +199,7 @@ namespace Generators {
 						args += ", ";
 					}
 				}
-				code += $"\t\tcase {i}:\n\t\t\t";
+				code += $"\t\tcase {i}: {{\n\t\t\t";
 				if (method.ret != null) {
 					code += "var res = ";
 				}
@@ -217,6 +218,7 @@ namespace Generators {
 					code += $"\t\t\tVariant.InteropSaveIntoPointer({getter}, r_return.data, Variant.Type.{t});\n";
 				}
 				code += $"\t\t\tbreak;\n";
+				code += "\t\t\t}\n";
 			}
 
 			code += $$"""
@@ -234,7 +236,7 @@ namespace Generators {
 					code += $"\t\t\t-1 => Variant.Type.{TypeToVariantType(method.ret)},\n";
 				}
 				for (var j = 0; j < method.arguments.Length; j++) {
-					code += $"\t\t\t{j} => Variant.Type.{TypeToVariantType(method.arguments[j].Item1)},\n";
+					code += $"\t\t\t{j} => Variant.Type.{TypeToVariantType(method.arguments[j].Item1.Name)},\n";
 				}
 				code += "\t\t\t_ => Variant.Type.Nil,\n\t\t},\n";
 			}
@@ -272,6 +274,61 @@ namespace Generators {
 			""";
 
 			context.AddSource($"{c.Name}.methods.gen.cs", code);
+		}
+
+		public enum SpecialBase {
+			None,
+			Node,
+			Resource,
+		}
+
+		public static SpecialBase GetSpecialBase(ITypeSymbol type) {
+			return type.Name switch {
+				"Node" => SpecialBase.Node,
+				"Resource" => SpecialBase.Resource,
+				_ => type.BaseType switch {
+					null => SpecialBase.Node,
+					_ => GetSpecialBase(type.BaseType),
+				},
+			};
+		}
+
+		public static string TypeToVariantType(ITypeSymbol type, SpecialBase sBase) {
+			return TypeToVariantType(type.Name);
+		}
+
+		public static string TypeToHintString(ITypeSymbol type, SpecialBase sBase) {
+			return sBase switch {
+				SpecialBase.Node or SpecialBase.Resource => $"(byte*)Marshal.StringToHGlobalAnsi(\"{type.Name}\")",
+				SpecialBase.None => "null",
+				_ => throw new Exception(),
+			};
+		}
+
+		public static string TypeToHint(ITypeSymbol type, SpecialBase sBase) {
+			return sBase switch {
+				SpecialBase.Node => "PropertyHint.PROPERTY_HINT_NODE_TYPE",
+				SpecialBase.Resource => "PropertyHint.PROPERTY_HINT_RESOURCE_TYPE",
+				SpecialBase.None => "PropertyHint.PROPERTY_HINT_NONE",
+				_ => throw new Exception(),
+			};
+		}
+
+		public static string CreatePropertyInfo(ITypeSymbol type, string name, string infoName) {
+			var sBase = GetSpecialBase(type);
+
+			return $$"""
+				static Native.PropertyInfo __{{infoName}}= new Native.PropertyInfo() {
+					type = (uint)Variant.Type.{{TypeToVariantType(type, sBase)}},
+					name = (byte*)Marshal.StringToHGlobalAnsi("{{name}}"),
+					class_name = null,
+					hint = (uint){{TypeToHint(type, sBase)}},
+					hint_string = {{TypeToHintString(type, sBase)}},
+					usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
+				};
+
+
+			""";
 		}
 
 		public static string TypeToVariantType(string t) {
