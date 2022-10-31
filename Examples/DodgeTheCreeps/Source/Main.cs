@@ -11,7 +11,7 @@ public unsafe partial class Main : Node {
 
 	long score;
 
-	[Notify(NOTIFICATION_READY)]
+	[Notify(Notifications.Ready)]
 	void Ready() {
 		GDExtension.Random.Randomize();
 	}
@@ -66,7 +66,7 @@ public unsafe partial class Main : Node {
 	[Method]
 	public void OnMobTimerTimeout() {
 		// Create a new instance of the Mob scene.
-		var mob = mobScene.Instantiate<Mob>(PackedScene.GenEditState.GEN_EDIT_STATE_DISABLED);
+		var mob = mobScene.Instantiate<Mob>(PackedScene.GenEditState.Disabled);
 
 		// Choose a random location on Path2D.
 		var mobSpawnLocation = GetNode<PathFollow2D>("MobPath/MobSpawnLocation");
@@ -86,6 +86,6 @@ public unsafe partial class Main : Node {
 		var velocity = new Vector2(GDExtension.Random.RandfRange(150.0, 250.0), 0.0);
 		mob.linear_velocity = velocity.Rotated(direction);
 
-		AddChild(mob, false, InternalMode.INTERNAL_MODE_DISABLED);
+		AddChild(mob, false, InternalMode.Disabled);
 	}
 }

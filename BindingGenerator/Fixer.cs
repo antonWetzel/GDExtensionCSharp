@@ -109,9 +109,24 @@ public static class Fixer {
 			if (w.Length == 0) {
 				res += "_";
 			} else {
-				res += w[0].ToString().ToUpper() + w.Substring(1);
+				res += w[0].ToString().ToUpper() + w.Substring(1).ToLower();
 			}
 		}
 		return res;
+	}
+
+	public static int SharedPrefixLength(string[] names) {
+		for (var l = 0; true; l++) {
+			if (l >= names[0].Length) { return 0; }
+			var c = names[0][l];
+			foreach (var name in names) {
+				if (l >= name.Length) {
+					return 0;
+				}
+				if (name[l] != c) {
+					return l;
+				}
+			}
+		}
 	}
 }

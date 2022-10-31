@@ -5,7 +5,7 @@ public class NotifyAttribute : System.Attribute {
 	public int notification;
 	public string? arguments;
 
-	public NotifyAttribute(int notification) {
-		this.notification = notification;
+	public NotifyAttribute(Object.Notifications notification) {
+		this.notification = (int)notification;
 	}
 }

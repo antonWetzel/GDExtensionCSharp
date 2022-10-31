@@ -46,8 +46,6 @@ public partial class Hud : CanvasLayer {
 	[Method]
 	unsafe void OnGetReadyMessageTimerTimeout() {
 		messageLabel.Hide();
-		var test = stackalloc Native.PropertyInfo[3];
-
 	}
 
 	[Method]

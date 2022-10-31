@@ -1,6 +1,7 @@
 public static class Convert {
 
 	static HashSet<string> objectTypes = new() { "Variant" };
+	static Dictionary<string, int> notificationsIds = new();
 
 	public static void Api(Api api, string dir, string configName) {
 
@@ -65,9 +66,21 @@ public static class Convert {
 			Method(f, "", file, MethodType.Utility);
 		}
 		foreach (var (_, file) in files) {
-			file.WriteLine("}");
+			file.WriteLine(value: "}");
 			file.Close();
 		}
+
+		var notifications = File.CreateText(dir + "/Notifications.cs");
+		notifications.WriteLine("namespace GDExtension;");
+		notifications.WriteLine();
+		notifications.WriteLine("public partial class Object {");
+		notifications.WriteLine("\tpublic enum Notifications {");
+		foreach (var (name, id) in notificationsIds) {
+			notifications.WriteLine($"\t\t{Fixer.SnakeToPascal(name.Substring("NOTIFICATION_".Length))} = {id},");
+		}
+		notifications.WriteLine("\t}");
+		notifications.WriteLine("}");
+		notifications.Close();
 	}
 
 	static void GlobalEnum(Api.Enum e, string dir) {
@@ -198,7 +211,8 @@ public static class Convert {
 	}
 
 	static void Constant(Api.Constant con, StreamWriter file) {
-		file.WriteLine($"\tpublic static {Fixer.Type(con.type)} {con.name} = {Fixer.Value(con.value)};");
+		//static because struct can't be const
+		file.WriteLine($"\tpublic static readonly {Fixer.Type(con.type)} {con.name} = {Fixer.Value(con.value)};");
 	}
 
 	static void Constructor(Api.BuiltinClass c, Api.Constructor constructor, StreamWriter file) {
@@ -268,12 +282,16 @@ public static class Convert {
 	}
 
 	static void Enum(Api.Enum e, StreamWriter file) {
+		var prefixLength = Fixer.SharedPrefixLength(e.values.Select(x => x.name).ToArray());
 		if (e.isBitfield != null) {
 			//throw new NotImplementedException();
 		}
+
 		file.WriteLine($"\tpublic enum {Fixer.Type(e.name)} {{");
 		foreach (var v in e.values) {
-			file.WriteLine($"\t\t{v.name} = {v.value},");
+			var name = Fixer.SnakeToPascal(v.name.Substring(prefixLength));
+			if (char.IsDigit(name[0])) { name = "_" + name; }
+			file.WriteLine($"\t\t{name} = {v.value},");
 		}
 		file.WriteLine("\t}");
 		file.WriteLine();
@@ -531,7 +549,15 @@ public static class Convert {
 
 		if (c.constants != null) {
 			foreach (var con in c.constants) {
-				file.WriteLine($"\tpublic const int {con.name} = {con.value};");
+				if (con.name.Substring(0, 5) != "NOTIF") {
+					file.WriteLine($"\tpublic const int {con.name} = {con.value};");
+				} else {
+					if (notificationsIds.ContainsKey(con.name)) {
+						Console.WriteLine($"Duplicate Notification: {con.name}");
+						continue;
+					}
+					notificationsIds.Add(con.name, con.value);
+				}
 			}
 			file.WriteLine();
 		}
@@ -590,8 +616,24 @@ public static class Convert {
 
 		if (c.signals != null) {
 			foreach (var sig in c.signals) {
+				file.Write($"\tpublic void EmitSignal{Fixer.SnakeToPascal(sig.name)}(");
+				if (sig.arguments != null) {
+					for (var j = 0; j < sig.arguments.Length; j++) {
+						var p = sig.arguments[j];
+						file.Write($"{Fixer.Type(p.type)} {Fixer.Name(p.name)}{(j < sig.arguments.Length - 1 ? ", " : "")}");
+					}
+				}
 
+				file.Write($") => EmitSignal(\"{sig.name}\"{(sig.arguments != null ? ", " : "")}");
+				if (sig.arguments != null) {
+					for (var j = 0; j < sig.arguments.Length; j++) {
+						var p = sig.arguments[j];
+						file.Write($"{Fixer.Name(p.name)}{(j < sig.arguments.Length - 1 ? ", " : "")}");
+					}
+				}
+				file.WriteLine(");");
 			}
+			file.WriteLine();
 		}
 
 		EqualAndHash(c.name, file);

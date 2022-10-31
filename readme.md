@@ -11,7 +11,6 @@ Work maybe in Progress
 ## To-do
 
 - Bindings
-	- finish
 	- clean-up
 	- cache functions
 	- signals (no clue how to convert delegate to callable)
