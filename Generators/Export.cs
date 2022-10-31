@@ -23,20 +23,15 @@ namespace Generators {
 
 			public unsafe partial class {{c.Name}} : {{c.BaseType.Name}} {
 
-			""";
-			for (var i = 0; i < members.Length; i++) {
-				var member = members[i];
-				code += $"static Native.PropertyInfo __{member.Name}Info = " + Methods.CreatePropertyInfo(member.Type, member.Name);
-			}
-
-			code += $$"""
 				static unsafe void RegisterExports() {
-					Native.ExtensionClassMethodInfo info;
 
 			""";
 
 			for (var i = 0; i < members.Length; i++) {
 				var member = members[i];
+
+				code += $"\t\tvar __{member.Name}Info = " + Methods.CreatePropertyInfo(member.Type, member.Name);
+
 				methods.AddMethod(new Methods.Info() {
 					name = member.SetMethod.Name,
 					arguments = new (ITypeSymbol, string)[] { (member.Type, "value") },
@@ -50,15 +45,18 @@ namespace Generators {
 					property = member.Name,
 				});
 				code += $$"""
-						fixed (Native.PropertyInfo* infoPtr = &__{{member.Name}}Info) {
-							Native.gdInterface.classdb_register_extension_class_property.Call(
-								Native.gdLibrary,
-								"{{c.Name}}",
-								infoPtr,
-								"{{member.SetMethod.Name}}",
-								"{{member.GetMethod.Name}}"
-							);
+						Native.gdInterface.classdb_register_extension_class_property.Call(
+							Native.gdLibrary,
+							"{{c.Name}}",
+							&__{{member.Name}}Info,
+							"{{member.SetMethod.Name}}",
+							"{{member.GetMethod.Name}}"
+						);
+
+						if (__{{member.Name}}Info.hint_string != null) {
+							Marshal.FreeHGlobal((IntPtr)__{{member.Name}}Info.hint_string);
 						}
+						Marshal.FreeHGlobal((IntPtr)__{{member.Name}}Info.name);
 
 				""";
 			}

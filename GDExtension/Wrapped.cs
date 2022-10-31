@@ -10,4 +10,5 @@ public unsafe class Wrapped {
 
 	//to lazy to check if the base class is custom or builtin so create this as base to always exist
 	public static unsafe void __Notification(Native.GDExtensionClassInstancePtr instance, int what) { /* pass */ }
+	public static void Register() { }
 }

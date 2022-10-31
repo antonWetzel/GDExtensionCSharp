@@ -21,6 +21,14 @@ namespace Generators {
 
 					var gdName = s.GetAttributes().SingleOrDefault(x => x.AttributeClass.Name == "RegisterAttribute").NamedArguments.SingleOrDefault(x => x.Key == "name").Value.Value ?? s.Name;
 
+					var methods = new Methods();
+
+					var notification = Notification.Generate(context, s);
+					Export.Generate(context, s, methods);
+					Signal.Generate(context, s);
+
+					methods.Generate(context, s);
+
 					var source = $$"""
 					using System.Runtime.CompilerServices;
 					using System.Runtime.InteropServices;
@@ -30,10 +38,12 @@ namespace Generators {
 					public unsafe partial class {{s.Name}} : {{s.BaseType.Name}} {
 						private GCHandle handle;
 
+					#pragma warning disable CS8618
 						public {{s.Name}}() {
 							handle = GCHandle.Alloc(this);
 							Native.gdInterface.object_set_instance.Call(_internal_pointer, "{{gdName}}", this);
 						}
+					#pragma warning restore CS8618
 
 						public static implicit operator Native.GDExtensionClassInstancePtr({{s.Name}} instance) => new(GCHandle.ToIntPtr(instance.handle));
 						public static implicit operator {{s.Name}}(Native.GDExtensionClassInstancePtr ptr) => ({{s.Name}})(GCHandle.FromIntPtr(ptr.data).Target!);
@@ -53,7 +63,7 @@ namespace Generators {
 								//free_property_list_func = new(FreePropertyList),
 								//property_can_revert_func = &PropertyCanConvert,
 								//property_get_revert_func = &PropertyGetRevert,
-								notification_func = Engine.IsEditorHint()? default : new(__Notification),
+								notification_func = {{(notification ? $"Engine.IsEditorHint()? default : new(__Notification)" : "default")}},
 								//to_string_func = &ToString,
 								//reference_func = &Reference,
 								//unreference_func = &Unreference,
@@ -83,14 +93,6 @@ namespace Generators {
 					}
 					""";
 					context.AddSource($"{s.Name}.gen.cs", source);
-
-					var methods = new Methods();
-
-					Notification.Generate(context, s);
-					Export.Generate(context, s, methods);
-					Signal.Generate(context, s);
-
-					methods.Generate(context, s);
 
 					classes.Add(s);
 				}

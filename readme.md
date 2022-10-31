@@ -12,17 +12,14 @@ Work maybe in Progress
 
 - Bindings
 	- clean-up
-	- cache functions
 	- signals (no clue how to convert delegate to callable)
-	- fix naming
 - Code-Generators
 	- clean-up
 	- avoid name conflicts
 	- ...
 - Memory management?
-	- Dictionary, Array, RefCounted, Variant ...
+	- Dictionary, Array, RefCounted, Variant, c-strings ...
 - Others
 	- maybe move to-do/done to GitHub issues
 	- automatic manage `Process` enable / disable
-	- fix warnings
 	- Godot as submodule (is there an official build repository?)

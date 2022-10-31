@@ -65,9 +65,9 @@ namespace Generators {
 						type = (uint)Variant.Type.{{TypeToVariantType(method.ret)}},
 						name = (byte*)Marshal.StringToHGlobalAnsi("return"),
 						class_name = null,
-						hint = (uint)PropertyHint.PROPERTY_HINT_NONE,
+						hint = (uint)PropertyHint.None,
 						hint_string = null,
-						usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
+						usage = (uint)PropertyUsageFlags.Default,
 					};
 
 
@@ -81,9 +81,9 @@ namespace Generators {
 						type = (uint)Variant.Type.{{t}},
 						name = (byte*)Marshal.StringToHGlobalAnsi("{{arg.Item2}}"),
 						class_name = null,
-						hint = (uint)PropertyHint.PROPERTY_HINT_NONE,
+						hint = (uint)PropertyHint.None,
 						hint_string = null,
-						usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
+						usage = (uint)PropertyUsageFlags.Default,
 					};
 
 
@@ -149,7 +149,8 @@ namespace Generators {
 				code += $"\t\tcase {i}:\n\t\t\t";
 				if (method.ret != null) {
 					if (TypeToVariantType(method.ret) == "Object") {
-						code += "throw new NotImplementedException(); //";
+						code += "throw new NotImplementedException();\n";
+						continue;
 					} else {
 						code += $"*({method.ret}*)r_ret.data = ";
 					}
@@ -307,9 +308,9 @@ namespace Generators {
 
 		public static string TypeToHint(ITypeSymbol type, SpecialBase sBase) {
 			return sBase switch {
-				SpecialBase.Node => "PropertyHint.PROPERTY_HINT_NODE_TYPE",
-				SpecialBase.Resource => "PropertyHint.PROPERTY_HINT_RESOURCE_TYPE",
-				SpecialBase.None => "PropertyHint.PROPERTY_HINT_NONE",
+				SpecialBase.Node => "PropertyHint.NodeType",
+				SpecialBase.Resource => "PropertyHint.ResourceType",
+				SpecialBase.None => "PropertyHint.None",
 				_ => throw new Exception(),
 			};
 		}
@@ -324,7 +325,7 @@ namespace Generators {
 					class_name = null,
 					hint = (uint){{TypeToHint(type, sBase)}},
 					hint_string = {{TypeToHintString(type, sBase)}},
-					usage = (uint)PropertyUsageFlags.PROPERTY_USAGE_DEFAULT,
+					usage = (uint)PropertyUsageFlags.Default,
 				};
 
 			""";

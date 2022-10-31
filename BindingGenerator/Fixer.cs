@@ -26,6 +26,14 @@ public static class Fixer {
 		return name;
 	}
 
+	public static string MethodName(string name) {
+		name = Fixer.SnakeToPascal(name);
+		return name switch {
+			"GetType" => "GetTypeGD",
+			_ => name,
+		};
+	}
+
 	public static string Name(string name) {
 		return name switch {
 			"object" => "@object",

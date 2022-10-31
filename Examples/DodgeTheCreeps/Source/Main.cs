@@ -35,7 +35,6 @@ public unsafe partial class Main : Node {
 		deathSound.Play(0.0);
 	}
 
-
 	[Method]
 	public void NewGame() {
 		score = 0;

@@ -150,8 +150,6 @@ public record struct Api {
 		public Property[]? properties { get; set; }
 	}
 
-
-
 	public Header header { get; set; }
 	[JsonPropertyName("builtin_class_sizes")] public BuiltinClassSizes[] builtinClassSizes { get; set; }
 	[JsonPropertyName("builtin_class_member_offsets")] public BuiltinClassMemberOffsets[] builtinClassMemberOffsets { get; set; }

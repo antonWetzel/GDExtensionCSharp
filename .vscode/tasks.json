@@ -11,7 +11,7 @@
 				"-property:GenerateFullPaths=true",
 				"-consoleloggerparameters:NoSummary",
 				"-p:NativeLib=Shared",
-				"-r=win-x64",
+				"-r=win-x64"
 			],
 			"problemMatcher": "$msCompile"
 		},
@@ -21,7 +21,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/BindingGenerator/BindingGenerator.csproj",
+				"${workspaceFolder}/BindingGenerator/BindingGenerator.csproj"
 			],
 			"problemMatcher": "$msCompile"
 		},
@@ -35,9 +35,19 @@
 				"-property:GenerateFullPaths=true",
 				"-consoleloggerparameters:NoSummary",
 				"-p:NativeLib=Shared",
-				"-r=win-x64",
+				"-r=win-x64"
 			],
 			"problemMatcher": "$msCompile"
 		},
+		{
+			"label": "Generate Api",
+			"type": "process",
+			"command": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"args": [
+				"--dump-extension-api",
+				"extension_api.json"
+			],
+			"problemMatcher": []
+		}
 	]
 }

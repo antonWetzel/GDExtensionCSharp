@@ -8,7 +8,7 @@ namespace Generators {
 
 	public static class Notification {
 
-		public static void Generate(GeneratorExecutionContext context, INamedTypeSymbol c) {
+		public static bool Generate(GeneratorExecutionContext context, INamedTypeSymbol c) {
 			var methods = c.GetMembers().Where(x => x is IMethodSymbol).Select(x => (IMethodSymbol)x);
 
 			var code = $$"""
@@ -30,7 +30,7 @@ namespace Generators {
 			}
 			if (notificationName == "") {
 				notificationName = "_Notification";
-
+				var has = false;
 				code += $$"""
 					void {{notificationName}}(int what) {
 						switch (what) {
@@ -41,6 +41,7 @@ namespace Generators {
 
 
 					if (att != null) {
+						has = true;
 						var args = att.NamedArguments.SingleOrDefault(x => x.Key == "arguments").Value.Value ?? "";
 
 						code += $$"""
@@ -50,6 +51,9 @@ namespace Generators {
 
 						""";
 					}
+				}
+				if (has == false) {
+					return false;
 				}
 				code += $$"""
 						}
@@ -68,6 +72,7 @@ namespace Generators {
 			""";
 
 			context.AddSource($"{c.Name}.notification.gen.cs", code);
+			return true;
 		}
 	}
 }

@@ -32,6 +32,17 @@
 			"preLaunchTask": "build Dodge the Creeps",
 		},
 		{
+			"name": "Run Dodge the Creeps",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}/Examples/DodgeTheCreeps",
+			"console": "integratedTerminal",
+			"preLaunchTask": "build Dodge the Creeps",
+		},
+		{
 			"name": "Summator",
 			"type": "cppvsdbg",
 			"request": "launch",
