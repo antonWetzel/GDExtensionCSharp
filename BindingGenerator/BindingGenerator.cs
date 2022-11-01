@@ -1,4 +1,9 @@
-var api = Api.Create("./extension_api.json");
+var documentationPath = "../godot/doc/classes/";
+var apiPath = "./extension_api.json";
+var serializer = new XmlSerializer(typeof(Documentation.Class));
+
+var api = Api.Create(apiPath);
+
 
 var dir = "./GDExtension/Generated";
 
@@ -9,4 +14,5 @@ if (Directory.Exists(dir)) {
 }
 Directory.CreateDirectory(dir);
 
-Convert.Api(api, dir, configName);
+var convert = new Convert(api, dir, documentationPath, configName);
+convert.Emit();

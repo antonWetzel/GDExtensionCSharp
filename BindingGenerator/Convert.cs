@@ -1,22 +1,35 @@
-public static class Convert {
+public class Convert {
 
-	static HashSet<string> objectTypes = new() { "Variant" };
-	static Dictionary<string, int> notificationsIds = new();
-	static Dictionary<string, List<string>> registrations = new() {
+	HashSet<string> objectTypes = new() { "Variant" };
+	Dictionary<string, int> notificationsIds = new();
+	Dictionary<string, List<string>> registrations = new() {
 		["core"] = new(),
 		["editor"] = new(),
 		["builtin"] = new(),
 		["utility"] = new(),
 	};
 
-	public static void Api(Api api, string dir, string configName) {
+	Api api;
+	XmlSerializer xml;
+	string dir;
+	string docDir;
+	string configName;
 
+	public Convert(Api api, string dir, string docDir, string configName) {
+		this.api = api;
+		this.xml = new XmlSerializer(typeof(Documentation.Class));
+		this.dir = dir;
+		this.docDir = docDir;
+		this.configName = configName;
+	}
+
+	public void Emit() {
 		foreach (var c in api.classes) {
 			objectTypes.Add(c.name);
 		}
 
-		BuiltinClasses(api, dir, configName: configName);
-		Classes(api, dir);
+		BuiltinClasses();
+		Classes();
 
 		Directory.CreateDirectory(dir + "/Enums");
 		foreach (var e in api.globalEnums) {
@@ -61,7 +74,7 @@ public static class Convert {
 				file.Item1.WriteLine($"public static unsafe class {cat} {{");
 				registrations["utility"].Add(cat);
 			}
-			Method(f, "", file.Item1, MethodType.Utility, file.Item2);
+			Method(f, "", file.Item1, MethodType.Utility, file.Item2, null);
 		}
 		foreach (var (_, (file, list)) in files) {
 			file.WriteLine("#pragma warning disable CS8618");
@@ -106,7 +119,19 @@ public static class Convert {
 		register.Close();
 	}
 
-	static void GlobalEnum(Api.Enum e, string dir) {
+	Documentation.Class? GetDocs(string name) {
+		var path = docDir + name + ".xml";
+		if (File.Exists(path)) {
+			var file = File.OpenRead(path);
+			var d = (Documentation.Class)xml.Deserialize(file)!;
+			file.Close();
+			return d;
+		} else {
+			return null;
+		}
+	}
+
+	void GlobalEnum(Api.Enum e, string dir) {
 		if (e.name.Contains(".")) { return; }
 		var name = Fixer.Type(e.name).Replace(".", "");
 		var file = File.CreateText(dir + "/" + Fixer.Type(name) + ".cs");
@@ -116,8 +141,8 @@ public static class Convert {
 		file.Close();
 	}
 
-	static void BuiltinClasses(Api api, string dir, string configName) {
-		dir += "/BuiltinClasses";
+	void BuiltinClasses() {
+		var dir = this.dir + "/BuiltinClasses";
 		Directory.CreateDirectory(dir);
 		foreach (var c in api.builtinClasses) {
 			switch (c.name) {
@@ -128,13 +153,13 @@ public static class Convert {
 			case "Nil":
 				break;
 			default:
-				BuiltinClass(api, c, dir, configName);
+				BuiltinClass(c, dir);
 				break;
 			}
 		}
 	}
 
-	static void BuiltinClass(Api api, Api.BuiltinClass c, string dir, string configName) {
+	void BuiltinClass(Api.BuiltinClass c, string dir) {
 
 		var file = File.CreateText(dir + "/" + Fixer.Type(c.name) + ".cs");
 		registrations["builtin"].Add(Fixer.Type(c.name));
@@ -205,7 +230,7 @@ public static class Convert {
 
 		if (c.methods != null) {
 			foreach (var meth in c.methods) {
-				Method(meth, c.name, file, MethodType.Native, methodRegistrations);
+				Method(meth, c.name, file, MethodType.Native, methodRegistrations, null);
 			}
 		}
 
@@ -254,7 +279,7 @@ public static class Convert {
 	}
 
 
-	static void Member(Api api, Api.BuiltinClass c, Api.Member member, string configName, StreamWriter file, List<string> withFunctions) {
+	void Member(Api api, Api.BuiltinClass c, Api.Member member, string configName, StreamWriter file, List<string> withFunctions) {
 		var offset = -1;
 		foreach (var config in api.builtinClassMemberOffsets) {
 			if (config.buildConfiguration == configName) {
@@ -294,7 +319,7 @@ public static class Convert {
 		file.WriteLine();
 	}
 
-	static void Constructor(Api.BuiltinClass c, Api.Constructor constructor, StreamWriter file, List<string> constructorRegistrations) {
+	void Constructor(Api.BuiltinClass c, Api.Constructor constructor, StreamWriter file, List<string> constructorRegistrations) {
 		file.Write($"\tpublic {Fixer.Type(c.name)}(");
 		if (constructor.arguments != null) {
 			for (var i = 0; i < constructor.arguments.Length - 1; i++) {
@@ -326,7 +351,7 @@ public static class Convert {
 		file.WriteLine();
 	}
 
-	static void Operator(Api.Operator op, string className, StreamWriter file, List<string> operatorRegistrations) {
+	void Operator(Api.Operator op, string className, StreamWriter file, List<string> operatorRegistrations) {
 
 		if (op.rightType != null) {
 			if (op.rightType == "Variant") { return; }
@@ -363,7 +388,7 @@ public static class Convert {
 		file.WriteLine();
 	}
 
-	static void Enum(Api.Enum e, StreamWriter file) {
+	void Enum(Api.Enum e, StreamWriter file, Documentation.Constant[]? constants = null) {
 		var prefixLength = Fixer.SharedPrefixLength(e.values.Select(x => x.name).ToArray());
 		if (e.isBitfield != null) {
 			//throw new NotImplementedException();
@@ -371,6 +396,12 @@ public static class Convert {
 
 		file.WriteLine($"\tpublic enum {Fixer.Type(e.name)} {{");
 		foreach (var v in e.values) {
+			if (constants != null) {
+				var d = constants.FirstOrDefault(x => x.@enum != null && x.@enum == e.name && x.name == v.name);
+				if (d != null && d.comment != null) {
+					file.WriteLine(NormalizeXMlComment(d.comment, 2));
+				}
+			}
 			var name = Fixer.SnakeToPascal(v.name.Substring(prefixLength));
 			if (char.IsDigit(name[0])) { name = "_" + name; }
 			file.WriteLine($"\t\t{name} = {v.value},");
@@ -379,7 +410,7 @@ public static class Convert {
 		file.WriteLine();
 	}
 
-	static string ValueToPointer(string name, string type) {
+	string ValueToPointer(string name, string type) {
 		if (type == "String") {
 			return $"StringMarshall.ToNative({name})";
 		} else if (objectTypes.Contains(type)) {
@@ -389,7 +420,7 @@ public static class Convert {
 		}
 	}
 
-	static string ReturnLocationType(string type) {
+	string ReturnLocationType(string type) {
 		if (objectTypes.Contains(type) || type == "String") {
 			return "IntPtr";
 		} else {
@@ -397,7 +428,7 @@ public static class Convert {
 		}
 	}
 
-	static string ReturnStatementValue(string type) {
+	string ReturnStatementValue(string type) {
 		if (type == "String") {
 			return "StringMarshall.ToManaged(__res)";
 		} else if (objectTypes.Contains(type)) {
@@ -413,7 +444,13 @@ public static class Convert {
 		Utility,
 	}
 
-	static void Method(Api.Method meth, string className, StreamWriter file, MethodType type, List<string> methodRegistrations, bool isSingleton = false) {
+	void Method(Api.Method meth, string className, StreamWriter file, MethodType type, List<string> methodRegistrations, Documentation.Method? doc, bool isSingleton = false) {
+		if (doc != null) {
+			if (doc.description != null) {
+				file.WriteLine(NormalizeXMlComment(doc.description));
+			}
+		}
+
 		var ret = meth.returnType ?? meth.returnValue?.type ?? "";
 		file.Write("\tpublic ");
 		if (meth.isStatic || type == MethodType.Utility || isSingleton) {
@@ -581,7 +618,7 @@ public static class Convert {
 		file.WriteLine();
 	}
 
-	public static void EqualAndHash(string className, StreamWriter file) {
+	void EqualAndHash(string className, StreamWriter file) {
 		file.WriteLine("\tpublic override bool Equals(object? obj) {");
 		file.WriteLine("\t\tif (obj == null) { return false; }");
 		file.WriteLine($"\t\tif (obj is {Fixer.Type(className)} other == false) {{ return false; }}");
@@ -596,7 +633,7 @@ public static class Convert {
 		file.WriteLine();
 	}
 
-	static Api.Method? GetMethod(Api api, string cName, string name) {
+	Api.Method? GetMethod(string cName, string name) {
 		foreach (var c in api.classes)
 			if (cName == c.name) {
 				if (c.methods != null) {
@@ -607,14 +644,14 @@ public static class Convert {
 					}
 				}
 				if (c.inherits != null) {
-					return GetMethod(api, c.inherits, name);
+					return GetMethod(c.inherits, name);
 				}
 			}
 		return null;
 	}
 
-	static void Classes(Api api, string dir) {
-		dir += "/Classes";
+	void Classes() {
+		var dir = this.dir + "/Classes";
 		Directory.CreateDirectory(dir);
 		foreach (var c in api.classes) {
 			switch (c.name) {
@@ -623,16 +660,48 @@ public static class Convert {
 			case "bool":
 				break;
 			default:
-				Class(api, c, dir);
+				Class(c, dir);
 				break;
 			}
 		}
 	}
+	string NormalizeXMlComment(string comment, int indent = 1) {
+		var tabs = new string('\t', indent);
+		var addons = new List<string>();
+		if (comment.Contains("[csharp]")) {
+			var pat = @"\[csharp\](?<a>.*)\[/csharp\]";
+			var c = Regex.Match(comment, pat, RegexOptions.Singleline).Groups["a"].Captures[0].Value;
+			c = tabs + c.Trim() + "\n";
+			c = Regex.Replace(c, "\t+(.*)\n", tabs + "///   $1\n");
+			addons.Add(tabs + "/// <code>\n" + c + tabs + "/// </code>");
+			comment = Regex.Replace(comment, @"\[codeblocks\](.*)\[/codeblocks\]", "", RegexOptions.Singleline);
+		}
+		comment = comment.Trim() + "\n";
+		var replacements = new[] {
+			("\t+(.*)\n", tabs + "///    $1</br>\n"),
+			(@"\[b\](.+)\[/b\]", "<b>$1</b>"),
+			(@"\[constant (\S+)\]", "<see cref=\"$1\"/>"),
+			(@"\[code\](.+)\[/code\]", "<c>$1</c>"),
+			(@"\[param (\S+)\]",  "<paramref name=\"$1\"/>"),
+		};
+		foreach (var (pattern, replacement) in replacements) {
+			comment = Regex.Replace(comment, pattern, replacement);
+		}
+		comment = tabs + "/// <summary>\n" + tabs + "///  " + comment;
+		foreach (var addon in addons) {
+			comment += addon + "\n";
+		}
+		comment += tabs + "/// </summary>";
+		return comment;
+	}
 
-	static void Class(Api api, Api.Class c, string dir) {
+	void Class(Api.Class c, string dir) {
 
 		var file = File.CreateText(dir + "/" + c.name + ".cs");
 		registrations[c.apiType].Add(c.name);
+
+
+		var doc = GetDocs(c.name);
 
 		var methodRegistrations = new List<string>();
 
@@ -656,6 +725,13 @@ public static class Convert {
 		if (c.constants != null) {
 			foreach (var con in c.constants) {
 				if (con.name.Substring(0, 5) != "NOTIF") {
+					if (doc != null) {
+						var d = doc.constants.FirstOrDefault(x => x.name == con.name);
+						if (d != null && d.comment != null) {
+							var com = NormalizeXMlComment(d.comment);
+							file.WriteLine(com);
+						}
+					}
 					file.WriteLine($"\tpublic const int {con.name} = {con.value};");
 				} else {
 					if (notificationsIds.ContainsKey(con.name)) {
@@ -670,7 +746,7 @@ public static class Convert {
 
 		if (c.enums != null) {
 			foreach (var e in c.enums) {
-				Enum(e, file);
+				Enum(e, file, doc != null ? doc.constants : null);
 			}
 		}
 
@@ -679,8 +755,8 @@ public static class Convert {
 				var type = prop.type;
 				var cast = "";
 
-				var getter = GetMethod(api, c.name, prop.getter);
-				var setter = GetMethod(api, c.name, prop.setter);
+				var getter = GetMethod(c.name, prop.getter);
+				var setter = GetMethod(c.name, prop.setter);
 
 				if (getter == null && setter == null) {
 					Console.WriteLine($"{c.name} setter {prop.setter} and getter {prop.getter} not found");
@@ -716,7 +792,11 @@ public static class Convert {
 
 		if (c.methods != null) {
 			foreach (var meth in c.methods) {
-				Method(meth, c.name, file, MethodType.Class, methodRegistrations, isSingleton);
+				Documentation.Method? d = null;
+				if (doc != null && doc.methods != null) {
+					d = doc.methods.FirstOrDefault(x => x.name == meth.name);
+				}
+				Method(meth, c.name, file, MethodType.Class, methodRegistrations, d, isSingleton);
 			}
 		}
 
@@ -760,7 +840,6 @@ public static class Convert {
 		file.WriteLine($"\t\tObject.RegisterConstructor(\"{c.name}\", Construct);");
 		for (var i = 0; i < methodRegistrations.Count; i++) {
 			file.WriteLine($"\t\t__methodPointer_{i} = {methodRegistrations[i]};");
-			//file.WriteLine($"\t\tif (__methodPointer_{i}.data == IntPtr.Zero) {{ Console.WriteLine(\"{c.name} {i}\"); }}");
 		}
 		file.WriteLine("\t}");
 		file.WriteLine("}");
