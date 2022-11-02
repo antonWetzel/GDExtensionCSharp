@@ -137,4 +137,67 @@ public static class Fixer {
 			}
 		}
 	}
+
+
+	//replacement to (x => ...) to fix names
+	static (string, string)[] xmlReplacements = new (string, string)[] {
+		(@"<", "&lt;"),
+		(@">", "&gt;"),
+		(@"\[b\](.+?)\[/b\]", "<b>$1</b>"),
+		(@"\[constant (\S+?)\]", "<see cref=\"$1\"/>"),
+		(@"\[code\](.+?)\[/code\]", "<c>$1</c>"),
+		(@"\[param (\S+?)\]", "<paramref name=\"$1\"/>"),
+		(@"\[method (\S+?)\]", "<see cref=\"$1\"/>"),
+		(@"\[member (\S+?)\]", "<see cref=\"$1\"/>"),
+		(@"\[(\S+?)\]", "<c>$1</c>"),
+	};
+
+	public static string XMLComment(string comment, int indent = 1) {
+
+		var tabs = new string('\t', count: indent);
+		var result = tabs + "/// <summary>\n";
+		var lines = comment.Trim().Split("\n");
+
+		for (var i = 0; i < lines.Length; i++) {
+			var line = lines[i].Trim();
+			if (line.Contains("[codeblock]")) {
+				var offset = lines[i].Count(x => x == '\t');
+				result += tabs + "/// <code>\n";
+				i += 1;
+				line = lines[i].Substring(offset);
+				while (line.Contains("[/codeblock]") == false) {
+					i += 1;
+					result += tabs + "/// " + line + "\n";
+					while (lines[i].Length <= offset) { i += 1; }
+					line = lines[i].Substring(offset);
+				}
+				result += tabs + "/// </code>\n";
+			} else if (line.Contains("[codeblocks]")) {
+				while (line.Contains("[/codeblocks]") == false) {
+					i += 1;
+					line = lines[i].Trim();
+					if (line.Contains("[csharp]")) {
+						var offset = lines[i].Count(x => x == '\t');
+						result += tabs + "/// <code>\n";
+						i += 1;
+						line = lines[i].Substring(offset);
+						while (line.Contains("[/csharp]") == false) {
+							i += 1;
+							result += tabs + "/// " + line + "\n";
+							while (lines[i].Length <= offset) { i += 1; }
+							line = lines[i].Substring(offset);
+						}
+						result += tabs + "/// </code>\n";
+					}
+				}
+			} else {
+				foreach (var (pattern, replacement) in xmlReplacements) {
+					line = Regex.Replace(line, pattern, replacement);
+				}
+				result += tabs + "/// " + line + "<br/>" + "\n";
+			}
+		}
+		result += tabs + "/// </summary>";
+		return result.ReplaceLineEndings();
+	}
 }

@@ -399,7 +399,7 @@ public class Convert {
 			if (constants != null) {
 				var d = constants.FirstOrDefault(x => x.@enum != null && x.@enum == e.name && x.name == v.name);
 				if (d != null && d.comment != null) {
-					file.WriteLine(NormalizeXMlComment(d.comment, 2));
+					file.WriteLine(Fixer.XMLComment(d.comment, 2));
 				}
 			}
 			var name = Fixer.SnakeToPascal(v.name.Substring(prefixLength));
@@ -447,7 +447,7 @@ public class Convert {
 	void Method(Api.Method meth, string className, StreamWriter file, MethodType type, List<string> methodRegistrations, Documentation.Method? doc, bool isSingleton = false) {
 		if (doc != null) {
 			if (doc.description != null) {
-				file.WriteLine(NormalizeXMlComment(doc.description));
+				file.WriteLine(Fixer.XMLComment(doc.description));
 			}
 		}
 
@@ -665,35 +665,6 @@ public class Convert {
 			}
 		}
 	}
-	string NormalizeXMlComment(string comment, int indent = 1) {
-		var tabs = new string('\t', indent);
-		var addons = new List<string>();
-		if (comment.Contains("[csharp]")) {
-			var pat = @"\[csharp\](?<a>.*)\[/csharp\]";
-			var c = Regex.Match(comment, pat, RegexOptions.Singleline).Groups["a"].Captures[0].Value;
-			c = tabs + c.Trim() + "\n";
-			c = Regex.Replace(c, "\t+(.*)\n", tabs + "///   $1\n");
-			addons.Add(tabs + "/// <code>\n" + c + tabs + "/// </code>");
-			comment = Regex.Replace(comment, @"\[codeblocks\](.*)\[/codeblocks\]", "", RegexOptions.Singleline);
-		}
-		comment = comment.Trim() + "\n";
-		var replacements = new[] {
-			("\t+(.*)\n", tabs + "///    $1</br>\n"),
-			(@"\[b\](.+)\[/b\]", "<b>$1</b>"),
-			(@"\[constant (\S+)\]", "<see cref=\"$1\"/>"),
-			(@"\[code\](.+)\[/code\]", "<c>$1</c>"),
-			(@"\[param (\S+)\]",  "<paramref name=\"$1\"/>"),
-		};
-		foreach (var (pattern, replacement) in replacements) {
-			comment = Regex.Replace(comment, pattern, replacement);
-		}
-		comment = tabs + "/// <summary>\n" + tabs + "///  " + comment;
-		foreach (var addon in addons) {
-			comment += addon + "\n";
-		}
-		comment += tabs + "/// </summary>";
-		return comment;
-	}
 
 	void Class(Api.Class c, string dir) {
 
@@ -728,7 +699,7 @@ public class Convert {
 					if (doc != null) {
 						var d = doc.constants.FirstOrDefault(x => x.name == con.name);
 						if (d != null && d.comment != null) {
-							var com = NormalizeXMlComment(d.comment);
+							var com = Fixer.XMLComment(d.comment);
 							file.WriteLine(com);
 						}
 					}
