@@ -1,18 +1,14 @@
-var documentationPath = "../godot/doc/classes/";
+var documentationPath = "../godot/doc/classes/"; //set to null if no godot repository is avaible
+var configName = "float_64";
 var apiPath = "./extension_api.json";
-var serializer = new XmlSerializer(typeof(Documentation.Class));
-
-var api = Api.Create(apiPath);
-
-
 var dir = "./GDExtension/Generated";
 
-var configName = "float_64";
-
+//create or clean directory
 if (Directory.Exists(dir)) {
 	Directory.Delete(dir, true);
 }
 Directory.CreateDirectory(dir);
 
+var api = Api.Create(apiPath);
 var convert = new Convert(api, dir, documentationPath, configName);
 convert.Emit();

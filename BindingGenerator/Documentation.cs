@@ -15,6 +15,20 @@ public record Class {
 	public Constant[] constants;
 }
 
+[XmlRootAttribute("class", IsNullable = false)]
+public record BuiltinClass {
+	[XmlAttribute] public string name;
+	[XmlAttribute] public string version;
+	public string brief_description;
+	public string description;
+	public Link[] tutorials;
+	public Constructor[] constructors;
+	public Method[] methods;
+	public Member[] members;
+	public Constant[] constants;
+	public Operator[] operators;
+}
+
 [XmlType("link")]
 public record Link {
 	[XmlAttribute] public string title;
@@ -45,7 +59,7 @@ public record Parameter {
 [XmlType("constant")]
 public record Constant {
 	[XmlAttribute] public string name;
-	[XmlAttribute] public int value;
+	[XmlAttribute] public string value;
 	[XmlAttribute] public string? @enum;
 	[XmlText] public string? comment;
 }
@@ -64,6 +78,22 @@ public record Member {
 [XmlType("signal")]
 public record Signal {
 	[XmlAttribute] public string name;
+	[XmlArray("param")] public Parameter[] parameters;
+	public string description;
+}
+
+[XmlType("constructor")]
+public record Constructor {
+	[XmlAttribute] public string name;
+	public Return @return;
+	[XmlElement("param")] public Parameter[]? parameters;
+	public string description;
+}
+
+[XmlType("operator")]
+public record Operator {
+	[XmlAttribute] public string name;
+	public Return @return;
 	[XmlArray("param")] public Parameter[] parameters;
 	public string description;
 }

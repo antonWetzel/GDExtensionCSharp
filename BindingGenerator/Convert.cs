@@ -1,7 +1,7 @@
 public class Convert {
 
 	HashSet<string> objectTypes = new() { "Variant" };
-	Dictionary<string, int> notificationsIds = new();
+	Dictionary<string, (int, string?)> notificationsIds = new();
 	Dictionary<string, List<string>> registrations = new() {
 		["core"] = new(),
 		["editor"] = new(),
@@ -10,14 +10,16 @@ public class Convert {
 	};
 
 	Api api;
-	XmlSerializer xml;
+	XmlSerializer classXml;
+	XmlSerializer builtinXml;
 	string dir;
-	string docDir;
+	string? docDir;
 	string configName;
 
-	public Convert(Api api, string dir, string docDir, string configName) {
+	public Convert(Api api, string dir, string? docDir, string configName) {
 		this.api = api;
-		this.xml = new XmlSerializer(typeof(Documentation.Class));
+		this.classXml = new XmlSerializer(typeof(Documentation.Class));
+		this.builtinXml = new XmlSerializer(typeof(Documentation.BuiltinClass));
 		this.dir = dir;
 		this.docDir = docDir;
 		this.configName = configName;
@@ -64,6 +66,7 @@ public class Convert {
 			file.Close();
 		}
 		Directory.CreateDirectory(dir + "/UtilityFunctions");
+		var docGlobalScope = GetDocs("@GlobalScope");
 		var files = new Dictionary<string, (StreamWriter, List<string>)>();
 		foreach (var f in api.untilityFunction) {
 			var cat = f.category![0].ToString().ToUpper() + f.category.Substring(1);
@@ -74,7 +77,11 @@ public class Convert {
 				file.Item1.WriteLine($"public static unsafe class {cat} {{");
 				registrations["utility"].Add(cat);
 			}
-			Method(f, "", file.Item1, MethodType.Utility, file.Item2, null);
+			Documentation.Method? d = null;
+			if (docGlobalScope != null && docGlobalScope.methods != null) {
+				d = docGlobalScope.methods.FirstOrDefault(x => x.name == f.name);
+			}
+			Method(f, "", file.Item1, MethodType.Utility, file.Item2, d);
 		}
 		foreach (var (_, (file, list)) in files) {
 			file.WriteLine("#pragma warning disable CS8618");
@@ -98,7 +105,11 @@ public class Convert {
 		notifications.WriteLine();
 		notifications.WriteLine("public partial class Object {");
 		notifications.WriteLine("\tpublic enum Notifications {");
-		foreach (var (name, id) in notificationsIds) {
+		foreach (var (name, (id, doc)) in notificationsIds) {
+			if (doc != null) {
+				var com = Fixer.XMLComment(doc, 2);
+				notifications.WriteLine(com);
+			}
 			notifications.WriteLine($"\t\t{Fixer.SnakeToPascal(name.Substring("NOTIFICATION_".Length))} = {id},");
 		}
 		notifications.WriteLine("\t}");
@@ -120,10 +131,24 @@ public class Convert {
 	}
 
 	Documentation.Class? GetDocs(string name) {
+		if (docDir == null) { return null; }
 		var path = docDir + name + ".xml";
 		if (File.Exists(path)) {
 			var file = File.OpenRead(path);
-			var d = (Documentation.Class)xml.Deserialize(file)!;
+			var d = (Documentation.Class)classXml.Deserialize(file)!;
+			file.Close();
+			return d;
+		} else {
+			return null;
+		}
+	}
+
+	Documentation.BuiltinClass? GetBuiltinDocs(string name) {
+		if (docDir == null) { return null; }
+		var path = docDir + name + ".xml";
+		if (File.Exists(path)) {
+			var file = File.OpenRead(path);
+			var d = (Documentation.BuiltinClass)builtinXml.Deserialize(file)!;
 			file.Close();
 			return d;
 		} else {
@@ -164,6 +189,8 @@ public class Convert {
 		var file = File.CreateText(dir + "/" + Fixer.Type(c.name) + ".cs");
 		registrations["builtin"].Add(Fixer.Type(c.name));
 
+		var doc = GetBuiltinDocs(c.name);
+
 		var constructorRegistrations = new List<string>();
 		var operatorRegistrations = new List<string>();
 		var methodRegistrations = new List<string>();
@@ -189,48 +216,74 @@ public class Convert {
 
 		if (c.isKeyed) {
 			//Dictionary
+			//todo: manually as extension?
 		}
 
 		if (c.indexingReturnType != null) {
 			//array?
+			//todo: manually as extension?
 		}
 
 		var membersWithFunctions = new List<string>();
 
 		if (c.members != null) {
 			foreach (var member in c.members) {
-				Member(api, c, member, configName, file, membersWithFunctions);
+				Documentation.Member? d = null;
+				if (doc != null && doc.members != null) {
+					d = doc.members.FirstOrDefault(x => x.name == member.name);
+				}
+				Member(api, c, member, configName, file, membersWithFunctions, d);
 			}
 		}
 
 		if (c.constants != null) {
 			foreach (var con in c.constants) {
+				if (doc != null && doc.constants != null) {
+					var d = doc.constants.FirstOrDefault(x => x.name == con.name);
+					if (d != null && d.comment != null) {
+						var com = Fixer.XMLComment(d.comment);
+						file.WriteLine(com);
+					}
+				}
 				file.WriteLine($"\tpublic static {Fixer.Type(con.type)} {Fixer.SnakeToPascal(con.name)} {{ get; private set; }}");
 			}
 			file.WriteLine();
 		}
 
 		if (c.constructors != null) {
-			foreach (var constructor in c.constructors) {
-				Constructor(c, constructor, file, constructorRegistrations);
+			for (var i = 0; i < c.constructors.Length; i++) {
+				var constructor = c.constructors[i];
+				Documentation.Constructor? d = null;
+				if (doc != null && doc.constructors != null) {
+					d = doc.constructors[i];
+				}
+				Constructor(c, constructor, file, constructorRegistrations, d);
 			}
 		}
 
 		if (c.operators != null) {
 			foreach (var op in c.operators) {
-				Operator(op, c.name, file, operatorRegistrations);
+				Documentation.Operator? d = null;
+				if (doc != null && doc.operators != null) {
+					d = doc.operators.FirstOrDefault(x => x.name == $"operator {op.name}");
+				}
+				Operator(op, c.name, file, operatorRegistrations, d);
 			}
 		}
 
 		if (c.enums != null) {
 			foreach (var e in c.enums) {
-				Enum(e, file);
+				Enum(e, file, doc != null ? doc.constants : null);
 			}
 		}
 
 		if (c.methods != null) {
 			foreach (var meth in c.methods) {
-				Method(meth, c.name, file, MethodType.Native, methodRegistrations, null);
+				Documentation.Method? d = null;
+				if (doc != null && doc.methods != null) {
+					d = doc.methods.FirstOrDefault(x => x.name == meth.name);
+				}
+				Method(meth, c.name, file, MethodType.Native, methodRegistrations, d);
 			}
 		}
 
@@ -279,7 +332,7 @@ public class Convert {
 	}
 
 
-	void Member(Api api, Api.BuiltinClass c, Api.Member member, string configName, StreamWriter file, List<string> withFunctions) {
+	void Member(Api api, Api.BuiltinClass c, Api.Member member, string configName, StreamWriter file, List<string> withFunctions, Documentation.Member? doc) {
 		var offset = -1;
 		foreach (var config in api.builtinClassMemberOffsets) {
 			if (config.buildConfiguration == configName) {
@@ -293,6 +346,10 @@ public class Convert {
 					}
 				}
 			}
+		}
+		if (doc != null) {
+			var com = Fixer.XMLComment(doc.comment);
+			file.WriteLine(com);
 		}
 		if (offset >= 0) {
 			file.WriteLine($"\t[FieldOffset({offset})]");
@@ -319,7 +376,11 @@ public class Convert {
 		file.WriteLine();
 	}
 
-	void Constructor(Api.BuiltinClass c, Api.Constructor constructor, StreamWriter file, List<string> constructorRegistrations) {
+	void Constructor(Api.BuiltinClass c, Api.Constructor constructor, StreamWriter file, List<string> constructorRegistrations, Documentation.Constructor? doc) {
+		if (doc != null) {
+			var com = Fixer.XMLComment(doc.description);
+			file.WriteLine(com);
+		}
 		file.Write($"\tpublic {Fixer.Type(c.name)}(");
 		if (constructor.arguments != null) {
 			for (var i = 0; i < constructor.arguments.Length - 1; i++) {
@@ -351,7 +412,7 @@ public class Convert {
 		file.WriteLine();
 	}
 
-	void Operator(Api.Operator op, string className, StreamWriter file, List<string> operatorRegistrations) {
+	void Operator(Api.Operator op, string className, StreamWriter file, List<string> operatorRegistrations, Documentation.Operator? doc) {
 
 		if (op.rightType != null) {
 			if (op.rightType == "Variant") { return; }
@@ -363,7 +424,9 @@ public class Convert {
 				"in" => "OperatorIn",
 				_ => $"operator {op.name}",
 			};
-
+			if (doc != null) {
+				file.WriteLine(Fixer.XMLComment(doc.description));
+			}
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} left, {Fixer.Type(op.rightType)} right) {{");
 			file.WriteLine($"\t\tvar __op = __operatorPointer_{operatorRegistrations.Count};");
 			operatorRegistrations.Add($"gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.{Fixer.VariantName(op.rightType)})");
@@ -377,6 +440,9 @@ public class Convert {
 				"unary+" => "operator +",
 				_ => $"operator {op.name}",
 			};
+			if (doc != null) {
+				file.WriteLine(Fixer.XMLComment(doc.description));
+			}
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} value) {{");
 			file.WriteLine($"\t\tvar __op = __operatorPointer_{operatorRegistrations.Count};");
 			operatorRegistrations.Add($"gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.Nil)");
@@ -671,7 +737,6 @@ public class Convert {
 		var file = File.CreateText(dir + "/" + c.name + ".cs");
 		registrations[c.apiType].Add(c.name);
 
-
 		var doc = GetDocs(c.name);
 
 		var methodRegistrations = new List<string>();
@@ -709,7 +774,14 @@ public class Convert {
 						Console.WriteLine($"Duplicate Notification: {con.name}");
 						continue;
 					}
-					notificationsIds.Add(con.name, con.value);
+					string? comment = null;
+					if (doc != null) {
+						var d = doc.constants.FirstOrDefault(x => x.name == con.name);
+						if (d != null && d.comment != null) {
+							comment = d.comment;
+						}
+					}
+					notificationsIds.Add(con.name, (con.value, comment));
 				}
 			}
 			file.WriteLine();
@@ -732,6 +804,13 @@ public class Convert {
 				if (getter == null && setter == null) {
 					Console.WriteLine($"{c.name} setter {prop.setter} and getter {prop.getter} not found");
 					continue;
+				}
+				if (doc != null && doc.members != null) {
+					var d = doc.members.FirstOrDefault(x => x.name == prop.name);
+					if (d != null && d.comment != null) {
+						var com = Fixer.XMLComment(d.comment);
+						file.WriteLine(com);
+					}
 				}
 				if (getter != null) { type = getter.Value.returnValue!.Value.type; } else { type = setter!.Value.arguments![0].type; }
 

@@ -2,24 +2,21 @@
 
 Work maybe in Progress
 
-## Done
+## Subprojects
 
-- Working Dodge the Creeps game
-	- probably leaks memory
-	- not performant
+- [`BindingGenerator`](./BindingGenerator/readme.md)
+	- Convert `extension_api.json` to C#
+- [`Examples`](./Examples/readme.md)
+	- Test the Bindings
+	- `Summator`
+	- `Dodge the Creeps`
+- [`GDExtension`](./GDExtension/readme.md)
+	- Result of `BindingGenerator` and glue to use
+- [`Generators`](./Generators/readme.md)
+	- C# source generators for project specific glue
 
 ## To-do
 
-- Bindings
-	- clean-up
-	- signals (no clue how to convert delegate to callable)
-- Code-Generators
-	- clean-up
-	- avoid name conflicts
-	- ...
-- Memory management?
-	- Dictionary, Array, RefCounted, Variant, c-strings ...
-- Others
-	- maybe move to-do/done to GitHub issues
-	- automatic manage `Process` enable / disable
-	- Godot as submodule (is there an official build repository?)
+- Subproject specific to-dos
+- maybe move to-do/done to GitHub issues
+- Godot as submodule (is there an official build repository?)
