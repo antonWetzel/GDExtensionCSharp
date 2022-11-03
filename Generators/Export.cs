@@ -41,7 +41,7 @@ namespace Generators {
 				methods.AddMethod(new Methods.Info() {
 					name = member.GetMethod.Name,
 					arguments = new (ITypeSymbol, string)[] { },
-					ret = member.Type.Name,
+					ret = member.Type,
 					property = member.Name,
 				});
 				code += $$"""

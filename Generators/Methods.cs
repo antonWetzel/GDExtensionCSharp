@@ -12,7 +12,7 @@ namespace Generators {
 		public struct Info {
 			public string name;
 			public (ITypeSymbol, string)[] arguments;
-			public string ret;
+			public ITypeSymbol ret;
 			public string property;
 		}
 
@@ -37,7 +37,7 @@ namespace Generators {
 				var info = new Info() {
 					name = method.Name,
 					arguments = method.Parameters.Select(x => (x.Type, x.Name)).ToArray(),
-					ret = method.ReturnsVoid ? null : method.ReturnType.Name,
+					ret = method.ReturnsVoid ? null : method.ReturnType,
 					property = null,
 				};
 				AddMethod(info);
@@ -75,7 +75,7 @@ namespace Generators {
 				}
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
-					var t = TypeToVariantType(arg.Item1.Name);
+					var t = TypeToVariantType(arg.Item1);
 					code += $$"""
 					static Native.PropertyInfo __{{method.name}}_{{arg.Item2}}Info = new Native.PropertyInfo() {
 						type = (uint)Variant.Type.{{t}},
@@ -137,7 +137,7 @@ namespace Generators {
 					var arg = method.arguments[j];
 					if (arg.Item1.Name == "String") {
 						args += $"StringMarshall.ToManaged(p_args[{j}].data)";
-					} else if (TypeToVariantType(arg.Item1.Name) == "Object") {
+					} else if (TypeToVariantType(arg.Item1) == "Object") {
 						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(*(IntPtr*)(void*)p_args[{j}].data)";
 					} else {
 						args += $"*({arg.Item1.Name}*)(void*)p_args[{j}].data";
@@ -188,7 +188,7 @@ namespace Generators {
 				var args = "";
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
-					var t = TypeToVariantType(arg.Item1.Name);
+					var t = TypeToVariantType(arg.Item1);
 					if (arg.Item1.Name == "String") {
 						args += $"StringMarshall.ToManaged(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}].data, Variant.Type.String))";
 					} else if (t == "Object") {
@@ -237,7 +237,7 @@ namespace Generators {
 					code += $"\t\t\t-1 => Variant.Type.{TypeToVariantType(method.ret)},\n";
 				}
 				for (var j = 0; j < method.arguments.Length; j++) {
-					code += $"\t\t\t{j} => Variant.Type.{TypeToVariantType(method.arguments[j].Item1.Name)},\n";
+					code += $"\t\t\t{j} => Variant.Type.{TypeToVariantType(method.arguments[j].Item1)},\n";
 				}
 				code += "\t\t\t_ => Variant.Type.Nil,\n\t\t},\n";
 			}
@@ -288,14 +288,60 @@ namespace Generators {
 				"Node" => SpecialBase.Node,
 				"Resource" => SpecialBase.Resource,
 				_ => type.BaseType switch {
-					null => SpecialBase.Node,
+					null => SpecialBase.None,
 					_ => GetSpecialBase(type.BaseType),
 				},
 			};
 		}
 
+		public static string TypeToVariantType(ITypeSymbol type) {
+			return TypeToVariantType(type, GetSpecialBase(type));
+		}
+
 		public static string TypeToVariantType(ITypeSymbol type, SpecialBase sBase) {
-			return TypeToVariantType(type.Name);
+			return sBase switch {
+				SpecialBase.Node => "Object",
+				SpecialBase.Resource => "Object",
+				_ => type.Name switch {
+					"Boolean" => "Bool",
+					"Int64" => "Int",
+					"Double" => "Float",
+					"String" => "String",
+					"Vector2" => "Vector2",
+					"Vector2i" => "Vector2i",
+					"Rect2" => "Rect2",
+					"Rect2i" => "Rect2i",
+					"Vector3" => "Vector3",
+					"Vector3i" => "Vector3i",
+					"Transform2D" => "Transform2D",
+					"Vector4" => "Vector4",
+					"Vector4i" => "Vector4i",
+					"Plane" => "Plane",
+					"Quaternion" => "Quaternion",
+					"AABB" => "AABB",
+					"Basis" => "Basis",
+					"Transform3D" => "Transform3D",
+					"Projection" => "Projection",
+					"Color" => "Color",
+					"StringName" => "StringName",
+					"NodePath" => "NodePath",
+					"RID" => "RID",
+					"Callable" => "Callable",
+					"Signal" => "Signal",
+					"Dictionary" => "Dictionary",
+					"Array" => "Array",
+					"PackedByteArray" => "PackedByteArray",
+					"PackedInt32Array" => "PackedInt32Array",
+					"PackedInt64Array" => "PackedInt64Array",
+					"PackedFloat32Array" => "PackedFloat32Array",
+					"PackedFloat64Array" => "PackedFloat64Array",
+					"PackedStringArray" => "PackedStringArray",
+					"PackedVector2Array" => "PackedVector2Array",
+					"PackedVector3Array" => "PackedVector3Array",
+					"PackedColorArray" => "PackedColorArray",
+					_ => throw new Exception("Unknown"),
+				},
+			};
 		}
 
 		public static string TypeToHintString(ITypeSymbol type, SpecialBase sBase) {
@@ -329,48 +375,6 @@ namespace Generators {
 				};
 
 			""";
-		}
-
-		public static string TypeToVariantType(string t) {
-			return t switch {
-				"Boolean" => "Bool",
-				"Int64" => "Int",
-				"Double" => "Float",
-				"String" => "String",
-				"Vector2" => "Vector2",
-				"Vector2i" => "Vector2i",
-				"Rect2" => "Rect2",
-				"Rect2i" => "Rect2i",
-				"Vector3" => "Vector3",
-				"Vector3i" => "Vector3i",
-				"Transform2D" => "Transform2D",
-				"Vector4" => "Vector4",
-				"Vector4i" => "Vector4i",
-				"Plane" => "Plane",
-				"Quaternion" => "Quaternion",
-				"AABB" => "AABB",
-				"Basis" => "Basis",
-				"Transform3D" => "Transform3D",
-				"Projection" => "Projection",
-				"Color" => "Color",
-				"StringName" => "StringName",
-				"NodePath" => "NodePath",
-				"RID" => "RID",
-				"Callable" => "Callable",
-				"Signal" => "Signal",
-				"Dictionary" => "Dictionary",
-				"Array" => "Array",
-				"PackedByteArray" => "PackedByteArray",
-				"PackedInt32Array" => "PackedInt32Array",
-				"PackedInt64Array" => "PackedInt64Array",
-				"PackedFloat32Array" => "PackedFloat32Array",
-				"PackedFloat64Array" => "PackedFloat64Array",
-				"PackedStringArray" => "PackedStringArray",
-				"PackedVector2Array" => "PackedVector2Array",
-				"PackedVector3Array" => "PackedVector3Array",
-				"PackedColorArray" => "PackedColorArray",
-				_ => "Object",
-			};
 		}
 	}
 }

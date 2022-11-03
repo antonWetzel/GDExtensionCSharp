@@ -15,5 +15,6 @@ public unsafe partial class Mob : RigidBody2D {
 	[Method]
 	void OnVisibleOnScreenNotifier2DScreenExited() {
 		QueueFree();
+
 	}
 }

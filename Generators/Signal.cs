@@ -64,13 +64,5 @@ namespace Generators {
 			""";
 			context.AddSource($"{c.Name}.signal.gen.cs", code);
 		}
-
-		static string TypeToVariantType(string t) {
-			return t switch {
-				"Double" => "Float",
-				"Int64" => "Int",
-				_ => throw new System.Exception($"unknwon type '{t}' for variant"),
-			};
-		}
 	}
 }

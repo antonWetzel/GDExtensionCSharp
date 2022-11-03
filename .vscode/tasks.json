@@ -7,11 +7,13 @@
 			"type": "process",
 			"args": [
 				"publish",
-				"${workspaceFolder}/Examples/DodgeTheCreeps/Source/Source.csproj",
+				"${workspaceFolder}/Examples/DodgeTheCreeps/Source/DodgeTheCreeps.csproj",
 				"-property:GenerateFullPaths=true",
 				"-consoleloggerparameters:NoSummary",
 				"-p:NativeLib=Shared",
-				"-r=win-x64"
+				"--use-current-runtime",
+				"-o",
+				"${workspaceFolder}/Examples/DodgeTheCreeps/Build",
 			],
 			"problemMatcher": "$msCompile"
 		},
@@ -31,11 +33,13 @@
 			"type": "process",
 			"args": [
 				"publish",
-				"${workspaceFolder}/Examples/Summator/Source/Source.csproj",
+				"${workspaceFolder}/Examples/Summator/Source/Summator.csproj",
 				"-property:GenerateFullPaths=true",
 				"-consoleloggerparameters:NoSummary",
 				"-p:NativeLib=Shared",
-				"-r=win-x64"
+				"--use-current-runtime",
+				"-o",
+				"${workspaceFolder}/Examples/Summator/Build",
 			],
 			"problemMatcher": "$msCompile"
 		},
