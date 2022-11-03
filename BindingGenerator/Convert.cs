@@ -510,49 +510,83 @@ public class Convert {
 		Utility,
 	}
 
+	bool IsValidDefaultValue(string value, string type) {
+		if (value.Contains('(')) { return false; }
+		if (value == "{}") { return false; }
+		if (value == "[]") { return false; }
+		if (value.Contains('&')) { return false; }
+		if (value == "") { return type == "String"; }
+		if (type == "Variant") { return false; }
+		if (type == "StringName") { return false; }
+		return true;
+	}
+
+	string FixDefaultValue(string value, string type) {
+		if (value.Contains('(')) { return $"new {value}"; }
+		if (value == "{}") { return "new Dictionary()"; }
+		if (value == "[]") { return "new Array()"; }
+		if (value.Contains('&')) { return $"new StringName({value.Substring(1)})"; }
+		if (value == "") { return $"new {type}()"; }
+		if (type == "Variant" && value == "null") { return "Variant.Nil"; }
+		if (value == "null") { return "null!"; }
+		return $"({Fixer.Type(type)}){value}";
+	}
+
 	void Method(Api.Method meth, string className, StreamWriter file, MethodType type, List<string> methodRegistrations, Documentation.Method? doc, bool isSingleton = false) {
+		var header = "";
 		if (doc != null) {
 			if (doc.description != null) {
-				file.WriteLine(Fixer.XMLComment(doc.description));
+				header += Fixer.XMLComment(doc.description) + Environment.NewLine;
 			}
 		}
-
+		header += "\tpublic ";
 		var ret = meth.returnType ?? meth.returnValue?.type ?? "";
-		file.Write("\tpublic ");
 		if (meth.isStatic || type == MethodType.Utility || isSingleton) {
-			file.Write("static ");
+			header += "static ";
 		}
 		if (meth.name == "to_string") {
-			file.Write("new ");
+			header += "new ";
 		}
 
 		if (ret != "") {
-			file.Write(Fixer.Type(ret));
+			header += Fixer.Type(ret);
 		} else {
-			file.Write("void");
+			header += "void";
 		}
-		file.Write($" {Fixer.MethodName(meth.name)}(");
+		header += $" {Fixer.MethodName(meth.name)}(";
 		if (meth.arguments != null) {
 			for (var i = 0; i < meth.arguments.Length; i++) {
 				var arg = meth.arguments[i];
-				file.Write($"{Fixer.Type(arg.type)} {Fixer.Name(arg.name)}");
-				/*if (arg.defaultValue != null) {
-					var def = arg.defaultValue;
-					if (def.Contains('(')) { goto skip; }
-					if (def.Contains('"')) { goto skip; }
-					if (def == "{}") { goto skip; }
-					if (def == "[]") { goto skip; }
-					if (def == "null") { goto skip; }
-					if (def == "") { goto skip; }
-					file.Write($" = {Fixer.Value(def)}");
-				skip:
-					;
-				}*/
-				if (i < meth.arguments.Length - 1) {
-					file.Write(", ");
+				var suffix = "";
+				if (arg.defaultValue != null) {
+					var validDefault = true;
+					for (var j = i; j < meth.arguments.Length; j++) {
+						validDefault &= IsValidDefaultValue(meth.arguments[j].defaultValue!, meth.arguments[j].type);
+					}
+					if (validDefault) {
+						suffix = $" = {FixDefaultValue(arg.defaultValue, arg.type)}";
+					} else {
+						file.Write(header + $") => {Fixer.MethodName(meth.name)}(");
+						for (var j = 0; j < i; j++) {
+							file.Write($"{Fixer.Name(meth.arguments[j].name)}, ");
+						}
+						for (var j = i; j < meth.arguments.Length; j++) {
+							file.Write($"{FixDefaultValue(meth.arguments[j].defaultValue!, meth.arguments[j].type)}");
+							if (j < meth.arguments.Length - 1) {
+								file.Write(", ");
+							}
+						}
+						file.WriteLine(");");
+					}
 				}
+				if (i != 0) {
+					header += ", ";
+				}
+				header += $"{Fixer.Type(arg.type)} {Fixer.Name(arg.name)}{suffix}";
 			}
 		}
+
+		file.Write(header);
 		if (meth.isVararg) {
 			if (meth.arguments != null) {
 				file.Write(", ");

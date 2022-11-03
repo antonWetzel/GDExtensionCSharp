@@ -12,12 +12,17 @@ _data = {
 }
 point_count = 5
 
-[node name="Main" type="Main" node_paths=PackedStringArray("mobTimer", "scoreTimer", "hud", "player")]
+[node name="Main" type="Main" node_paths=PackedStringArray("mobTimer", "scoreTimer", "hud", "player", "music", "deathSound", "startPosition", "startTimer", "mobSpawnLocation")]
 mobScene = ExtResource("1_j5k53")
 mobTimer = NodePath("MobTimer")
 scoreTimer = NodePath("ScoreTimer")
 hud = NodePath("Hud")
 player = NodePath("Player")
+music = NodePath("Music")
+deathSound = NodePath("DeathSound")
+startPosition = NodePath("StartPosition")
+startTimer = NodePath("StartTimer")
+mobSpawnLocation = NodePath("MobPath/MobSpawnLocation")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 anchors_preset = 15

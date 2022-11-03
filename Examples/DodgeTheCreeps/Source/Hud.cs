@@ -15,14 +15,14 @@ public partial class Hud : CanvasLayer {
 	public void ShowGetReady() {
 		messageLabel.text = "Get Ready";
 		messageLabel.Show();
-		startReadyMessageTimer.Start(-1.0);
+		startReadyMessageTimer.Start();
 	}
 
 	[Method]
 	public void ShowGameOver() {
 		messageLabel.text = "Game Over";
 		messageLabel.Show();
-		startMessageTimer.Start(-1.0);
+		startMessageTimer.Start();
 	}
 
 	[Method]
@@ -40,7 +40,7 @@ public partial class Hud : CanvasLayer {
 	void OnStartMessageTimerTimeout() {
 		messageLabel.text = "Dodge the Creeps!";
 		messageLabel.Show();
-		startButtonTimer.Start(-1.0);
+		startButtonTimer.Start();
 	}
 
 	[Method]

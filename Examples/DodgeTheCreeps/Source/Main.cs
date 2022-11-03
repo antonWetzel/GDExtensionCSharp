@@ -8,6 +8,11 @@ public unsafe partial class Main : Node {
 	[Export] Timer scoreTimer { get; set; }
 	[Export] Hud hud { get; set; }
 	[Export] Player player { get; set; }
+	[Export] AudioStreamPlayer music { get; set; }
+	[Export] AudioStreamPlayer deathSound { get; set; }
+	[Export] Marker2D startPosition { get; set; }
+	[Export] Timer startTimer { get; set; }
+	[Export] PathFollow2D mobSpawnLocation { get; set; }
 
 	long score;
 
@@ -28,26 +33,21 @@ public unsafe partial class Main : Node {
 			mob.QueueFree();
 		}
 		//GetTree().CallGroup("mobs", "queue_free"); //crashes (probably problems with vararg)
-		var music = GetNode<AudioStreamPlayer>("Music");
 		music.Stop();
-
-		var deathSound = GetNode<AudioStreamPlayer>("DeathSound");
-		deathSound.Play(0.0);
+		deathSound.Play();
 	}
 
 	[Method]
 	public void NewGame() {
 		score = 0;
 
-		var startPosition = GetNode<Marker2D>("StartPosition");
 		player.Start(startPosition.position);
-		GetNode<Timer>("StartTimer").Start(-1.0);
+		startTimer.Start();
 
 		hud.UpdateScore(score);
 		hud.ShowGetReady();
 
-		var music = GetNode<AudioStreamPlayer>("Music");
-		music.Play(0.0);
+		music.Play();
 	}
 
 	[Method]
@@ -58,8 +58,8 @@ public unsafe partial class Main : Node {
 
 	[Method]
 	public void OnStartTimerTimeout() {
-		mobTimer.Start(-1.0);
-		scoreTimer.Start(-1.0);
+		mobTimer.Start();
+		scoreTimer.Start();
 	}
 
 	[Method]
@@ -68,7 +68,6 @@ public unsafe partial class Main : Node {
 		var mob = mobScene.Instantiate<Mob>(PackedScene.GenEditState.Disabled);
 
 		// Choose a random location on Path2D.
-		var mobSpawnLocation = GetNode<PathFollow2D>("MobPath/MobSpawnLocation");
 		mobSpawnLocation.progress_ratio = GDExtension.Random.Randf();
 
 		// Set the mob's direction perpendicular to the path direction.
@@ -85,6 +84,6 @@ public unsafe partial class Main : Node {
 		var velocity = new Vector2(GDExtension.Random.RandfRange(150.0, 250.0), 0.0);
 		mob.linear_velocity = velocity.Rotated(direction);
 
-		AddChild(mob, false, InternalMode.Disabled);
+		AddChild(mob);
 	}
 }

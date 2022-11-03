@@ -20,22 +20,22 @@ public unsafe partial class Player : Area2D {
 	[Notify(Notifications.Process, arguments = "GetProcessDeltaTime()")]
 	void Process(double delta) {
 		var velocity = Vector2.Zero;
-		if (Input.IsActionPressed("move_up", false)) {
+		if (Input.IsActionPressed("move_up")) {
 			velocity.y -= 1f;
 		}
-		if (Input.IsActionPressed("move_left", false)) {
+		if (Input.IsActionPressed("move_left")) {
 			velocity.x -= 1f;
 		}
-		if (Input.IsActionPressed("move_down", false)) {
+		if (Input.IsActionPressed("move_down")) {
 			velocity.y += 1f;
 		}
-		if (Input.IsActionPressed("move_right", false)) {
+		if (Input.IsActionPressed("move_right")) {
 			velocity.x += 1f;
 		}
 
 		if (velocity.Length() > 0.0) {
 			velocity = velocity.Normalized() * speed;
-			animatedSprite2D.Play("", false);
+			animatedSprite2D.Play();
 		} else {
 			animatedSprite2D.Stop();
 		}
