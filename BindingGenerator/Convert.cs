@@ -767,6 +767,16 @@ public class Convert {
 	}
 
 	void Class(Api.Class c, string dir) {
+		switch (c.name) {
+		case "GDScriptNativeClass":
+		case "JavaClassWrapper":
+		case "JavaScriptBridge":
+		case "ThemeDB":
+			//in 'extension_api' but not in 'ClassDB'
+			return;
+		default:
+			break;
+		}
 
 		var file = File.CreateText(dir + "/" + c.name + ".cs");
 		registrations[c.apiType].Add(c.name);
@@ -924,6 +934,7 @@ public class Convert {
 		file.WriteLine($"\t\tObject.RegisterConstructor(\"{c.name}\", Construct);");
 		for (var i = 0; i < methodRegistrations.Count; i++) {
 			file.WriteLine($"\t\t__methodPointer_{i} = {methodRegistrations[i]};");
+			file.WriteLine($"\t\tif (__methodPointer_{i}.data == IntPtr.Zero) {{ Console.WriteLine(\"{c.name} {i}\"); }}");
 		}
 		file.WriteLine("\t}");
 		file.WriteLine("}");

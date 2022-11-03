@@ -60,34 +60,11 @@ namespace Generators {
 			for (var i = 0; i < methods.Count; i++) {
 				var method = methods[i];
 				if (method.ret != null) {
-					code += $$"""
-					static Native.PropertyInfo __{{method.name}}_returnInfo = new Native.PropertyInfo() {
-						type = (uint)Variant.Type.{{TypeToVariantType(method.ret)}},
-						name = (byte*)Marshal.StringToHGlobalAnsi("return"),
-						class_name = null,
-						hint = (uint)PropertyHint.None,
-						hint_string = null,
-						usage = (uint)PropertyUsageFlags.Default,
-					};
-
-
-				""";
+					code += $"static Native.PropertyInfo __{method.name}_returnInfo = {CreatePropertyInfo(method.ret, "return")}";
 				}
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
-					var t = TypeToVariantType(arg.Item1);
-					code += $$"""
-					static Native.PropertyInfo __{{method.name}}_{{arg.Item2}}Info = new Native.PropertyInfo() {
-						type = (uint)Variant.Type.{{t}},
-						name = (byte*)Marshal.StringToHGlobalAnsi("{{arg.Item2}}"),
-						class_name = null,
-						hint = (uint)PropertyHint.None,
-						hint_string = null,
-						usage = (uint)PropertyUsageFlags.Default,
-					};
-
-
-				""";
+					code += $"static Native.PropertyInfo __{method.name}_{arg.Item2}Info = {CreatePropertyInfo(arg.Item1, arg.Item2)}";
 				}
 			}
 
@@ -107,7 +84,7 @@ namespace Generators {
 							method_userdata = new IntPtr({{i}}),
 							call_func = new(CallFunc),
 							ptrcall_func = new(CallFuncPtr),
-							method_flags = (uint)Native.ExtensionClassMethodFlags.Default,
+							method_flags = Native.ExtensionClassMethodFlags.Default,
 							argument_count = {{method.arguments.Length}},
 							has_return_value = {{(method.ret != null ? "true" : "false")}},
 							get_argument_type_func = new(ArgumentType),
@@ -366,12 +343,12 @@ namespace Generators {
 
 			return $$"""
 			new Native.PropertyInfo() {
-					type = (uint)Variant.Type.{{TypeToVariantType(type, sBase)}},
+					type = Variant.Type.{{TypeToVariantType(type, sBase)}},
 					name = (byte*)Marshal.StringToHGlobalAnsi("{{name}}"),
 					class_name = null,
-					hint = (uint){{TypeToHint(type, sBase)}},
+					hint = {{TypeToHint(type, sBase)}},
 					hint_string = {{TypeToHintString(type, sBase)}},
-					usage = (uint)PropertyUsageFlags.Default,
+					usage = PropertyUsageFlags.Default,
 				};
 
 			""";

@@ -53,7 +53,7 @@ public static partial class Native {
 		TooManyArguments, /* expected is number of arguments */
 		TooFewArguments, /*  expected is number of arguments */
 		InstanceIsNull,
-		MethodNotConst, /* used for call */
+		MethodNotConst, /* used for const call */
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -102,19 +102,19 @@ public static partial class Native {
 
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct PropertyInfo {
-		public uint type;
+		public Variant.Type type;
 		public byte* name;
 		public byte* class_name;
-		public uint hint;
+		public PropertyHint hint;
 		public byte* hint_string;
-		public uint usage;
+		public PropertyUsageFlags usage;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
 	public unsafe struct MethodInfo {
 		public byte* name;
 		public PropertyInfo return_value;
-		public uint flags; // From ExtensionClassMethodFlags
+		public ExtensionClassMethodFlags flags; // From ExtensionClassMethodFlags
 		public int id;
 		public PropertyInfo* arguments;
 		public uint argument_count;
@@ -174,16 +174,15 @@ public static partial class Native {
 
 	public enum ExtensionClassMethodArgumentMetadata {
 		None,
-		IsInt8,
-		IsInt16,
-		IsInt32,
-		IsInt64,
-		IsUint8,
-		IsUint16,
-		IsUint32,
-		IsUint64,
-		IsFloat,
-		IsDouble
+		IntIsInt16,
+		IntIsInt32,
+		IntIsInt64,
+		IntIsUint8,
+		IntIsUint16,
+		IntIsUint32,
+		IntIsUint64,
+		RealIsFloat,
+		RealIsDouble,
 	}
 
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionClassMethodCall(IntPtr method_userdata, GDExtensionClassInstancePtr p_instance, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
@@ -200,7 +199,7 @@ public static partial class Native {
 		public IntPtr method_userdata;
 		public FuncPtr<ExtensionClassMethodCall> call_func;
 		public FuncPtr<ExtensionClassMethodPtrCall> ptrcall_func;
-		public uint method_flags; /* ExtensionClassMethodFlags */
+		public ExtensionClassMethodFlags method_flags;
 		public uint argument_count;
 		public Bool has_return_value;
 		public FuncPtr<ExtensionClassMethodGetArgumentType> get_argument_type_func;
