@@ -36,7 +36,9 @@
 			"type": "cppvsdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
-			"args": [],
+			"args": [
+				"--verbose",
+			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}/Examples/DodgeTheCreeps",
 			"console": "integratedTerminal",

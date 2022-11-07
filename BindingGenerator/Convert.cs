@@ -1,7 +1,25 @@
 public class Convert {
 
 	HashSet<string> objectTypes = new() { "Variant" };
-	Dictionary<string, (int, string?)> notificationsIds = new();
+
+	HashSet<string> builtinObjectTypes = new() {
+		"Array",
+		"Callable",
+		"Dictionary",
+		"PackedByteArray",
+		"PackedColorArray",
+		"PackedFloat32Array",
+		"PackedFloat64Array",
+		"PackedInt32Array",
+		"PackedInt64Array",
+		"PackedStringArray",
+		"PackedVector2Array",
+		"PackedVector3Array",
+		"NodePath",
+		"Signal",
+		"StringName",
+	};
+
 	Dictionary<string, List<string>> registrations = new() {
 		["core"] = new(),
 		["editor"] = new(),
@@ -26,6 +44,11 @@ public class Convert {
 	}
 
 	public void Emit() {
+
+		foreach (var o in builtinObjectTypes) {
+			objectTypes.Add(o);
+		}
+
 		foreach (var c in api.classes) {
 			objectTypes.Add(c.name);
 		}
@@ -51,6 +74,8 @@ public class Convert {
 				if (name.Contains("*")) {
 					type = "IntPtr"; //pointer to `'Object', which is managed in bindings
 					name = name.Replace("*", "");
+				} else if (builtinObjectTypes.Contains(type)) {
+					type = "IntPtr";
 				}
 				if (name.Contains("[")) {
 					var size = int.Parse(name.Split("[")[1].Split("]")[0]);
@@ -99,22 +124,6 @@ public class Convert {
 			file.WriteLine(value: "}");
 			file.Close();
 		}
-
-		var notifications = File.CreateText(dir + "/Notifications.cs");
-		notifications.WriteLine("namespace GDExtension;");
-		notifications.WriteLine();
-		notifications.WriteLine("public partial class Object {");
-		notifications.WriteLine("\tpublic enum Notifications {");
-		foreach (var (name, (id, doc)) in notificationsIds) {
-			if (doc != null) {
-				var com = Fixer.XMLComment(doc, 2);
-				notifications.WriteLine(com);
-			}
-			notifications.WriteLine($"\t\t{Fixer.SnakeToPascal(name.Substring("NOTIFICATION_".Length))} = {id},");
-		}
-		notifications.WriteLine("\t}");
-		notifications.WriteLine(value: "}");
-		notifications.Close();
 
 		var register = File.CreateText(dir + "/Register.cs");
 		register.WriteLine("namespace GDExtension;");
@@ -178,13 +187,13 @@ public class Convert {
 			case "Nil":
 				break;
 			default:
-				BuiltinClass(c, dir);
+				BuiltinClass(c, dir, builtinObjectTypes.Contains(c.name));
 				break;
 			}
 		}
 	}
 
-	void BuiltinClass(Api.BuiltinClass c, string dir) {
+	void BuiltinClass(Api.BuiltinClass c, string dir, bool hasPointer) {
 
 		var file = File.CreateText(dir + "/" + Fixer.Type(c.name) + ".cs");
 		registrations["builtin"].Add(Fixer.Type(c.name));
@@ -210,9 +219,18 @@ public class Convert {
 
 		file.WriteLine("namespace GDExtension;");
 		file.WriteLine("");
-		file.WriteLine($"[StructLayout(LayoutKind.Explicit, Size = {size})]");
-		file.WriteLine($"public unsafe partial struct {Fixer.Type(c.name)} {{");
+		if (hasPointer == false) {
+			file.WriteLine($"[StructLayout(LayoutKind.Explicit, Size = {size})]");
+		}
+		file.WriteLine($"public unsafe partial {(hasPointer ? "class" : "struct")} {Fixer.Type(c.name)} {{");
 		file.WriteLine();
+
+		if (hasPointer) {
+			file.WriteLine($"\tpublic const int StructSize = {size};");
+			file.WriteLine("\tpublic TypePtr _internal_pointer;");
+			file.WriteLine($"\tpublic {c.name}(TypePtr ptr) => _internal_pointer = ptr;");
+			file.WriteLine();
+		}
 
 		if (c.isKeyed) {
 			//Dictionary
@@ -257,7 +275,7 @@ public class Convert {
 				if (doc != null && doc.constructors != null) {
 					d = doc.constructors[i];
 				}
-				Constructor(c, constructor, file, constructorRegistrations, d);
+				Constructor(c, constructor, file, constructorRegistrations, d, hasPointer);
 			}
 		}
 
@@ -267,7 +285,7 @@ public class Convert {
 				if (doc != null && doc.operators != null) {
 					d = doc.operators.FirstOrDefault(x => x.name == $"operator {op.name}");
 				}
-				Operator(op, c.name, file, operatorRegistrations, d);
+				Operator(op, c.name, file, operatorRegistrations, d, hasPointer);
 			}
 		}
 
@@ -283,11 +301,20 @@ public class Convert {
 				if (doc != null && doc.methods != null) {
 					d = doc.methods.FirstOrDefault(x => x.name == meth.name);
 				}
-				Method(meth, c.name, file, MethodType.Native, methodRegistrations, d);
+				Method(meth, c.name, file, MethodType.Native, methodRegistrations, d, isBuiltinPointer: hasPointer);
 			}
 		}
 
 		EqualAndHash(c.name, file);
+
+		if (hasPointer) {
+			file.WriteLine($"\t~{Fixer.Type(c.name)}() => __destructor(_internal_pointer);");
+			file.WriteLine();
+			file.WriteLine("\t[StructLayout(LayoutKind.Explicit, Size = StructSize)]");
+			file.WriteLine("\tpublic struct InternalStruct { }");
+			file.WriteLine();
+		}
+
 
 		file.WriteLine("#pragma warning disable CS8618");
 		foreach (var member in membersWithFunctions) {
@@ -302,6 +329,9 @@ public class Convert {
 		}
 		for (var i = 0; i < methodRegistrations.Count; i++) {
 			file.WriteLine($"\tstatic PtrBuiltInMethod __methodPointer_{i};");
+		}
+		if (hasPointer) {
+			file.WriteLine("\tstatic PtrDestructor __destructor;");
 		}
 
 		file.WriteLine("#pragma warning restore CS8618");
@@ -320,6 +350,9 @@ public class Convert {
 		}
 		for (var i = 0; i < methodRegistrations.Count; i++) {
 			file.WriteLine($"\t\t__methodPointer_{i} = {methodRegistrations[i]};");
+		}
+		if (hasPointer) {
+			file.WriteLine($"\t\t__destructor = gdInterface.variant_get_ptr_destructor.Call(Variant.Type.{Fixer.Type(c.name)});");
 		}
 		if (c.constants != null) {
 			foreach (var con in c.constants) {
@@ -376,7 +409,7 @@ public class Convert {
 		file.WriteLine();
 	}
 
-	void Constructor(Api.BuiltinClass c, Api.Constructor constructor, StreamWriter file, List<string> constructorRegistrations, Documentation.Constructor? doc) {
+	void Constructor(Api.BuiltinClass c, Api.Constructor constructor, StreamWriter file, List<string> constructorRegistrations, Documentation.Constructor? doc, bool hasPointer) {
 		if (doc != null) {
 			var com = Fixer.XMLComment(doc.description);
 			file.WriteLine(com);
@@ -391,6 +424,9 @@ public class Convert {
 			file.Write(value: $"{Fixer.Type(a.type)} {Fixer.Name(a.name)}");
 		}
 		file.WriteLine(") {");
+		if (hasPointer) {
+			file.WriteLine("\t\t_internal_pointer = gdInterface.mem_alloc.Call(StructSize);");
+		}
 		file.WriteLine($"\t\tvar constructor = __constructorPointer_{constructorRegistrations.Count};");
 		constructorRegistrations.Add($"gdInterface.variant_get_ptr_constructor.Call(Variant.Type.{Fixer.Type(c.name)}, {constructor.index})");
 
@@ -401,18 +437,25 @@ public class Convert {
 				file.WriteLine($"\t\targs[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
 			}
 		}
-		file.WriteLine($"\t\tfixed ({Fixer.Type(c.name)}* ptr = &this) {{");
-		if (constructor.arguments != null) {
-			file.WriteLine("\t\t\tconstructor(new IntPtr(ptr), args);");
+		if (hasPointer == false) {
+			file.WriteLine($"\t\tfixed ({Fixer.Type(c.name)}* ptr = &this) {{");
+			file.Write("\t\t\tconstructor(new IntPtr(ptr), ");
 		} else {
-			file.WriteLine("\t\t\tconstructor(new IntPtr(ptr), (TypePtr*)(void*)IntPtr.Zero);");
+			file.Write("\t\tconstructor(_internal_pointer, ");
 		}
-		file.WriteLine("\t\t}");
+		if (constructor.arguments != null) {
+			file.WriteLine("args);");
+		} else {
+			file.WriteLine("(TypePtr*)(void*)IntPtr.Zero);");
+		}
+		if (hasPointer == false) {
+			file.WriteLine("\t\t}");
+		}
 		file.WriteLine("\t}");
 		file.WriteLine();
 	}
 
-	void Operator(Api.Operator op, string className, StreamWriter file, List<string> operatorRegistrations, Documentation.Operator? doc) {
+	void Operator(Api.Operator op, string className, StreamWriter file, List<string> operatorRegistrations, Documentation.Operator? doc, bool hasPointer) {
 
 		if (op.rightType != null) {
 			if (op.rightType == "Variant") { return; }
@@ -430,9 +473,9 @@ public class Convert {
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} left, {Fixer.Type(op.rightType)} right) {{");
 			file.WriteLine($"\t\tvar __op = __operatorPointer_{operatorRegistrations.Count};");
 			operatorRegistrations.Add($"gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.{Fixer.VariantName(op.rightType)})");
-			file.WriteLine($"\t\t{Fixer.Type(op.returnType)} __res;");
-			file.WriteLine($"\t\t__op(new IntPtr(&left), {ValueToPointer("right", op.rightType)}, new IntPtr(&__res));");
-			file.WriteLine("\t\treturn __res;");
+			file.WriteLine($"\t\t{ReturnLocationType(op.returnType, "__res")};");
+			file.WriteLine($"\t\t__op({ValueToPointer("left", className)}, {ValueToPointer("right", op.rightType)}, new IntPtr(&__res));");
+			file.WriteLine($"\t\treturn {ReturnStatementValue(op.returnType)};");
 		} else {
 			var name = op.name switch {
 				"unary-" => "operator -",
@@ -446,9 +489,9 @@ public class Convert {
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} value) {{");
 			file.WriteLine($"\t\tvar __op = __operatorPointer_{operatorRegistrations.Count};");
 			operatorRegistrations.Add($"gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.Nil)");
-			file.WriteLine($"\t\t{Fixer.Type(op.returnType)} __res;");
-			file.WriteLine($"\t\t__op(new IntPtr(&value), IntPtr.Zero, new IntPtr(&__res));");
-			file.WriteLine("\t\treturn __res;");
+			file.WriteLine($"\t\t{ReturnLocationType(op.returnType, "__res")};");
+			file.WriteLine($"\t\t__op({ValueToPointer("value", className)}, IntPtr.Zero, new IntPtr(&__res));");
+			file.WriteLine($"\t\treturn {ReturnStatementValue(op.returnType)};");
 		}
 		file.WriteLine("\t}");
 		file.WriteLine();
@@ -477,26 +520,33 @@ public class Convert {
 	}
 
 	string ValueToPointer(string name, string type) {
+		var f = Fixer.Type(type);
 		if (type == "String") {
 			return $"StringMarshall.ToNative({name})";
-		} else if (objectTypes.Contains(type)) {
+		} else if (objectTypes.Contains(type) || builtinObjectTypes.Contains(f)) {
 			return $"{name}._internal_pointer";
 		} else {
 			return $"new IntPtr(&{Fixer.Name(name)})";
 		}
 	}
 
-	string ReturnLocationType(string type) {
-		if (objectTypes.Contains(type) || type == "String") {
-			return "IntPtr";
+	string ReturnLocationType(string type, string name) {
+		var f = Fixer.Type(type);
+		if (builtinObjectTypes.Contains(f)) {
+			return $"{f}.InternalStruct {name}";
+		} else if (objectTypes.Contains(type) || type == "String") {
+			return $"IntPtr {name}";
 		} else {
-			return $"{Fixer.Type(type)}";
+			return $"{f} {name}";
 		}
 	}
 
 	string ReturnStatementValue(string type) {
+		var f = Fixer.Type(type);
 		if (type == "String") {
 			return "StringMarshall.ToManaged(__res)";
+		} else if (builtinObjectTypes.Contains(f)) {
+			return $"new {f}(gdInterface.MoveToUnmanaged(__res))";
 		} else if (objectTypes.Contains(type)) {
 			return $"({type})Object.ConstructUnknown(__res)";
 		} else {
@@ -532,7 +582,7 @@ public class Convert {
 		return $"({Fixer.Type(type)}){value}";
 	}
 
-	void Method(Api.Method meth, string className, StreamWriter file, MethodType type, List<string> methodRegistrations, Documentation.Method? doc, bool isSingleton = false) {
+	void Method(Api.Method meth, string className, StreamWriter file, MethodType type, List<string> methodRegistrations, Documentation.Method? doc, bool isSingleton = false, bool isBuiltinPointer = false) {
 		var header = "";
 		if (doc != null) {
 			if (doc.description != null) {
@@ -652,12 +702,12 @@ public class Convert {
 			file.WriteLine("\t\t};");
 		}
 		if (ret != "") {
-			file.WriteLine($"\t\t{ReturnLocationType(ret)} __res;");
+			file.WriteLine($"\t\t{ReturnLocationType(ret, "__res")};");
 		}
 		if (type == MethodType.Class && meth.isVararg) {
 			file.WriteLine("\t\tCallError __err;");
 		}
-		if (meth.isStatic == false && type == MethodType.Native) {
+		if (meth.isStatic == false && type == MethodType.Native && isBuiltinPointer == false) {
 			file.WriteLine($"\t\tvar __temp = this;");
 		}
 		if (type == MethodType.Class) {
@@ -678,7 +728,9 @@ public class Convert {
 		} else if (meth.isStatic) {
 			file.Write("IntPtr.Zero");
 		} else if (type == MethodType.Class) {
-			file.Write($"{(isSingleton ? "Singleton" : "this")}._internal_pointer");
+			file.Write(value: $"{(isSingleton ? "Singleton" : "this")}._internal_pointer");
+		} else if (isBuiltinPointer) {
+			file.Write("this._internal_pointer");
 		} else {
 			file.Write("new IntPtr(&__temp)");
 		}
@@ -772,7 +824,7 @@ public class Convert {
 		case "JavaClassWrapper":
 		case "JavaScriptBridge":
 		case "ThemeDB":
-			//in 'extension_api' but not in 'ClassDB'
+			//in 'extension_api' but not in 'ClassDB' at latest init level
 			return;
 		default:
 			break;
@@ -804,28 +856,17 @@ public class Convert {
 
 		if (c.constants != null) {
 			foreach (var con in c.constants) {
-				if (con.name.Substring(0, 5) != "NOTIF") {
-					if (doc != null) {
-						var d = doc.constants.FirstOrDefault(x => x.name == con.name);
-						if (d != null && d.comment != null) {
-							var com = Fixer.XMLComment(d.comment);
-							file.WriteLine(com);
-						}
+				if (doc != null) {
+					var d = doc.constants.FirstOrDefault(x => x.name == con.name);
+					if (d != null && d.comment != null) {
+						var com = Fixer.XMLComment(d.comment);
+						file.WriteLine(com);
 					}
-					file.WriteLine($"\tpublic const int {con.name} = {con.value};");
+				}
+				if (con.name.StartsWith("NOTIFICATION_")) {
+					file.WriteLine($"\tpublic const Notification {Fixer.SnakeToPascal(con.name)} = (Notification){con.value};");
 				} else {
-					if (notificationsIds.ContainsKey(con.name)) {
-						Console.WriteLine($"Duplicate Notification: {con.name}");
-						continue;
-					}
-					string? comment = null;
-					if (doc != null) {
-						var d = doc.constants.FirstOrDefault(x => x.name == con.name);
-						if (d != null && d.comment != null) {
-							comment = d.comment;
-						}
-					}
-					notificationsIds.Add(con.name, (con.value, comment));
+					file.WriteLine($"\tpublic const int {con.name} = {con.value};");
 				}
 			}
 			file.WriteLine();
@@ -890,7 +931,7 @@ public class Convert {
 				if (doc != null && doc.methods != null) {
 					d = doc.methods.FirstOrDefault(x => x.name == meth.name);
 				}
-				Method(meth, c.name, file, MethodType.Class, methodRegistrations, d, isSingleton);
+				Method(meth, c.name, file, MethodType.Class, methodRegistrations, d, isSingleton: isSingleton);
 			}
 		}
 
@@ -934,7 +975,6 @@ public class Convert {
 		file.WriteLine($"\t\tObject.RegisterConstructor(\"{c.name}\", Construct);");
 		for (var i = 0; i < methodRegistrations.Count; i++) {
 			file.WriteLine($"\t\t__methodPointer_{i} = {methodRegistrations[i]};");
-			file.WriteLine($"\t\tif (__methodPointer_{i}.data == IntPtr.Zero) {{ Console.WriteLine(\"{c.name} {i}\"); }}");
 		}
 		file.WriteLine("\t}");
 		file.WriteLine("}");

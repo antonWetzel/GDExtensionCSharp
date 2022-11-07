@@ -141,6 +141,7 @@ public static class Fixer {
 	static (string, MatchEvaluator)[] xmlReplacements = new (string, MatchEvaluator)[] {
 		(@"<", x => "&lt;"),
 		(@">", x => "&gt;"),
+		(@"&", x => "&amp;"),
 		(@"\[b\](?<a>.+?)\[/b\]", x => $"<b>{x.Groups["a"].Captures[0].Value}</b>"),
 		(@"\[i\](?<a>.+?)\[/i\]", x => $"<i>{x.Groups["a"].Captures[0].Value}</i>"),
 		(@"\[constant (?<a>\S+?)\]", x => $"<see cref=\"{SnakeToPascal(x.Groups["a"].Captures[0].Value)}\"/>"),

@@ -10,14 +10,14 @@ public unsafe partial class Player : Area2D {
 
 	public Vector2 screenSize;
 
-	[Notify(Notifications.Ready)]
+	[Notify(NotificationReady)]
 	void Ready() {
 		SetProcess(true);
 		screenSize = GetViewportRect().size;
 		Hide();
 	}
 
-	[Notify(Notifications.Process, arguments = "GetProcessDeltaTime()")]
+	[Notify(NotificationProcess, arguments = "GetProcessDeltaTime()")]
 	void Process(double delta) {
 		var velocity = Vector2.Zero;
 		if (Input.IsActionPressed("move_up")) {

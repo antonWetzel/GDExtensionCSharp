@@ -87,18 +87,51 @@ public unsafe class Variant {
 		MAX
 	}
 
-	public static void InteropSaveIntoPointer<T>(T value, IntPtr _internal_pointer, Variant.Type t) where T : unmanaged {
-		gdInterface.get_variant_from_type_constructor.Call(t)(_internal_pointer, new IntPtr(&value));
+	public static void SaveIntoPointer(bool value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Bool)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(long value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Int)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(double value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Float)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(string value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.String)(ptr, StringMarshall.ToNative(value));
+	public static void SaveIntoPointer(Vector2 value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Vector2)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Vector2i value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Vector2i)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Rect2 value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Rect2)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Rect2i value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Rect2i)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Vector3 value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Vector3)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Vector3i value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Vector3i)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Transform2D value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Transform2D)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Vector4 value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Vector4)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Vector4i value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Vector4i)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Plane value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Plane)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Quaternion value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Quaternion)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(AABB value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.AABB)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Basis value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Basis)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Transform3D value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Transform3D)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Projection value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Projection)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Color value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Color)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(StringName value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.StringName)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(NodePath value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.NodePath)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(RID value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.RID)(ptr, new IntPtr(&value));
+	public static void SaveIntoPointer(Object value, IntPtr ptr) {
+		var objectPtr = value != null ? value._internal_pointer : IntPtr.Zero;
+		gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Object)(ptr, new IntPtr(&objectPtr));
 	}
-
-	public static void InteropSaveIntoPointer(string value, IntPtr _internal_pointer) {
-		gdInterface.get_variant_from_type_constructor.Call(Variant.Type.String)(_internal_pointer, StringMarshall.ToNative(value));
-	}
+	public static void SaveIntoPointer(Callable value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Callable)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(Signal value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Signal)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(Dictionary value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Dictionary)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(Array value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.Array)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedByteArray value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedByteArray)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedInt32Array value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedInt32Array)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedInt64Array value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedInt64Array)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedFloat32Array value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedFloat32Array)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedFloat64Array value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedFloat64Array)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedStringArray value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedStringArray)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedVector2Array value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedVector2Array)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedVector3Array value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedVector3Array)(ptr, value._internal_pointer);
+	public static void SaveIntoPointer(PackedColorArray value, IntPtr ptr) => gdInterface.get_variant_from_type_constructor.Call(Variant.Type.PackedColorArray)(ptr, value._internal_pointer);
 
 	public static T InteropGetFromPointer<T>(IntPtr _internal_pointer, Variant.Type t) where T : unmanaged {
 		var rT = gdInterface.variant_get_type.Call(_internal_pointer);
 		if (rT == Type.Nil) {
-			return default; //probatly bad idea
+			return default; //probably bad idea
 		}
 		if (rT != t) {
 			throw new Exception($"variant contains {rT}, tried to get {t}");
@@ -109,56 +142,57 @@ public unsafe class Variant {
 	}
 
 	internal IntPtr _internal_pointer;
+	bool createdFromPointer;
 
 	public Variant.Type type => gdInterface.variant_get_type.Call(_internal_pointer);
 
 	private Variant() => _internal_pointer = gdInterface.mem_alloc.Call(24);
-	internal Variant(IntPtr data) => _internal_pointer = data;
+	internal Variant(IntPtr data) {
+		_internal_pointer = data;
+		createdFromPointer = true;
+	}
 
 	public static Variant Nil {
 		get { var v = new Variant(); gdInterface.variant_new_nil.Call(v._internal_pointer); return v; }
 	}
 
-	public Variant(bool value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Bool);
-	public Variant(long value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Int);
-	public Variant(double value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Float);
-	public Variant(string value) : this() => InteropSaveIntoPointer(value, _internal_pointer);
-
-	public Variant(Vector2 value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Vector2);
-	public Variant(Vector2i value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Vector2i);
-	public Variant(Rect2 value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Rect2);
-	public Variant(Rect2i value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Rect2i);
-	public Variant(Vector3 value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Vector3);
-	public Variant(Vector3i value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Vector3i);
-	public Variant(Transform2D value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Transform2D);
-	public Variant(Vector4 value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Vector4);
-	public Variant(Vector4i value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Vector4);
-	public Variant(Plane value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Plane);
-	public Variant(Quaternion value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Quaternion);
-	public Variant(AABB value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.AABB);
-	public Variant(Basis value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Basis);
-	public Variant(Transform3D value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Transform3D);
-	public Variant(Projection value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Projection);
-
-	public Variant(Color value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Color);
-	public Variant(StringName value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.StringName);
-	public Variant(NodePath value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.NodePath);
-	public Variant(RID value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.RID);
-	public Variant(Object value) : this() => InteropSaveIntoPointer(value != null ? value._internal_pointer : IntPtr.Zero, _internal_pointer, Variant.Type.Object);
-	public Variant(Callable value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Callable);
-	public Variant(Signal value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Signal);
-	public Variant(Dictionary value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Dictionary);
-	public Variant(Array value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.Array);
-
-	public Variant(PackedByteArray value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedByteArray);
-	public Variant(PackedInt32Array value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedInt32Array);
-	public Variant(PackedInt64Array value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedInt64Array);
-	public Variant(PackedFloat32Array value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedFloat32Array);
-	public Variant(PackedFloat64Array value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedFloat64Array);
-	public Variant(PackedStringArray value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedStringArray);
-	public Variant(PackedVector2Array value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedVector2Array);
-	public Variant(PackedVector3Array value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedVector3Array);
-	public Variant(PackedColorArray value) : this() => InteropSaveIntoPointer(value, _internal_pointer, Variant.Type.PackedColorArray);
+	public Variant(bool value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(long value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(double value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(string value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Vector2 value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Vector2i value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Rect2 value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Rect2i value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Vector3 value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Vector3i value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Transform2D value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Vector4 value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Vector4i value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Plane value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Quaternion value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(AABB value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Basis value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Transform3D value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Projection value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Color value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(StringName value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(NodePath value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(RID value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Object value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Callable value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Signal value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Dictionary value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(Array value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedByteArray value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedInt32Array value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedInt64Array value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedFloat32Array value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedFloat64Array value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedStringArray value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedVector2Array value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedVector3Array value) : this() => SaveIntoPointer(value, _internal_pointer);
+	public Variant(PackedColorArray value) : this() => SaveIntoPointer(value, _internal_pointer);
 
 	public Variant(int value) : this((long)value) { }
 	public Variant(float value) : this((double)value) { }
@@ -183,23 +217,23 @@ public unsafe class Variant {
 	public Transform3D AsTransform3D() => InteropGetFromPointer<Transform3D>(_internal_pointer, Variant.Type.Transform3D);
 	public Projection AsProjection() => InteropGetFromPointer<Projection>(_internal_pointer, Variant.Type.Projection);
 	public Color AsColor() => InteropGetFromPointer<Color>(_internal_pointer, Variant.Type.Color);
-	public StringName AsStringName() => InteropGetFromPointer<StringName>(_internal_pointer, Variant.Type.StringName);
-	public NodePath AsNodePath() => InteropGetFromPointer<NodePath>(_internal_pointer, Variant.Type.NodePath);
+	public StringName AsStringName() => new StringName(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.StringName));
+	public NodePath AsNodePath() => new NodePath(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.NodePath));
 	public RID AsRID() => InteropGetFromPointer<RID>(_internal_pointer, Variant.Type.RID);
 	public Object AsObject() => Object.ConstructUnknown(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.Object));
-	public Callable AsCallable() => InteropGetFromPointer<Callable>(_internal_pointer, Variant.Type.Callable);
-	public Signal AsSignal() => InteropGetFromPointer<Signal>(_internal_pointer, Variant.Type.Signal);
-	public Dictionary AsDictionary() => InteropGetFromPointer<Dictionary>(_internal_pointer, Variant.Type.Dictionary);
-	public Array AsArray() => InteropGetFromPointer<Array>(_internal_pointer, Variant.Type.Array);
-	public PackedByteArray AsPackedByteArray() => InteropGetFromPointer<PackedByteArray>(_internal_pointer, Variant.Type.PackedByteArray);
-	public PackedInt32Array AsPackedInt32Array() => InteropGetFromPointer<PackedInt32Array>(_internal_pointer, Variant.Type.PackedInt32Array);
-	public PackedInt64Array AsPackedInt64Array() => InteropGetFromPointer<PackedInt64Array>(_internal_pointer, Variant.Type.PackedInt64Array);
-	public PackedFloat32Array AsPackedFloat32Array() => InteropGetFromPointer<PackedFloat32Array>(_internal_pointer, Variant.Type.PackedFloat32Array);
-	public PackedFloat64Array AsPackedFloat64Array() => InteropGetFromPointer<PackedFloat64Array>(_internal_pointer, Variant.Type.PackedFloat64Array);
-	public PackedStringArray AsPackedStringArray() => InteropGetFromPointer<PackedStringArray>(_internal_pointer, Variant.Type.PackedStringArray);
-	public PackedVector2Array AsPackedVector2Array() => InteropGetFromPointer<PackedVector2Array>(_internal_pointer, Variant.Type.PackedVector2Array);
-	public PackedVector3Array AsPackedVector3Array() => InteropGetFromPointer<PackedVector3Array>(_internal_pointer, Variant.Type.PackedVector3Array);
-	public PackedColorArray AsPackedColorArray() => InteropGetFromPointer<PackedColorArray>(_internal_pointer, Variant.Type.PackedColorArray);
+	public Callable AsCallable() => new Callable(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.Callable));
+	public Signal AsSignal() => new Signal(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.Signal));
+	public Dictionary AsDictionary() => new Dictionary(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.Dictionary));
+	public Array AsArray() => new Array(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.Array));
+	public PackedByteArray AsPackedByteArray() => new PackedByteArray(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedByteArray));
+	public PackedInt32Array AsPackedInt32Array() => new PackedInt32Array(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedInt32Array));
+	public PackedInt64Array AsPackedInt64Array() => new PackedInt64Array(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedInt64Array));
+	public PackedFloat32Array AsPackedFloat32Array() => new PackedFloat32Array(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedFloat32Array));
+	public PackedFloat64Array AsPackedFloat64Array() => new PackedFloat64Array(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedFloat64Array));
+	public PackedStringArray AsPackedStringArray() => new PackedStringArray(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedStringArray));
+	public PackedVector2Array AsPackedVector2Array() => new PackedVector2Array(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedVector2Array));
+	public PackedVector3Array AsPackedVector3Array() => new PackedVector3Array(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedVector3Array));
+	public PackedColorArray AsPackedColorArray() => new PackedColorArray(InteropGetFromPointer<IntPtr>(_internal_pointer, Variant.Type.PackedColorArray));
 
 	public static implicit operator Variant(bool value) => new Variant(value);
 	public static implicit operator Variant(long value) => new Variant(value);
@@ -278,8 +312,9 @@ public unsafe class Variant {
 	public static explicit operator PackedColorArray(Variant value) => value.AsPackedColorArray();
 
 	~Variant() {
-		//not right
-		//gdInterface.variant_destroy.Call(_internal_pointer);
-		//gdInterface.mem_free.Call(_internal_pointer);
+		if (createdFromPointer == false) {
+			gdInterface.variant_destroy.Call(_internal_pointer);
+			gdInterface.mem_free.Call(_internal_pointer);
+		}
 	}
 }

@@ -5,7 +5,7 @@ public unsafe partial class Mob : RigidBody2D {
 
 	[Export] AnimatedSprite2D animSprite2D { get; set; }
 
-	[Notify(Notifications.Ready)]
+	[Notify(NotificationReady)]
 	void Ready() {
 		animSprite2D.playing = true;
 		var mobTypes = animSprite2D.frames.GetAnimationNames();
@@ -15,6 +15,5 @@ public unsafe partial class Mob : RigidBody2D {
 	[Method]
 	void OnVisibleOnScreenNotifier2DScreenExited() {
 		QueueFree();
-
 	}
 }

@@ -1,6 +1,6 @@
 namespace GDExtension;
 
-public unsafe partial struct Array {
+public unsafe partial class Array {
 
 	public Variant this[int index] {
 		get => this[(long)index];
@@ -9,9 +9,7 @@ public unsafe partial struct Array {
 	public Variant this[long index] {
 		get {
 			VariantPtr res;
-			fixed (Array* ptr = &this) {
-				res = gdInterface.array_operator_index.Call(new IntPtr(ptr), index);
-			}
+			res = gdInterface.array_operator_index.Call(_internal_pointer, index);
 			return new Variant(res.data);
 		}
 	}

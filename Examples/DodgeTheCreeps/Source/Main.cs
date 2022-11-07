@@ -16,7 +16,7 @@ public unsafe partial class Main : Node {
 
 	long score;
 
-	[Notify(Notifications.Ready)]
+	[Notify(NotificationReady)]
 	void Ready() {
 		GDExtension.Random.Randomize();
 	}

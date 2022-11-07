@@ -15,6 +15,10 @@ public static partial class Native {
 		public static implicit operator StringPtr(IntPtr ptr) => new(ptr);
 	}
 	[StructLayout(LayoutKind.Sequential)]
+	public record struct StringNamePtr(IntPtr data) {
+		public static implicit operator StringNamePtr(IntPtr ptr) => new(ptr);
+	}
+	[StructLayout(LayoutKind.Sequential)]
 	public record struct ObjectPtr(IntPtr data) {
 		public static implicit operator ObjectPtr(IntPtr ptr) => new(ptr);
 		public static implicit operator TypePtr(ObjectPtr ptr) => new TypePtr(ptr.data);
@@ -96,8 +100,8 @@ public static partial class Native {
 	[StructLayout(LayoutKind.Sequential)]
 	public record struct GDExtensionClassInstancePtr(IntPtr data);
 
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionClassSet(GDExtensionClassInstancePtr p_instance, StringName* p_name, VariantPtr p_value);
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionClassGet(GDExtensionClassInstancePtr p_instance, StringName* p_name, VariantPtr r_ret);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionClassSet(GDExtensionClassInstancePtr p_instance, StringNamePtr p_name, VariantPtr p_value);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionClassGet(GDExtensionClassInstancePtr p_instance, StringNamePtr p_name, VariantPtr r_ret);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate ulong ExtensionClassGetRID(GDExtensionClassInstancePtr p_instance);
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -124,8 +128,8 @@ public static partial class Native {
 
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PropertyInfo* ExtensionClassGetPropertyList(GDExtensionClassInstancePtr p_instance, uint* r_count);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionClassFreePropertyList(GDExtensionClassInstancePtr p_instance, PropertyInfo* p_list);
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionClassPropertyCanRevert(GDExtensionClassInstancePtr p_instance, StringName* p_name);
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionClassPropertyGetRevert(GDExtensionClassInstancePtr p_instance, StringName* p_name, VariantPtr r_ret);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionClassPropertyCanRevert(GDExtensionClassInstancePtr p_instance, StringNamePtr p_name);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionClassPropertyGetRevert(GDExtensionClassInstancePtr p_instance, StringNamePtr p_name, VariantPtr r_ret);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionClassNotification(GDExtensionClassInstancePtr p_instance, int p_what);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionClassToString(GDExtensionClassInstancePtr p_instance, StringPtr p_out);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionClassReference(GDExtensionClassInstancePtr p_instance);
@@ -213,25 +217,25 @@ public static partial class Native {
 
 	[StructLayout(LayoutKind.Sequential)] public record struct ExtensionScriptInstanceDataPtr(IntPtr data); // Pointer to custom ScriptInstance native implementation
 
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstanceSet(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name, VariantPtr p_value);
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstanceGet(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name, VariantPtr r_ret);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstanceSet(ExtensionScriptInstanceDataPtr p_instance, StringNamePtr p_name, VariantPtr p_value);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstanceGet(ExtensionScriptInstanceDataPtr p_instance, StringNamePtr p_name, VariantPtr r_ret);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate PropertyInfo* ExtensionScriptInstanceGetPropertyList(ExtensionScriptInstanceDataPtr p_instance, uint* r_count);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstanceFreePropertyList(ExtensionScriptInstanceDataPtr p_instance, PropertyInfo* p_list);
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Variant.Type ExtensionScriptInstanceGetPropertyType(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name, Bool* r_is_valid);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Variant.Type ExtensionScriptInstanceGetPropertyType(ExtensionScriptInstanceDataPtr p_instance, StringNamePtr p_name, Bool* r_is_valid);
 
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstancePropertyCanRevert(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name);
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstancePropertyGetRevert(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name, VariantPtr r_ret);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstancePropertyCanRevert(ExtensionScriptInstanceDataPtr p_instance, StringNamePtr p_name);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstancePropertyGetRevert(ExtensionScriptInstanceDataPtr p_instance, StringNamePtr p_name, VariantPtr r_ret);
 
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate ObjectPtr ExtensionScriptInstanceGetOwner(ExtensionScriptInstanceDataPtr p_instance);
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstancePropertyStateAdd(StringName* p_name, VariantPtr p_value, IntPtr p_userdata);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstancePropertyStateAdd(StringNamePtr p_name, VariantPtr p_value, IntPtr p_userdata);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstanceGetPropertyState(ExtensionScriptInstanceDataPtr p_instance, ExtensionScriptInstancePropertyStateAdd p_add_func, IntPtr p_userdata);
 
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate MethodInfo* ExtensionScriptInstanceGetMethodList(ExtensionScriptInstanceDataPtr p_instance, uint* r_count);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstanceFreeMethodList(ExtensionScriptInstanceDataPtr p_instance, MethodInfo* p_list);
 
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstanceHasMethod(ExtensionScriptInstanceDataPtr p_instance, StringName* p_name);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool ExtensionScriptInstanceHasMethod(ExtensionScriptInstanceDataPtr p_instance, StringNamePtr p_name);
 
-	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstanceCall(ExtensionScriptInstanceDataPtr p_self, StringName* p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
+	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstanceCall(ExtensionScriptInstanceDataPtr p_self, StringNamePtr p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void ExtensionScriptInstanceNotification(ExtensionScriptInstanceDataPtr p_instance, int p_what);
 	[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate byte* ExtensionScriptInstanceToString(ExtensionScriptInstanceDataPtr p_instance, Bool* r_is_valid);
 
@@ -326,15 +330,15 @@ public static partial class Native {
 		public FuncPtr<VariantDestroy> variant_destroy;
 
 		/* variant type */
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantCall(VariantPtr p_self, StringName* p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantCall(VariantPtr p_self, StringNamePtr p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
 		public FuncPtr<VariantCall> variant_call;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantCallStatic(Variant.Type p_type, StringName* p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantCallStatic(Variant.Type p_type, StringNamePtr p_method, VariantPtr* p_args, Int p_argument_count, VariantPtr r_return, CallError* r_error);
 		public FuncPtr<VariantCallStatic> variant_call_static;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantEvaluate(Variant.Operator p_op, VariantPtr p_a, VariantPtr p_b, VariantPtr r_return, Bool* r_valid);
 		public FuncPtr<VariantEvaluate> variant_evaluate;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantSet(VariantPtr p_self, VariantPtr p_key, VariantPtr p_value, Bool* r_valid);
 		public FuncPtr<VariantSet> variant_set;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantSetNamed(VariantPtr p_self, StringName* p_key, VariantPtr p_value, Bool* r_valid);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantSetNamed(VariantPtr p_self, StringNamePtr p_key, VariantPtr p_value, Bool* r_valid);
 		public FuncPtr<VariantSetNamed> variant_set_named;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantSetKeyed(VariantPtr p_self, VariantPtr p_key, VariantPtr p_value, Bool* r_valid);
 		public FuncPtr<VariantSetKeyed> variant_set_keyed;
@@ -342,7 +346,7 @@ public static partial class Native {
 		public FuncPtr<VariantSetIndexed> variant_set_indexed;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantGet(VariantPtr p_self, VariantPtr p_key, VariantPtr r_ret, Bool* r_valid);
 		public FuncPtr<VariantGet> variant_get;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantGetNamed(VariantPtr p_self, StringName* p_key, VariantPtr r_ret, Bool* r_valid);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantGetNamed(VariantPtr p_self, StringNamePtr p_key, VariantPtr r_ret, Bool* r_valid);
 		public FuncPtr<VariantGetNamed> variant_get_named;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate void VariantGetKeyed(VariantPtr p_self, VariantPtr p_key, VariantPtr r_ret, Bool* r_valid);
 		public FuncPtr<VariantGetKeyed> variant_get_keyed;
@@ -369,9 +373,9 @@ public static partial class Native {
 
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Variant.Type VariantGetType(VariantPtr p_self);
 		public FuncPtr<VariantGetType> variant_get_type;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasMethod(VariantPtr p_self, StringName* p_method);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasMethod(VariantPtr p_self, StringNamePtr p_method);
 		public FuncPtr<VariantHasMethod> variant_has_method;
-		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasMember(Variant.Type p_type, StringName* p_member);
+		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasMember(Variant.Type p_type, StringNamePtr p_member);
 		public FuncPtr<VariantHasMember> variant_has_member;
 		[UnmanagedFunctionPointer(callingConvention: CallingConvention.Cdecl)] public unsafe delegate Bool VariantHasKey(VariantPtr p_self, VariantPtr p_key, Bool* r_valid);
 		public FuncPtr<VariantHasKey> variant_has_key;

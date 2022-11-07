@@ -192,8 +192,7 @@ namespace Generators {
 				}
 				if (method.ret != null) {
 					var t = TypeToVariantType(method.ret);
-					var getter = t == "Object" ? "res == null? IntPtr.Zero : res._internal_pointer" : "res";
-					code += $"\t\t\tVariant.InteropSaveIntoPointer({getter}, r_return.data, Variant.Type.{t});\n";
+					code += $"\t\t\tVariant.SaveIntoPointer(res, r_return.data);\n";
 				}
 				code += $"\t\t\tbreak;\n";
 				code += "\t\t\t}\n";

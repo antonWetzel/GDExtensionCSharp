@@ -62,10 +62,10 @@ namespace Generators {
 						break;
 					case Native.InitializationLevel.Scene:
 						Register.RegisterCore();
-						break;
+						{{registrations}}break;
 					case Native.InitializationLevel.Editor:
 						Register.RegisterEditor();
-						{{registrations}}break;
+						break;
 					}
 				}
 
@@ -76,9 +76,9 @@ namespace Generators {
 					case Native.InitializationLevel.Servers:
 						break;
 					case Native.InitializationLevel.Scene:
-						break;
-					case Native.InitializationLevel.Editor:
 						{{unregistrations}}break;
+					case Native.InitializationLevel.Editor:
+						break;
 					}
 				}
 			}
