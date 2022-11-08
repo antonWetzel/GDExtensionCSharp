@@ -15,7 +15,8 @@
 				"-o",
 				"${workspaceFolder}/Examples/DodgeTheCreeps/Build",
 			],
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"dependsOn": "Update Nuget",
 		},
 		{
 			"label": "build binding generator",
@@ -52,6 +53,14 @@
 				"extension_api.json"
 			],
 			"problemMatcher": []
+		},
+		{
+			"label": "Update Nuget",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"Scripts/update_nuget.py"
+			]
 		}
 	]
 }

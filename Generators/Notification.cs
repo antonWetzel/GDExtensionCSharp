@@ -62,7 +62,8 @@ namespace Generators {
 				""";
 			}
 			code += $$"""
-				public static unsafe new void __Notification(Native.GDExtensionClassInstancePtr instance, int what) {
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+				public static unsafe new void __Notification(IntPtr instance, int what) {
 					var inst = ({{c.Name}})instance;
 					{{c.BaseType.Name}}.__Notification(instance, what);
 					inst.{{notificationName}}(what);

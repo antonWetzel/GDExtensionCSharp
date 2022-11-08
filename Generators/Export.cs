@@ -24,6 +24,9 @@ namespace Generators {
 			public unsafe partial class {{c.Name}} : {{c.BaseType.Name}} {
 
 				static unsafe void RegisterExports() {
+					var namePtr = Marshal.StringToHGlobalAnsi("{{c.Name}}");
+					IntPtr setterPtr;
+					IntPtr getterPtr;
 
 			""";
 
@@ -45,14 +48,17 @@ namespace Generators {
 					property = member.Name,
 				});
 				code += $$"""
-						Native.gdInterface.classdb_register_extension_class_property.Call(
+						setterPtr = Marshal.StringToHGlobalAnsi("{{member.SetMethod.Name}}");
+						getterPtr = Marshal.StringToHGlobalAnsi("{{member.GetMethod.Name}}");
+						Native.gdInterface.classdb_register_extension_class_property(
 							Native.gdLibrary,
-							"{{c.Name}}",
+							(sbyte*)namePtr,
 							&__{{member.Name}}Info,
-							"{{member.SetMethod.Name}}",
-							"{{member.GetMethod.Name}}"
+							(sbyte*)setterPtr,
+							(sbyte*)getterPtr
 						);
-
+						Marshal.FreeHGlobal(setterPtr);
+						Marshal.FreeHGlobal(getterPtr);
 						if (__{{member.Name}}Info.hint_string != null) {
 							Marshal.FreeHGlobal((IntPtr)__{{member.Name}}Info.hint_string);
 						}
@@ -61,6 +67,7 @@ namespace Generators {
 				""";
 			}
 			code += """
+					Marshal.FreeHGlobal(namePtr);
 				}
 			}
 

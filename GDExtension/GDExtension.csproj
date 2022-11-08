@@ -16,6 +16,8 @@
     <PackageId>GDExtensionCSharpMain</PackageId>
     <Version>0.0.1</Version>
     <Authors>AntonWetzel</Authors>
+
+    <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
 </Project>

@@ -71,38 +71,40 @@ namespace Generators {
 			code += $$"""
 				static unsafe void RegisterMethods() {
 					Native.ExtensionClassMethodInfo info;
+					var namePtr = Marshal.StringToHGlobalAnsi("{{c.Name}}");
 
 			""";
-
-
 
 			for (var i = 0; i < methods.Count; i++) {
 				var method = methods[i];
 				code += $$"""
 						info = new Native.ExtensionClassMethodInfo() {
-							name = (byte*)Marshal.StringToHGlobalAnsi("{{method.name}}"),
+							name = (sbyte*)Marshal.StringToHGlobalAnsi("{{method.name}}"),
 							method_userdata = new IntPtr({{i}}),
-							call_func = new(CallFunc),
-							ptrcall_func = new(CallFuncPtr),
+							call_func = &CallFunc,
+							ptrcall_func = &CallFuncPtr,
 							method_flags = Native.ExtensionClassMethodFlags.Default,
 							argument_count = {{method.arguments.Length}},
 							has_return_value = {{(method.ret != null ? "true" : "false")}},
-							get_argument_type_func = new(ArgumentType),
-							get_argument_info_func = new(ArgumentInfo),
-							get_argument_metadata_func = new(ArgumentMetadata),
+							get_argument_type_func = &ArgumentType,
+							get_argument_info_func = &ArgumentInfo,
+							get_argument_metadata_func = &ArgumentMetadata,
 							default_argument_count = 0,
 							default_arguments = null,
 						};
-						Native.gdInterface.classdb_register_extension_class_method.Call(Native.gdLibrary, "{{c.Name}}", &info);
+
+						Native.gdInterface.classdb_register_extension_class_method(Native.gdLibrary, (sbyte*)namePtr, &info);
 
 
 				""";
 			}
 
 			code += $$"""
+					Marshal.FreeHGlobal(namePtr);
 				}
 
-				static void CallFuncPtr(IntPtr method_userdata, Native.GDExtensionClassInstancePtr p_instance, Native.TypePtr* p_args, Native.TypePtr r_ret) {
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+				static void CallFuncPtr(IntPtr method_userdata, IntPtr p_instance, IntPtr* p_args, IntPtr r_ret) {
 					var instance = ({{c.Name}})p_instance;
 					switch ((int)method_userdata) {
 
@@ -113,11 +115,11 @@ namespace Generators {
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
 					if (arg.Item1.Name == "String") {
-						args += $"StringMarshall.ToManaged(p_args[{j}].data)";
+						args += $"StringMarshall.ToManaged(p_args[{j}])";
 					} else if (TypeToVariantType(arg.Item1) == "Object") {
-						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(*(IntPtr*)(void*)p_args[{j}].data)";
+						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(*(IntPtr*)(void*)p_args[{j}])";
 					} else {
-						args += $"*({arg.Item1.Name}*)(void*)p_args[{j}].data";
+						args += $"*({arg.Item1.Name}*)(void*)p_args[{j}]";
 					}
 					if (j < method.arguments.Length - 1) {
 						args += ", ";
@@ -129,7 +131,7 @@ namespace Generators {
 						code += "throw new NotImplementedException();\n";
 						continue;
 					} else {
-						code += $"*({method.ret}*)r_ret.data = ";
+						code += $"*({method.ret}*)r_ret = ";
 					}
 				}
 				if (method.property != null) {
@@ -148,14 +150,16 @@ namespace Generators {
 					}
 				}
 
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 				static void CallFunc(
 					IntPtr method_userdata,
-					Native.GDExtensionClassInstancePtr p_instance,
-					Native.VariantPtr* p_args,
-					Native.Int p_argument_count,
-					Native.VariantPtr r_return,
+					IntPtr p_instance,
+					IntPtr* p_args,
+					long p_argument_count,
+					IntPtr r_return,
 					Native.CallError* r_error
 				) {
+					Native.gdInterface.variant_new_nil(r_return); //no clue why this is needed
 					var instance = ({{c.Name}})p_instance;
 					switch ((int)method_userdata) {
 
@@ -167,11 +171,11 @@ namespace Generators {
 					var arg = method.arguments[j];
 					var t = TypeToVariantType(arg.Item1);
 					if (arg.Item1.Name == "String") {
-						args += $"StringMarshall.ToManaged(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}].data, Variant.Type.String))";
+						args += $"StringMarshall.ToManaged(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}], Variant.Type.String))";
 					} else if (t == "Object") {
-						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}].data, Variant.Type.{t}))";
+						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}], Variant.Type.{t}))";
 					} else {
-						args += $"Variant.InteropGetFromPointer<{arg.Item1}>(p_args[{j}].data, Variant.Type.{t})";
+						args += $"Variant.InteropGetFromPointer<{arg.Item1}>(p_args[{j}], Variant.Type.{t})";
 					}
 					if (j < method.arguments.Length - 1) {
 						args += ", ";
@@ -192,7 +196,7 @@ namespace Generators {
 				}
 				if (method.ret != null) {
 					var t = TypeToVariantType(method.ret);
-					code += $"\t\t\tVariant.SaveIntoPointer(res, r_return.data);\n";
+					code += $"\t\t\tVariant.SaveIntoPointer(res, r_return);\n";
 				}
 				code += $"\t\t\tbreak;\n";
 				code += "\t\t\t}\n";
@@ -202,6 +206,7 @@ namespace Generators {
 					}
 				}
 
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 				static Variant.Type ArgumentType(IntPtr p_method_userdata, int p_argument) {
 					return (int)p_method_userdata switch {
 
@@ -222,6 +227,7 @@ namespace Generators {
 					};
 				}
 
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 				static void ArgumentInfo(IntPtr p_method_userdata, int p_argument, Native.PropertyInfo* r_info) {
 					*r_info = (int)p_method_userdata switch {
 
@@ -244,6 +250,7 @@ namespace Generators {
 					};
 				}
 
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 				static Native.ExtensionClassMethodArgumentMetadata ArgumentMetadata(IntPtr p_method_userdata, int p_argument) {
 					return Native.ExtensionClassMethodArgumentMetadata.None;
 				}
@@ -322,7 +329,7 @@ namespace Generators {
 
 		public static string TypeToHintString(ITypeSymbol type, SpecialBase sBase) {
 			return sBase switch {
-				SpecialBase.Node or SpecialBase.Resource => $"(byte*)Marshal.StringToHGlobalAnsi(\"{type.Name}\")",
+				SpecialBase.Node or SpecialBase.Resource => $"(sbyte*)Marshal.StringToHGlobalAnsi(\"{type.Name}\")",
 				SpecialBase.None => "null",
 				_ => throw new Exception(),
 			};
@@ -343,7 +350,7 @@ namespace Generators {
 			return $$"""
 			new Native.PropertyInfo() {
 					type = Variant.Type.{{TypeToVariantType(type, sBase)}},
-					name = (byte*)Marshal.StringToHGlobalAnsi("{{name}}"),
+					name = (sbyte*)Marshal.StringToHGlobalAnsi("{{name}}"),
 					class_name = null,
 					hint = {{TypeToHint(type, sBase)}},
 					hint_string = {{TypeToHintString(type, sBase)}},

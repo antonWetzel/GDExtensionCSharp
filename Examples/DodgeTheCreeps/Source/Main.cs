@@ -26,13 +26,13 @@ public unsafe partial class Main : Node {
 		mobTimer.Stop();
 		scoreTimer.Stop();
 		hud.ShowGameOver();
+		//GetTree().CallGroup("mobs", "queue_free"); //crashes
 		var mobs = GetTree().GetNodesInGroup("mobs");
 		for (var i = 0; i < mobs.Size(); i++) {
 			var test = mobs[i];
 			var mob = (Mob)(test.AsObject());
 			mob.QueueFree();
 		}
-		//GetTree().CallGroup("mobs", "queue_free"); //crashes (probably problems with vararg)
 		music.Stop();
 		deathSound.Play();
 	}
@@ -65,7 +65,7 @@ public unsafe partial class Main : Node {
 	[Method]
 	public void OnMobTimerTimeout() {
 		// Create a new instance of the Mob scene.
-		var mob = mobScene.Instantiate<Mob>(PackedScene.GenEditState.Disabled);
+		var mob = (Mob)mobScene.Instantiate(PackedScene.GenEditState.Disabled);
 
 		// Choose a random location on Path2D.
 		mobSpawnLocation.progress_ratio = GDExtension.Random.Randf();

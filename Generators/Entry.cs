@@ -22,7 +22,7 @@ namespace Generators {
 					if (valid) {
 						var n = classes[i];
 						registrations += $"{n.ContainingNamespace}.{n.Name}.Register();\n\t\t\t";
-						unregistrations = $"Native.gdInterface.classdb_unregister_extension_class.Call(Native.gdLibrary, \"{n.Name}\");\n\t\t\t" + unregistrations;
+						unregistrations = $"{{ var ptr = Marshal.StringToHGlobalAnsi(\"{n.Name}\"); Native.gdInterface.classdb_unregister_extension_class(Native.gdLibrary, (sbyte*)ptr); Marshal.FreeHGlobal(ptr); }}\n\t\t\t" + unregistrations;
 						classes[i] = classes.Last();
 						classes.RemoveAt(classes.Count - 1);
 						break;
@@ -39,19 +39,20 @@ namespace Generators {
 			public static class ExtensionEntry {
 
 				[UnmanagedCallersOnly(EntryPoint = "gd_extension_entry", CallConvs = new[] { typeof(CallConvCdecl) })]
-				public static unsafe bool EntryPoint(Native.Interface @interface, Native.ExtensionClassLibraryPtr library, Native.Initialization* init) {
+				public static unsafe bool EntryPoint(Native.Interface @interface, IntPtr library, Native.Initialization* init) {
 					Native.gdInterface = @interface;
 					Native.gdLibrary = library;
 
 					*init = new Native.Initialization() {
 						minimum_initialization_level = Native.InitializationLevel.Scene,
-						initialize = new(Initialize),
-						deinitialize = new(Deinitialize),
+						initialize = &Initialize,
+						deinitialize = &Deinitialize,
 					};
 
 					return true;
 				}
 
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 				public static unsafe void Initialize(IntPtr userdata, Native.InitializationLevel level) {
 					switch (level) {
 					case Native.InitializationLevel.Core:
@@ -69,6 +70,7 @@ namespace Generators {
 					}
 				}
 
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 				public static unsafe void Deinitialize(IntPtr userdata, Native.InitializationLevel level) {
 					switch (level) {
 					case Native.InitializationLevel.Core:

@@ -8,9 +8,8 @@ public unsafe partial class Array {
 
 	public Variant this[long index] {
 		get {
-			VariantPtr res;
-			res = gdInterface.array_operator_index.Call(_internal_pointer, index);
-			return new Variant(res.data);
+			var res = gdInterface.array_operator_index(_internal_pointer, index);
+			return new Variant(res);
 		}
 	}
 }

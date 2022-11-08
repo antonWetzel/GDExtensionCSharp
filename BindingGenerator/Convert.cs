@@ -21,10 +21,10 @@ public class Convert {
 	};
 
 	Dictionary<string, List<string>> registrations = new() {
+		["builtin"] = new() { "Variant" },
+		["utility"] = new(),
 		["core"] = new(),
 		["editor"] = new(),
-		["builtin"] = new(),
-		["utility"] = new(),
 	};
 
 	Api api;
@@ -111,14 +111,14 @@ public class Convert {
 		foreach (var (_, (file, list)) in files) {
 			file.WriteLine("#pragma warning disable CS8618");
 			for (var i = 0; i < list.Count; i++) {
-				file.WriteLine($"\tstatic PtrUtilityFunction __methodPointer_{i};");
+				file.WriteLine($"\tstatic delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, int, void> __methodPointer_{i};");
 			}
 			file.WriteLine("#pragma warning restore CS8618");
 			file.WriteLine();
 
 			file.WriteLine("\tpublic static void Register() {");
 			for (var i = 0; i < list.Count; i++) {
-				file.WriteLine($"\t\t__methodPointer_{i} = {list[i]};");
+				file.WriteLine(list[i]);
 			}
 			file.WriteLine("\t}");
 			file.WriteLine(value: "}");
@@ -227,8 +227,8 @@ public class Convert {
 
 		if (hasPointer) {
 			file.WriteLine($"\tpublic const int StructSize = {size};");
-			file.WriteLine("\tpublic TypePtr _internal_pointer;");
-			file.WriteLine($"\tpublic {c.name}(TypePtr ptr) => _internal_pointer = ptr;");
+			file.WriteLine("\tpublic IntPtr _internal_pointer;");
+			file.WriteLine($"\tpublic {c.name}(IntPtr ptr) => _internal_pointer = ptr;");
 			file.WriteLine();
 		}
 
@@ -318,20 +318,21 @@ public class Convert {
 
 		file.WriteLine("#pragma warning disable CS8618");
 		foreach (var member in membersWithFunctions) {
-			file.WriteLine($"\tstatic PtrGetter {member}_getter;");
-			file.WriteLine($"\tstatic PtrSetter {member}_setter;");
+			file.WriteLine($"\tstatic delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> {member}_getter;");
+			file.WriteLine($"\tstatic delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> {member}_setter;");
 		}
 		for (var i = 0; i < constructorRegistrations.Count; i++) {
-			file.WriteLine($"\tstatic PtrConstructor __constructorPointer_{i};");
+			file.WriteLine($"\tstatic delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, void> __constructorPointer_{i};");
 		}
 		for (var i = 0; i < operatorRegistrations.Count; i++) {
-			file.WriteLine($"\tstatic PtrOperatorEvaluator __operatorPointer_{i};");
+			file.WriteLine($"\tstatic delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, void> __operatorPointer_{i};");
 		}
 		for (var i = 0; i < methodRegistrations.Count; i++) {
-			file.WriteLine($"\tstatic PtrBuiltInMethod __methodPointer_{i};");
+			file.WriteLine($"\tstatic delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, IntPtr, int, void> __methodPointer_{i};");
 		}
+
 		if (hasPointer) {
-			file.WriteLine("\tstatic PtrDestructor __destructor;");
+			file.WriteLine("\tstatic delegate* unmanaged[Cdecl]<IntPtr, void> __destructor;");
 		}
 
 		file.WriteLine("#pragma warning restore CS8618");
@@ -339,20 +340,20 @@ public class Convert {
 
 		file.WriteLine("\tpublic static void Register() {");
 		foreach (var member in membersWithFunctions) {
-			file.WriteLine($"\t\t{member}_getter = gdInterface.variant_get_ptr_getter.Call(Variant.Type.{Fixer.Type(c.name)}, \"member\");");
-			file.WriteLine($"\t\t{member}_setter = gdInterface.variant_get_ptr_setter.Call(Variant.Type.{Fixer.Type(c.name)}, \"member\");");
+			file.WriteLine($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{member}\"); {member}_getter = gdInterface.variant_get_ptr_getter(Variant.Type.{Fixer.Type(c.name)}, (sbyte*)ptr); Marshal.FreeHGlobal(ptr); }}");
+			file.WriteLine($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{member}\"); {member}_setter = gdInterface.variant_get_ptr_setter(Variant.Type.{Fixer.Type(c.name)}, (sbyte*)ptr); Marshal.FreeHGlobal(ptr); }}");
 		}
 		for (var i = 0; i < constructorRegistrations.Count; i++) {
-			file.WriteLine($"\t\t__constructorPointer_{i} = {constructorRegistrations[i]};");
+			file.WriteLine(constructorRegistrations[i]);
 		}
 		for (var i = 0; i < operatorRegistrations.Count; i++) {
-			file.WriteLine($"\t\t__operatorPointer_{i} = {operatorRegistrations[i]};");
+			file.WriteLine(operatorRegistrations[i]);
 		}
 		for (var i = 0; i < methodRegistrations.Count; i++) {
-			file.WriteLine($"\t\t__methodPointer_{i} = {methodRegistrations[i]};");
+			file.WriteLine(methodRegistrations[i]);
 		}
 		if (hasPointer) {
-			file.WriteLine($"\t\t__destructor = gdInterface.variant_get_ptr_destructor.Call(Variant.Type.{Fixer.Type(c.name)});");
+			file.WriteLine($"\t\t__destructor = gdInterface.variant_get_ptr_destructor(Variant.Type.{Fixer.Type(c.name)});");
 		}
 		if (c.constants != null) {
 			foreach (var con in c.constants) {
@@ -425,13 +426,14 @@ public class Convert {
 		}
 		file.WriteLine(") {");
 		if (hasPointer) {
-			file.WriteLine("\t\t_internal_pointer = gdInterface.mem_alloc.Call(StructSize);");
+			file.WriteLine("\t\t_internal_pointer = gdInterface.mem_alloc(StructSize);");
 		}
-		file.WriteLine($"\t\tvar constructor = __constructorPointer_{constructorRegistrations.Count};");
-		constructorRegistrations.Add($"gdInterface.variant_get_ptr_constructor.Call(Variant.Type.{Fixer.Type(c.name)}, {constructor.index})");
+		var m = $"__constructorPointer_{constructorRegistrations.Count}";
+		file.WriteLine($"\t\tvar constructor = {m};");
+		constructorRegistrations.Add($"\t\t{m} = gdInterface.variant_get_ptr_constructor(Variant.Type.{Fixer.Type(c.name)}, {constructor.index});");
 
 		if (constructor.arguments != null) {
-			file.WriteLine($"\t\tvar args = stackalloc TypePtr[{constructor.arguments.Length}];");
+			file.WriteLine($"\t\tvar args = stackalloc IntPtr[{constructor.arguments.Length}];");
 			for (var i = 0; i < constructor.arguments.Length; i++) {
 				var arg = constructor.arguments[i];
 				file.WriteLine($"\t\targs[{i}] = {ValueToPointer(Fixer.Name(arg.name), arg.type)};");
@@ -446,7 +448,7 @@ public class Convert {
 		if (constructor.arguments != null) {
 			file.WriteLine("args);");
 		} else {
-			file.WriteLine("(TypePtr*)(void*)IntPtr.Zero);");
+			file.WriteLine("(IntPtr*)(void*)IntPtr.Zero);");
 		}
 		if (hasPointer == false) {
 			file.WriteLine("\t\t}");
@@ -471,8 +473,9 @@ public class Convert {
 				file.WriteLine(Fixer.XMLComment(doc.description));
 			}
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} left, {Fixer.Type(op.rightType)} right) {{");
-			file.WriteLine($"\t\tvar __op = __operatorPointer_{operatorRegistrations.Count};");
-			operatorRegistrations.Add($"gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.{Fixer.VariantName(op.rightType)})");
+			var m = $"__operatorPointer_{operatorRegistrations.Count}";
+			file.WriteLine($"\t\tvar __op = {m};");
+			operatorRegistrations.Add($"\t\t{m} = gdInterface.variant_get_ptr_operator_evaluator(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.{Fixer.VariantName(op.rightType)});");
 			file.WriteLine($"\t\t{ReturnLocationType(op.returnType, "__res")};");
 			file.WriteLine($"\t\t__op({ValueToPointer("left", className)}, {ValueToPointer("right", op.rightType)}, new IntPtr(&__res));");
 			file.WriteLine($"\t\treturn {ReturnStatementValue(op.returnType)};");
@@ -487,8 +490,9 @@ public class Convert {
 				file.WriteLine(Fixer.XMLComment(doc.description));
 			}
 			file.WriteLine($"\tpublic static {Fixer.Type(op.returnType)} {name}({Fixer.Type(className)} value) {{");
-			file.WriteLine($"\t\tvar __op = __operatorPointer_{operatorRegistrations.Count};");
-			operatorRegistrations.Add($"gdInterface.variant_get_ptr_operator_evaluator.Call(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.Nil)");
+			var m = $"__operatorPointer_{operatorRegistrations.Count}";
+			file.WriteLine($"\t\tvar __op = {m};");
+			operatorRegistrations.Add($"\t\t{m} = gdInterface.variant_get_ptr_operator_evaluator(Variant.Operator.{Fixer.VariantOperator(op.name)}, Variant.Type.{className}, Variant.Type.Nil);");
 			file.WriteLine($"\t\t{ReturnLocationType(op.returnType, "__res")};");
 			file.WriteLine($"\t\t__op({ValueToPointer("value", className)}, IntPtr.Zero, new IntPtr(&__res));");
 			file.WriteLine($"\t\treturn {ReturnStatementValue(op.returnType)};");
@@ -544,7 +548,9 @@ public class Convert {
 	string ReturnStatementValue(string type) {
 		var f = Fixer.Type(type);
 		if (type == "String") {
-			return "StringMarshall.ToManaged(__res)";
+			return "StringMarshall.ToManaged(new IntPtr(&__res))";
+		} else if (f == "Variant") {
+			return "new Variant(__res)";
 		} else if (builtinObjectTypes.Contains(f)) {
 			return $"new {f}(gdInterface.MoveToUnmanaged(__res))";
 		} else if (objectTypes.Contains(type)) {
@@ -656,32 +662,27 @@ public class Convert {
 				file.WriteLine("\t}");
 				return;
 			}
-			file.WriteLine("#pragma warning disable CS0219");
-			file.WriteLine("\t\tvar someAlignmentUsuesMaybe = 0; //crash without");
-			file.WriteLine("#pragma warning restore CS0219");
 			m = $"__methodPointer_{methodRegistrations.Count}";
-			methodRegistrations.Add($"gdInterface.classdb_get_method_bind.Call(\"{className}\", \"{meth.name}\", {meth.hash})");
+			methodRegistrations.Add($"\t\t{{ var ptrClass = Marshal.StringToHGlobalAnsi(\"{className}\"); var ptrName = Marshal.StringToHGlobalAnsi(\"{meth.name}\"); {m} = gdInterface.classdb_get_method_bind((sbyte*)ptrClass, (sbyte*)ptrName, {meth.hash}); Marshal.FreeHGlobal(ptrClass); Marshal.FreeHGlobal(ptrName); }}");
 			break;
 		case MethodType.Native:
-			//file.WriteLine(value: $"\t\tvar __m = gdInterface.variant_get_ptr_builtin_method.Call(Variant.Type.{className}, \"{meth.name}\", {meth.hash});");
 			m = $"__methodPointer_{methodRegistrations.Count}";
-			methodRegistrations.Add($"gdInterface.variant_get_ptr_builtin_method.Call(Variant.Type.{className}, \"{meth.name}\", {meth.hash})");
+			methodRegistrations.Add($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{meth.name}\"); {m} = gdInterface.variant_get_ptr_builtin_method(Variant.Type.{className}, (sbyte*)ptr, {meth.hash}); Marshal.FreeHGlobal(ptr); }}");
 			break;
 		case MethodType.Utility:
-			//file.WriteLine($"\t\tvar __m = gdInterface.variant_get_ptr_utility_function.Call(\"{meth.name}\", {meth.hash});");
 			m = $"__methodPointer_{methodRegistrations.Count}";
-			methodRegistrations.Add($"gdInterface.variant_get_ptr_utility_function.Call(\"{meth.name}\", {meth.hash})");
+			methodRegistrations.Add($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{meth.name}\"); {m} = gdInterface.variant_get_ptr_utility_function((sbyte*)ptr, {meth.hash}); Marshal.FreeHGlobal(ptr); }}");
 			break;
 		}
 		if (meth.isVararg) {
-			var t = type == MethodType.Class ? "VariantPtr" : "TypePtr";
+			var t = type == MethodType.Class ? "IntPtr" : "IntPtr";
 			if (meth.arguments != null) {
 				file.WriteLine($"\t\tvar __args = stackalloc {t}[{meth.arguments.Length} + arguments.Length];");
 			} else {
 				file.WriteLine($"\t\tvar __args = stackalloc {t}[arguments.Length];");
 			}
 		} else if (meth.arguments != null) {
-			file.WriteLine($"\t\tvar __args = stackalloc TypePtr[{meth.arguments.Length}];");
+			file.WriteLine($"\t\tvar __args = stackalloc IntPtr[{meth.arguments.Length}];");
 		}
 		if (meth.arguments != null) {
 			for (var i = 0; i < meth.arguments.Length; i++) {
@@ -705,16 +706,16 @@ public class Convert {
 			file.WriteLine($"\t\t{ReturnLocationType(ret, "__res")};");
 		}
 		if (type == MethodType.Class && meth.isVararg) {
-			file.WriteLine("\t\tCallError __err;");
+			//file.WriteLine("\t\tCallError __err;");
 		}
 		if (meth.isStatic == false && type == MethodType.Native && isBuiltinPointer == false) {
 			file.WriteLine($"\t\tvar __temp = this;");
 		}
 		if (type == MethodType.Class) {
 			if (meth.isVararg) {
-				file.Write($"\t\tgdInterface.object_method_bind_call.Call({m}, ");
+				file.Write($"\t\tgdInterface.object_method_bind_call({m}, ");
 			} else {
-				file.Write($"\t\tgdInterface.object_method_bind_ptrcall.Call({m}, ");
+				file.Write($"\t\tgdInterface.object_method_bind_ptrcall({m}, ");
 			}
 		} else {
 			file.Write($"\t\t{m}(");
@@ -760,7 +761,8 @@ public class Convert {
 			}
 		}
 		if (type == MethodType.Class && meth.isVararg) {
-			file.Write(", &__err");
+			//file.Write(", &__err");
+			file.Write(", null");
 		}
 		file.WriteLine(");");
 		if (ret != "") {
@@ -850,7 +852,16 @@ public class Convert {
 
 		var isSingleton = api.singletons.Any(x => x.type == c.name);
 		if (isSingleton) {
-			file.WriteLine($"\tpublic static {c.name} Singleton => new {c.name}(gdInterface.global_get_singleton.Call(\"{c.name}\"));");
+			//file.WriteLine($"\tpublic static {c.name} Singleton;");
+			//see note below
+			file.WriteLine($"\tpublic static {c.name} Singleton {{");
+			file.WriteLine("\t\tget {");
+			file.WriteLine($"\t\t\tvar ptr = Marshal.StringToHGlobalAnsi(\"{c.name}\");");
+			file.WriteLine($"\t\t\tvar s = new {c.name}(gdInterface.global_get_singleton((sbyte*)ptr));");
+			file.WriteLine("\t\t\tMarshal.FreeHGlobal(ptr);");
+			file.WriteLine("\t\t\treturn s;");
+			file.WriteLine("\t\t}");
+			file.WriteLine("\t}");
 			file.WriteLine();
 		}
 
@@ -960,21 +971,27 @@ public class Convert {
 		EqualAndHash(c.name, file);
 
 		var content = c.name == "RefCounted" ? " Reference(); " : " ";
-		file.WriteLine($"\tpublic {c.name}() : base(gdInterface.classdb_construct_object.Call(\"{c.name}\")) {{{content}}}");
-		file.WriteLine($"\tprotected {c.name}(ObjectPtr ptr) : base(ptr) {{{content}}}");
-		file.WriteLine($"\tprivate static {c.name} Construct(ObjectPtr ptr) => new {c.name}(ptr);");
+		file.WriteLine($"\tpublic {c.name}() : base(\"{c.name}\") {{{content}}}");
+		file.WriteLine($"\tprotected {c.name}(string type) : base(type) {{{content}}}");
+		file.WriteLine($"\tprotected {c.name}(IntPtr ptr) : base(ptr) {{{content}}}");
+		file.WriteLine($"\tprivate static {c.name} Construct(IntPtr ptr) => new {c.name}(ptr);");
 		file.WriteLine();
 
 		file.WriteLine("#pragma warning disable CS8625");
 		for (var i = 0; i < methodRegistrations.Count; i++) {
-			file.WriteLine($"\tstatic MethodBindPtr __methodPointer_{i} = default;");
+			file.WriteLine($"\tstatic IntPtr __methodPointer_{i};");
 		}
 		file.WriteLine("#pragma warning restore CS8625");
 		file.WriteLine();
 		file.WriteLine("\tpublic static new void Register() {");
 		file.WriteLine($"\t\tObject.RegisterConstructor(\"{c.name}\", Construct);");
 		for (var i = 0; i < methodRegistrations.Count; i++) {
-			file.WriteLine($"\t\t__methodPointer_{i} = {methodRegistrations[i]};");
+			file.WriteLine(methodRegistrations[i]);
+		}
+		if (isSingleton) {
+			//they are registered after every init level, cashing not possible
+			//https://github.com/godotengine/godot/pull/65018 (?)
+			//file.WriteLine($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{c.name}\"); Singleton = new {c.name}(gdInterface.global_get_singleton((sbyte*)ptr)); Marshal.FreeHGlobal(ptr); }}");
 		}
 		file.WriteLine("\t}");
 		file.WriteLine("}");

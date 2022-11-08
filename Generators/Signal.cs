@@ -25,6 +25,8 @@ namespace Generators {
 			public unsafe partial class {{c.Name}} : {{c.BaseType.Name}} {
 
 				static unsafe void RegisterSignals() {
+					var namePtr = Marshal.StringToHGlobalAnsi("{{c.Name}}");
+					IntPtr eventPtr;
 
 			""";
 			for (var i = 0; i < events.Length; i++) {
@@ -36,9 +38,12 @@ namespace Generators {
 					var p = m.Parameters[j];
 					code += $"\t\tinfos{ev.Name}[{j}] = {Methods.CreatePropertyInfo(p.Type, p.Name)}\n";
 				}
-				code += $"\t\tNative.gdInterface.classdb_register_extension_class_signal.Call(Native.gdLibrary, \"{c.Name}\", \"{ev.Name}\", infos{ev.Name}, {m.Parameters.Length});\n";
+				code += $"\t\teventPtr = Marshal.StringToHGlobalAnsi(\"{ev.Name}\");\n";
+				code += $"\t\tNative.gdInterface.classdb_register_extension_class_signal(Native.gdLibrary, (sbyte*)namePtr, (sbyte*)eventPtr, infos{ev.Name}, {m.Parameters.Length});\n";
+				code += $"\t\tMarshal.FreeHGlobal(eventPtr);\n";
 			}
 			code += $$"""
+					Marshal.FreeHGlobal(namePtr);
 				}
 
 
