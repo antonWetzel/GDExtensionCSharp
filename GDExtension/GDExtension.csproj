@@ -12,6 +12,7 @@
     <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies-->
 
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>GDExtensionCSharpMain</PackageId>
     <Version>0.0.1</Version>
     <Authors>AntonWetzel</Authors>
