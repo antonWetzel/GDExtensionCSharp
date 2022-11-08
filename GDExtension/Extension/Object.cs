@@ -2,6 +2,7 @@ namespace GDExtension;
 
 public partial class Object {
 	public static Object ConstructUnknown(ObjectPtr ptr) {
+		if (ptr.data == IntPtr.Zero) { return null!; }
 		var o = new Object(ptr);
 		var c = o.GetClass();
 		return constructors[c](ptr);

@@ -1,17 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\GDExtension\GDExtension.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference
-      Include="..\..\..\Generators\Generators.csproj"
-      OutputItemType="Analyzer"
-      ReferenceOutputAssembly="false"
-    />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -31,5 +19,10 @@
     <CompilerGeneratedFilesOutputPath>../Generated</CompilerGeneratedFilesOutputPath>
 
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="GdExtensionCsharpGenerators" Version="0.0.1" />
+    <PackageReference Include="GdExtensionCsharpMain" Version="0.0.1" />
+  </ItemGroup>
 
 </Project>

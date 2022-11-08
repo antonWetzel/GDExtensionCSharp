@@ -4,7 +4,6 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PublishAot>true</PublishAot>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!--IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
@@ -12,6 +11,10 @@
     <IlcDisableReflection>true</IlcDisableReflection>
     <IlcOptimizationPreference>Speed</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies-->
+
+    <PackageId>GDExtensionCSharpMain</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>AntonWetzel</Authors>
   </PropertyGroup>
 
 </Project>

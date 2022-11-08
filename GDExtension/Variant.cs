@@ -1,6 +1,6 @@
 namespace GDExtension;
 
-public unsafe class Variant {
+public sealed unsafe class Variant {
 
 	public enum Type {
 		Nil,
@@ -142,14 +142,14 @@ public unsafe class Variant {
 	}
 
 	internal IntPtr _internal_pointer;
-	bool createdFromPointer;
 
 	public Variant.Type type => gdInterface.variant_get_type.Call(_internal_pointer);
 
 	private Variant() => _internal_pointer = gdInterface.mem_alloc.Call(24);
+
 	internal Variant(IntPtr data) {
 		_internal_pointer = data;
-		createdFromPointer = true;
+		GC.SuppressFinalize(this);
 	}
 
 	public static Variant Nil {
@@ -312,9 +312,7 @@ public unsafe class Variant {
 	public static explicit operator PackedColorArray(Variant value) => value.AsPackedColorArray();
 
 	~Variant() {
-		if (createdFromPointer == false) {
-			gdInterface.variant_destroy.Call(_internal_pointer);
-			gdInterface.mem_free.Call(_internal_pointer);
-		}
+		gdInterface.variant_destroy.Call(_internal_pointer);
+		gdInterface.mem_free.Call(_internal_pointer);
 	}
 }

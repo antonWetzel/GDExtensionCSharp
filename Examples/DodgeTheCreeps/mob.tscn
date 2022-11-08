@@ -1,6 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid://bkqtfakslyl06"]
+[gd_scene load_steps=10 format=3 uid="uid://bkqtfakslyl06"]
 
 [ext_resource type="Texture2D" uid="uid://be4g33qufwohr" path="res://Art/enemyFlyingAlt_1.png" id="1_aw4f2"]
+[ext_resource type="Test" uid="uid://cvv2c7qgwyhi6" path="res://Test.tres" id="1_mlj3h"]
 [ext_resource type="Texture2D" uid="uid://58h75t57m0ru" path="res://Art/enemyFlyingAlt_2.png" id="2_cijlv"]
 [ext_resource type="Texture2D" uid="uid://d0s8vmcqp5e3c" path="res://Art/enemySwimming_1.png" id="3_fpynj"]
 [ext_resource type="Texture2D" uid="uid://b0f1adi46owqq" path="res://Art/enemySwimming_2.png" id="4_ojq0d"]
@@ -31,6 +32,7 @@ height = 98.0
 
 [node name="Mob" type="Mob" node_paths=PackedStringArray("animSprite2D") groups=["mobs"]]
 animSprite2D = NodePath("AnimatedSprite2d")
+test = ExtResource("1_mlj3h")
 collision_mask = 0
 gravity_scale = 0.0
 metadata/_edit_group_ = true

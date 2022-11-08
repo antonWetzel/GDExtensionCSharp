@@ -315,7 +315,7 @@ namespace Generators {
 					"PackedVector2Array" => "PackedVector2Array",
 					"PackedVector3Array" => "PackedVector3Array",
 					"PackedColorArray" => "PackedColorArray",
-					_ => throw new Exception("Unknown"),
+					_ => throw new Exception($"Unknown type: {type.Name}"),
 				},
 			};
 		}
