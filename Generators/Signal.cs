@@ -26,9 +26,11 @@ namespace Generators {
 
 				static unsafe void RegisterSignals() {
 					var namePtr = Marshal.StringToHGlobalAnsi("{{c.Name}}");
-					IntPtr eventPtr;
 
 			""";
+			if (events.Length > 0) {
+				code += "\t\tIntPtr eventPtr;\n";
+			}
 			for (var i = 0; i < events.Length; i++) {
 				var ev = events[i];
 				var m = ev.DelegateInvokeMethod;
@@ -38,7 +40,7 @@ namespace Generators {
 					var p = m.Parameters[j];
 					code += $"\t\tinfos{ev.Name}[{j}] = {Methods.CreatePropertyInfo(p.Type, p.Name)}\n";
 				}
-				code += $"\t\teventPtr = Marshal.StringToHGlobalAnsi(\"{ev.Name}\");\n";
+				code += $"\t\teventPtr = Marshal.StringToHGlobalAnsi(\"{Renamer.ToSnake(ev.Name)}\");\n";
 				code += $"\t\tNative.gdInterface.classdb_register_extension_class_signal(Native.gdLibrary, (sbyte*)namePtr, (sbyte*)eventPtr, infos{ev.Name}, {m.Parameters.Length});\n";
 				code += $"\t\tMarshal.FreeHGlobal(eventPtr);\n";
 			}
@@ -57,10 +59,10 @@ namespace Generators {
 					var p = m.Parameters[j];
 					code += $"{p.Type.Name} {p.Name}{(j < m.Parameters.Length - 1 ? ", " : "")}";
 				}
-				code += $") => EmitSignal(\"{ev.Name}\"{(m.Parameters.Length > 0 ? ", " : "")}";
+				code += $") => EmitSignal(\"{Renamer.ToSnake(ev.Name)}\"";
 				for (var j = 0; j < m.Parameters.Length; j++) {
 					var p = m.Parameters[j];
-					code += $"{p.Name}{(j < m.Parameters.Length - 1 ? ", " : "")}";
+					code += $", {p.Name}";
 				}
 				code += ");\n";
 			}

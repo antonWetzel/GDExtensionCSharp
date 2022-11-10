@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://bu2qvq4sd6jny"]
 
+[ext_resource type="PackedScene" uid="uid://bkqtfakslyl06" path="res://mob.tscn" id="1_7vsgm"]
 [ext_resource type="PackedScene" uid="uid://ceyr6o81r5yse" path="res://player.tscn" id="1_gcdev"]
-[ext_resource type="PackedScene" uid="uid://bkqtfakslyl06" path="res://mob.tscn" id="1_j5k53"]
 [ext_resource type="PackedScene" uid="uid://r8cupuo8h04r" path="res://hud.tscn" id="3_lcpeq"]
 [ext_resource type="AudioStream" uid="uid://p1qx6d87tfqu" path="res://Art/House In a Forest Loop.ogg" id="4_0kjur"]
 [ext_resource type="AudioStream" uid="uid://bhlqclwpce1o7" path="res://Art/gameover.wav" id="5_fcq3x"]
@@ -12,17 +12,17 @@ _data = {
 }
 point_count = 5
 
-[node name="Main" type="Main" node_paths=PackedStringArray("mobTimer", "scoreTimer", "hud", "player", "music", "deathSound", "startPosition", "startTimer", "mobSpawnLocation")]
-mobScene = ExtResource("1_j5k53")
-mobTimer = NodePath("MobTimer")
-scoreTimer = NodePath("ScoreTimer")
+[node name="Main" type="Main" node_paths=PackedStringArray("mob_timer", "score_timer", "hud", "player", "music", "death_sound", "start_position", "start_timer", "mob_spawn_location")]
+mob_scene = ExtResource("1_7vsgm")
+mob_timer = NodePath("MobTimer")
+score_timer = NodePath("ScoreTimer")
 hud = NodePath("Hud")
 player = NodePath("Player")
 music = NodePath("Music")
-deathSound = NodePath("DeathSound")
-startPosition = NodePath("StartPosition")
-startTimer = NodePath("StartTimer")
-mobSpawnLocation = NodePath("MobPath/MobSpawnLocation")
+death_sound = NodePath("DeathSound")
+start_position = NodePath("StartPosition")
+start_timer = NodePath("StartTimer")
+mob_spawn_location = NodePath("MobPath/MobSpawnLocation")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 anchors_preset = 15
@@ -61,8 +61,8 @@ volume_db = -10.0
 [node name="DeathSound" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("5_fcq3x")
 
-[connection signal="Hit" from="Player" to="." method="GameOver"]
-[connection signal="timeout" from="MobTimer" to="." method="OnMobTimerTimeout"]
-[connection signal="timeout" from="ScoreTimer" to="." method="OnScoreTimerTimeout"]
-[connection signal="timeout" from="StartTimer" to="." method="OnStartTimerTimeout"]
-[connection signal="StartGame" from="Hud" to="." method="NewGame"]
+[connection signal="hit" from="Player" to="." method="game_over"]
+[connection signal="timeout" from="MobTimer" to="." method="on_mob_timer_timeout"]
+[connection signal="timeout" from="ScoreTimer" to="." method="on_score_timer_timeout"]
+[connection signal="timeout" from="StartTimer" to="." method="on_start_timer_timeout"]
+[connection signal="start_game" from="Hud" to="." method="new_game"]

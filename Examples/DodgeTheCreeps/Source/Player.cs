@@ -4,9 +4,9 @@ namespace DodgeTheCreeps;
 public unsafe partial class Player : Area2D {
 
 	[Signal] public delegate void Hit();
-	[Export] long speed { get; set; } = 400;
-	[Export] AnimatedSprite2D animatedSprite2D { get; set; }
-	[Export] CollisionShape2D collisionShape { get; set; }
+	[Export] long speed = 400;
+	[Export] AnimatedSprite2D animatedSprite2D;
+	[Export] CollisionShape2D collisionShape;
 
 	public Vector2 screenSize;
 

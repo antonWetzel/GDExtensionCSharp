@@ -8,12 +8,18 @@ namespace Generators {
 
 	public static class Export {
 
+		record struct Data(string name, string setter, string getter, ITypeSymbol type);
+
 		public static void Generate(GeneratorExecutionContext context, INamedTypeSymbol c, Methods methods) {
 			var members = c.GetMembers().
-				Where(x => x is IPropertySymbol).
-				Select(x => (IPropertySymbol)x).
-				Where(x => x.GetAttributes().Where(x => x.AttributeClass.ToString() == "GDExtension.ExportAttribute").Count() > 0)
-				.ToArray();
+				Where(x => x is IPropertySymbol || x is IFieldSymbol).
+				Where(x => x.GetAttributes().Where(x => x.AttributeClass.ToString() == "GDExtension.ExportAttribute").Count() > 0).
+				Select(x => x switch {
+					IPropertySymbol prop => new Data(prop.Name, prop.SetMethod.Name, prop.GetMethod.Name, prop.Type),
+					IFieldSymbol field => new Data(field.Name, "set_" + field.Name, "get_" + field.Name, field.Type),
+					_ => throw new System.NotSupportedException(),
+				}).
+				ToArray();
 
 			var code = $$"""
 			using System.Runtime.CompilerServices;
@@ -33,36 +39,36 @@ namespace Generators {
 			for (var i = 0; i < members.Length; i++) {
 				var member = members[i];
 
-				code += $"\t\tvar __{member.Name}Info = " + Methods.CreatePropertyInfo(member.Type, member.Name);
+				code += $"\t\tvar __{member.name}Info = " + Methods.CreatePropertyInfo(member.type, member.name);
 
 				methods.AddMethod(new Methods.Info() {
-					name = member.SetMethod.Name,
-					arguments = new (ITypeSymbol, string)[] { (member.Type, "value") },
+					name = member.setter,
+					arguments = new (ITypeSymbol, string)[] { (member.type, "value") },
 					ret = null,
-					property = member.Name,
+					property = member.name,
 				});
 				methods.AddMethod(new Methods.Info() {
-					name = member.GetMethod.Name,
+					name = member.getter,
 					arguments = new (ITypeSymbol, string)[] { },
-					ret = member.Type,
-					property = member.Name,
+					ret = member.type,
+					property = member.name,
 				});
 				code += $$"""
-						setterPtr = Marshal.StringToHGlobalAnsi("{{member.SetMethod.Name}}");
-						getterPtr = Marshal.StringToHGlobalAnsi("{{member.GetMethod.Name}}");
+						setterPtr = Marshal.StringToHGlobalAnsi("{{Renamer.ToSnake(member.setter)}}");
+						getterPtr = Marshal.StringToHGlobalAnsi("{{Renamer.ToSnake(member.getter)}}");
 						Native.gdInterface.classdb_register_extension_class_property(
 							Native.gdLibrary,
 							(sbyte*)namePtr,
-							&__{{member.Name}}Info,
+							&__{{member.name}}Info,
 							(sbyte*)setterPtr,
 							(sbyte*)getterPtr
 						);
 						Marshal.FreeHGlobal(setterPtr);
 						Marshal.FreeHGlobal(getterPtr);
-						if (__{{member.Name}}Info.hint_string != null) {
-							Marshal.FreeHGlobal((IntPtr)__{{member.Name}}Info.hint_string);
+						if (__{{member.name}}Info.hint_string != null) {
+							Marshal.FreeHGlobal((IntPtr)__{{member.name}}Info.hint_string);
 						}
-						Marshal.FreeHGlobal((IntPtr)__{{member.Name}}Info.name);
+						Marshal.FreeHGlobal((IntPtr)__{{member.name}}Info.name);
 
 				""";
 			}

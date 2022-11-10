@@ -29,8 +29,8 @@ animations = [{
 radius = 36.0
 height = 98.0
 
-[node name="Mob" type="Mob" node_paths=PackedStringArray("animSprite2D") groups=["mobs"]]
-animSprite2D = NodePath("AnimatedSprite2d")
+[node name="Mob" type="Mob" node_paths=PackedStringArray("anim_sprite_2d") groups=["mobs"]]
+anim_sprite_2d = NodePath("AnimatedSprite2d")
 collision_mask = 0
 gravity_scale = 0.0
 metadata/_edit_group_ = true
@@ -46,4 +46,4 @@ shape = SubResource("CapsuleShape2D_8ckuq")
 
 [node name="VisibleOnScreenNotifier2d" type="VisibleOnScreenNotifier2D" parent="."]
 
-[connection signal="screen_exited" from="VisibleOnScreenNotifier2d" to="." method="OnVisibleOnScreenNotifier2DScreenExited"]
+[connection signal="screen_exited" from="VisibleOnScreenNotifier2d" to="." method="on_visible_on_screen_notifier_2d_screen_exited"]

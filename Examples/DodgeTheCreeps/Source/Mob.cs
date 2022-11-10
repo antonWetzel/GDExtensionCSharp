@@ -3,7 +3,7 @@ namespace DodgeTheCreeps;
 [Register]
 public unsafe partial class Mob : RigidBody2D {
 
-	[Export] AnimatedSprite2D animSprite2D { get; set; }
+	[Export] AnimatedSprite2D animSprite2D;
 
 	[Notify(NotificationReady)]
 	void Ready() {

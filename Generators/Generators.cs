@@ -50,12 +50,10 @@ namespace Generators {
 
 						public static explicit operator IntPtr({{s.Name}} instance) => GCHandle.ToIntPtr(instance.handle);
 						public static explicit operator {{s.Name}}(IntPtr ptr) => ({{s.Name}})(GCHandle.FromIntPtr(ptr).Target!);
+
 						public static {{s.Name}} Construct(IntPtr ptr) {
-							var name = Marshal.StringToHGlobalAnsi("{{s.Name}}");
-							var tag = Native.gdInterface.classdb_get_class_tag((sbyte*)name);
-							Marshal.FreeHGlobal(name);
-							var p = *(IntPtr*)(void*)(ptr + 16); //Did I miss the inverse function to 'object_set_instance'?, this only works if Godot.Object does not change
-							return ({{s.Name}})p;
+							ptr = *(IntPtr*)(void*)(ptr + 16); //Did I miss the inverse function to 'object_set_instance'?, this only works if Godot.Object does not change
+							return ({{s.Name}})ptr;
 						}
 
 						public static unsafe new void Register() {

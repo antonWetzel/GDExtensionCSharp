@@ -22,9 +22,9 @@ animations = [{
 radius = 27.0
 height = 68.0
 
-[node name="Player" type="Player" node_paths=PackedStringArray("animatedSprite2D", "collisionShape")]
-animatedSprite2D = NodePath("AnimatedSprite2d")
-collisionShape = NodePath("CollisionShape2d")
+[node name="Player" type="Player" node_paths=PackedStringArray("animated_sprite_2d", "collision_shape")]
+animated_sprite_2d = NodePath("AnimatedSprite2d")
+collision_shape = NodePath("CollisionShape2d")
 metadata/_edit_group_ = true
 
 [node name="AnimatedSprite2d" type="AnimatedSprite2D" parent="."]
@@ -35,4 +35,4 @@ animation = &"up"
 [node name="CollisionShape2d" type="CollisionShape2D" parent="."]
 shape = SubResource("CapsuleShape2D_14fvm")
 
-[connection signal="body_entered" from="." to="." method="OnPlayerBodyEntered"]
+[connection signal="body_entered" from="." to="." method="on_player_body_entered"]

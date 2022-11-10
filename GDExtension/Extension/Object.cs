@@ -1,6 +1,6 @@
 namespace GDExtension;
 
-public partial class Object {
+public partial class Object : Wrapped {
 	public static Object ConstructUnknown(IntPtr ptr) {
 		if (ptr == IntPtr.Zero) { return null!; }
 		var o = new Object(ptr);

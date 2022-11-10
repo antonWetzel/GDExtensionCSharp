@@ -4,12 +4,12 @@ namespace DodgeTheCreeps;
 public partial class Hud : CanvasLayer {
 
 	[Signal] public delegate void StartGame();
-	[Export] Label messageLabel { get; set; }
-	[Export] Label scoreLabel { get; set; }
-	[Export] Button startButton { get; set; }
-	[Export] Timer startButtonTimer { get; set; }
-	[Export] Timer startReadyMessageTimer { get; set; }
-	[Export] Timer startMessageTimer { get; set; }
+	[Export] Label messageLabel;
+	[Export] Label scoreLabel;
+	[Export] Button startButton;
+	[Export] Timer startButtonTimer;
+	[Export] Timer startReadyMessageTimer;
+	[Export] Timer startMessageTimer;
 
 	[Method]
 	public void ShowGetReady() {

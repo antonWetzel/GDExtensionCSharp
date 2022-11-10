@@ -91,11 +91,10 @@ public sealed unsafe class Variant {
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> toType;
 	}
 
-	static Constructor[] constructors;
+	static Constructor[] constructors = new Constructor[(int)Type.MAX];
 
 	public static void Register() {
-		constructors = new Constructor[(int)Type.MAX];
-		for (var i = 0; i < (int)Type.MAX; i++) {
+		for (var i = 1; i < (int)Type.MAX; i++) {
 			constructors[i] = new Constructor() {
 				fromType = gdInterface.get_variant_from_type_constructor((Type)i),
 				toType = gdInterface.get_variant_to_type_constructor((Type)i),

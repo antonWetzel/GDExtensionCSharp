@@ -79,7 +79,7 @@ namespace Generators {
 				var method = methods[i];
 				code += $$"""
 						info = new Native.ExtensionClassMethodInfo() {
-							name = (sbyte*)Marshal.StringToHGlobalAnsi("{{method.name}}"),
+							name = (sbyte*)Marshal.StringToHGlobalAnsi("{{Renamer.ToSnake(method.name)}}"),
 							method_userdata = new IntPtr({{i}}),
 							call_func = &CallFunc,
 							ptrcall_func = &CallFuncPtr,
@@ -94,6 +94,7 @@ namespace Generators {
 						};
 
 						Native.gdInterface.classdb_register_extension_class_method(Native.gdLibrary, (sbyte*)namePtr, &info);
+						Marshal.FreeHGlobal((IntPtr)info.name);
 
 
 				""";
@@ -350,7 +351,7 @@ namespace Generators {
 			return $$"""
 			new Native.PropertyInfo() {
 					type = Variant.Type.{{TypeToVariantType(type, sBase)}},
-					name = (sbyte*)Marshal.StringToHGlobalAnsi("{{name}}"),
+					name = (sbyte*)Marshal.StringToHGlobalAnsi("{{Renamer.ToSnake(name)}}"),
 					class_name = null,
 					hint = {{TypeToHint(type, sBase)}},
 					hint_string = {{TypeToHintString(type, sBase)}},

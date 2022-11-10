@@ -8,13 +8,13 @@ action = &"start_game"
 [sub_resource type="Shortcut" id="Shortcut_dcw8k"]
 events = [SubResource("InputEventAction_r4107")]
 
-[node name="Hud" type="Hud" node_paths=PackedStringArray("messageLabel", "scoreLabel", "startButton", "startButtonTimer", "startReadyMessageTimer", "startMessageTimer")]
-messageLabel = NodePath("Message")
-scoreLabel = NodePath("ScoreLabel")
-startButton = NodePath("StartButton")
-startButtonTimer = NodePath("StartButtonTimer")
-startReadyMessageTimer = NodePath("GetReadyMessageTimer")
-startMessageTimer = NodePath("StartMessageTimer")
+[node name="Hud" type="Hud" node_paths=PackedStringArray("message_label", "score_label", "start_button", "start_button_timer", "start_ready_message_timer", "start_message_timer")]
+message_label = NodePath("Message")
+score_label = NodePath("ScoreLabel")
+start_button = NodePath("StartButton")
+start_button_timer = NodePath("StartButtonTimer")
+start_ready_message_timer = NodePath("GetReadyMessageTimer")
+start_message_timer = NodePath("StartMessageTimer")
 
 [node name="ScoreLabel" type="Label" parent="."]
 anchors_preset = 10
@@ -70,7 +70,7 @@ one_shot = true
 [node name="StartButtonTimer" type="Timer" parent="."]
 one_shot = true
 
-[connection signal="button_down" from="StartButton" to="." method="OnStartButtonPressed"]
-[connection signal="timeout" from="StartMessageTimer" to="." method="OnStartMessageTimerTimeout"]
-[connection signal="timeout" from="GetReadyMessageTimer" to="." method="OnGetReadyMessageTimerTimeout"]
-[connection signal="timeout" from="StartButtonTimer" to="." method="OnStartButtonTimer"]
+[connection signal="button_down" from="StartButton" to="." method="on_start_button_pressed"]
+[connection signal="timeout" from="StartMessageTimer" to="." method="on_start_message_timer_timeout"]
+[connection signal="timeout" from="GetReadyMessageTimer" to="." method="on_get_ready_message_timer_timeout"]
+[connection signal="timeout" from="StartButtonTimer" to="." method="on_start_button_timer"]

@@ -3,16 +3,16 @@ namespace DodgeTheCreeps;
 [Register]
 public unsafe partial class Main : Node {
 
-	[Export] PackedScene mobScene { get; set; }
-	[Export] Timer mobTimer { get; set; }
-	[Export] Timer scoreTimer { get; set; }
-	[Export] Hud hud { get; set; }
-	[Export] Player player { get; set; }
-	[Export] AudioStreamPlayer music { get; set; }
-	[Export] AudioStreamPlayer deathSound { get; set; }
-	[Export] Marker2D startPosition { get; set; }
-	[Export] Timer startTimer { get; set; }
-	[Export] PathFollow2D mobSpawnLocation { get; set; }
+	[Export] PackedScene mobScene;
+	[Export] Timer mobTimer;
+	[Export] Timer scoreTimer;
+	[Export] Hud hud;
+	[Export] Player player;
+	[Export] AudioStreamPlayer music;
+	[Export] AudioStreamPlayer deathSound;
+	[Export] Marker2D startPosition;
+	[Export] Timer startTimer;
+	[Export] PathFollow2D mobSpawnLocation;
 
 	long score;
 

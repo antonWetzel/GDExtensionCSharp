@@ -6,7 +6,6 @@ The generated Bindings
 
 - works with problems
 	- some Calls crash
-	- some function pointers can't be found
 	- memory management not finished
 
 ## To-do
