@@ -261,25 +261,8 @@ namespace Generators {
 			context.AddSource($"{c.Name}.methods.gen.cs", code);
 		}
 
-		public enum SpecialBase {
-			None,
-			Node,
-			Resource,
-		}
-
-		public static SpecialBase GetSpecialBase(ITypeSymbol type) {
-			return type.Name switch {
-				"Node" => SpecialBase.Node,
-				"Resource" => SpecialBase.Resource,
-				_ => type.BaseType switch {
-					null => SpecialBase.None,
-					_ => GetSpecialBase(type.BaseType),
-				},
-			};
-		}
-
 		public static string TypeToVariantType(ITypeSymbol type) {
-			return TypeToVariantType(type, GetSpecialBase(type));
+			return TypeToVariantType(type, Generators.GetSpecialBase(type));
 		}
 
 		public static string TypeToVariantType(ITypeSymbol type, SpecialBase sBase) {
@@ -346,7 +329,7 @@ namespace Generators {
 		}
 
 		public static string CreatePropertyInfo(ITypeSymbol type, string name) {
-			var sBase = GetSpecialBase(type);
+			var sBase = Generators.GetSpecialBase(type);
 
 			return $$"""
 			new Native.PropertyInfo() {

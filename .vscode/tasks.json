@@ -42,7 +42,8 @@
 				"-o",
 				"${workspaceFolder}/Examples/Summator/Build",
 			],
-			"problemMatcher": "$msCompile"
+			"problemMatcher": "$msCompile",
+			"dependsOn": "Update Nuget",
 		},
 		{
 			"label": "Generate Api",
