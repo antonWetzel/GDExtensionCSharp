@@ -33,11 +33,10 @@ grow_vertical = 2
 color = Color(0.2, 0.384314, 0.34902, 1)
 
 [node name="Player" parent="." instance=ExtResource("1_gcdev")]
-collision_mask = 0
 
 [node name="MobTimer" type="Timer" parent="."]
 process_callback = 0
-wait_time = 0.001
+wait_time = 0.5
 
 [node name="ScoreTimer" type="Timer" parent="."]
 

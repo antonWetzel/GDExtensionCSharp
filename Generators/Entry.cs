@@ -56,16 +56,16 @@ namespace Generators {
 				public static unsafe void Initialize(IntPtr userdata, Native.InitializationLevel level) {
 					switch (level) {
 					case Native.InitializationLevel.Core:
-						Register.RegisterBuiltin();
-						Register.RegisterUtility();
+						GDExtension.Register.RegisterBuiltin();
+						GDExtension.Register.RegisterUtility();
 						break;
 					case Native.InitializationLevel.Servers:
 						break;
 					case Native.InitializationLevel.Scene:
-						Register.RegisterCore();
+						GDExtension.Register.RegisterCore();
 						{{registrations}}break;
 					case Native.InitializationLevel.Editor:
-						Register.RegisterEditor();
+						GDExtension.Register.RegisterEditor();
 						break;
 					}
 				}

@@ -99,7 +99,7 @@ public class Convert {
 				file = (File.CreateText(dir + "/UtilityFunctions/" + cat + ".cs"), new List<string>());
 				files.Add(cat, file);
 				file.Item1.WriteLine("namespace GDExtension;");
-				file.Item1.WriteLine($"public static unsafe class {cat} {{");
+				file.Item1.WriteLine($"public static unsafe partial class {cat} {{");
 				registrations["utility"].Add(cat);
 			}
 			Documentation.Method? d = null;

@@ -27,10 +27,15 @@ public static class Fixer {
 	}
 
 	public static string MethodName(string name) {
-		name = Fixer.SnakeToPascal(name);
-		return name switch {
+		var res = "";
+		var parts = name.Split(".");
+		for (var i = 0; i < parts.Length - 1; i++) {
+			res += parts[i] + ".";
+		}
+		var last = Fixer.SnakeToPascal(parts[^1]);
+		return res + last switch {
 			"GetType" => "GetTypeGD",
-			_ => name,
+			_ => last,
 		};
 	}
 
@@ -138,22 +143,32 @@ public static class Fixer {
 		}
 	}
 
+	static string XMLConstant(string value) {
+		value = SnakeToPascal(value);
+		return value switch {
+			"@gdscript.nan" => "NaN",
+			"@gdscript.tau" => "Tau",
+			_ => value,
+		};
+	}
+
 	static (string, MatchEvaluator)[] xmlReplacements = new (string, MatchEvaluator)[] {
 		(@"<", x => "&lt;"),
 		(@">", x => "&gt;"),
 		(@"&", x => "&amp;"),
 		(@"\[b\](?<a>.+?)\[/b\]", x => $"<b>{x.Groups["a"].Captures[0].Value}</b>"),
 		(@"\[i\](?<a>.+?)\[/i\]", x => $"<i>{x.Groups["a"].Captures[0].Value}</i>"),
-		(@"\[constant (?<a>\S+?)\]", x => $"<see cref=\"{SnakeToPascal(x.Groups["a"].Captures[0].Value)}\"/>"),
+		(@"\[constant (?<a>\S+?)\]", x => $"<see cref=\"{XMLConstant(x.Groups["a"].Captures[0].Value)}\"/>"),
 		(@"\[code\](?<a>.+?)\[/code\]", x => $"<c>{x.Groups["a"].Captures[0].Value}</c>"),
 		(@"\[param (?<a>\S+?)\]",x => $"<paramref name=\"{x.Groups["a"].Captures[0].Value}\"/>"),
 		(@"\[method (?<a>\S+?)\]", x => $"<see cref=\"{MethodName(x.Groups["a"].Captures[0].Value)}\"/>"),
 		(@"\[member (?<a>\S+?)\]", x => $"<see cref=\"{x.Groups["a"].Captures[0].Value}\"/>"),
 		(@"\[enum (?<a>\S+?)\]",x => $"<see cref=\"{x.Groups["a"].Captures[0].Value}\"/>"),
-		(@"\[signal (?<a>\S+?)\]", x => $"<see cref=\"{SnakeToPascal( x.Groups["a"].Captures[0].Value)}\"/>"), //currently just two functions
+		(@"\[signal (?<a>\S+?)\]", x => $"<see cref=\"EmitSignal{SnakeToPascal( x.Groups["a"].Captures[0].Value)}\"/>"), //currently just two functions
 		(@"\[theme_item (?<a>\S+?)\]", x => $"<see cref=\"{x.Groups["a"].Captures[0].Value}\"/>"), //no clue
+		//(@"cref=""Url=\$docsUrl/(?<a>.+?)/>", x => $"href=\"https://docs.godotengine.org/en/stable/{x.Groups["a"].Captures[0].Value}\"/>"),
+		(@"\[url=(?<a>.+?)\](?<b>.+?)\[/url]", x => $"<see href=\"{x.Groups["a"].Captures[0].Value}\">{x.Groups["b"].Captures[0].Value}</see>"),
 		(@"\[(?<a>\S+?)\]", x => $"<see cref=\"{x.Groups["a"].Captures[0].Value}\"/>"), //can be multiple things
-		(@"cref=""Url=\$docsUrl/(?<a>.+?)/>", x => $"href=\"https://docs.godotengine.org/en/stable/{x.Groups["a"].Captures[0].Value}\"/>"),
 	};
 
 	public static string XMLComment(string comment, int indent = 1) {

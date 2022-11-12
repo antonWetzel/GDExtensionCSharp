@@ -18,11 +18,12 @@ public unsafe partial class Main : Node {
 
 	[Notify(NotificationReady)]
 	void Ready() {
-		GDExtension.Random.Randomize();
+		Randomize();
 	}
 
 	[Method]
 	public void GameOver() {
+		Prints("Final Score:", score);
 		mobTimer.Stop();
 		scoreTimer.Stop();
 		hud.ShowGameOver();
@@ -68,20 +69,20 @@ public unsafe partial class Main : Node {
 		var mob = (Mob)mobScene.Instantiate(PackedScene.GenEditState.Disabled);
 
 		// Choose a random location on Path2D.
-		mobSpawnLocation.progress_ratio = GDExtension.Random.Randf();
+		mobSpawnLocation.progress_ratio = Randf();
 
 		// Set the mob's direction perpendicular to the path direction.
-		double direction = mobSpawnLocation.rotation + System.Math.PI / 2.0;
+		double direction = mobSpawnLocation.rotation + Pi / 2.0;
 
 		// Set the mob's position to a random location.
 		mob.position = mobSpawnLocation.position;
 
 		// Add some randomness to the direction.
-		direction += GDExtension.Random.RandfRange(-System.Math.PI / 4.0, System.Math.PI / 4.0);
+		direction += RandfRange(-Pi / 4.0, Pi / 4.0);
 		mob.rotation = direction;
 
 		// Choose the velocity.
-		var velocity = new Vector2(GDExtension.Random.RandfRange(150.0, 250.0), 0.0);
+		var velocity = new Vector2(RandfRange(150.0, 250.0), 0.0);
 		mob.linear_velocity = velocity.Rotated(direction);
 
 		AddChild(mob);
