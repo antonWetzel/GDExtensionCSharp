@@ -4,6 +4,7 @@ namespace GDExtension;
 public class RegisterAttribute : System.Attribute {
 	public string? name;
 	//string? icon;
+	public bool editorOnly;
 
 	public RegisterAttribute() { }
 }

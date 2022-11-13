@@ -12,7 +12,7 @@ namespace Generators {
 		public void Execute(GeneratorExecutionContext context) {
 			try {
 				var rec = (SyntaxReciever)context.SyntaxReceiver!;
-				var classes = new List<INamedTypeSymbol>();
+				var classes = new List<Register.Data>();
 				foreach (var cSyntax in rec.names) {
 					var c = (INamedTypeSymbol)context.Compilation.GetSemanticModel(cSyntax.SyntaxTree).GetDeclaredSymbol(cSyntax);
 					var methods = new Methods();
@@ -21,8 +21,8 @@ namespace Generators {
 					Export.Generate(context, c, methods);
 					Signal.Generate(context, c);
 					methods.Generate(context, c);
-					Register.Generate(context, c, notification, sBase);
-					classes.Add(c);
+					var data = Register.Generate(context, c, notification, sBase);
+					classes.Add(data);
 				}
 				Entry.Execute(context, classes);
 			} catch (System.Exception e) {

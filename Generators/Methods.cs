@@ -118,9 +118,9 @@ namespace Generators {
 					if (arg.Item1.Name == "String") {
 						args += $"StringMarshall.ToManaged(p_args[{j}])";
 					} else if (TypeToVariantType(arg.Item1) == "Object") {
-						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(*(IntPtr*)(void*)p_args[{j}])";
+						args += $"({arg.Item1})GDExtension.Object.ConstructUnknown(*(IntPtr*)(void*)p_args[{j}])";
 					} else {
-						args += $"*({arg.Item1.Name}*)(void*)p_args[{j}]";
+						args += $"*({arg.Item1}*)(void*)p_args[{j}]";
 					}
 					if (j < method.arguments.Length - 1) {
 						args += ", ";
@@ -171,13 +171,7 @@ namespace Generators {
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
 					var t = TypeToVariantType(arg.Item1);
-					if (arg.Item1.Name == "String") {
-						args += $"StringMarshall.ToManaged(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}], Variant.Type.String))";
-					} else if (t == "Object") {
-						args += $"({arg.Item1.Name})GDExtension.Object.ConstructUnknown(Variant.InteropGetFromPointer<IntPtr>(p_args[{j}], Variant.Type.{t}))";
-					} else {
-						args += $"Variant.InteropGetFromPointer<{arg.Item1}>(p_args[{j}], Variant.Type.{t})";
-					}
+					args += $"({arg.Item1})Variant.Get{t}FromPointer(p_args[{j}])";
 					if (j < method.arguments.Length - 1) {
 						args += ", ";
 					}

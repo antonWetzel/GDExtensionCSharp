@@ -46,12 +46,11 @@
 			"dependsOn": "Update Nuget",
 		},
 		{
-			"label": "Generate Api",
-			"type": "process",
-			"command": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"label": "Update Api Dump",
+			"type": "shell",
+			"command": "python",
 			"args": [
-				"--dump-extension-api",
-				"extension_api.json"
+				"Scripts/update_dump.py"
 			],
 			"problemMatcher": []
 		},

@@ -57,5 +57,16 @@
 			"console": "integratedTerminal",
 			"preLaunchTask": "build Summator",
 		},
+		{
+			"name": "Run Summator",
+			"type": "cppvsdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceFolder}/Examples/Summator",
+			"console": "integratedTerminal",
+			"preLaunchTask": "build Summator",
+		},
 	]
 }

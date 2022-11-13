@@ -137,6 +137,8 @@ public class Convert {
 		}
 		register.WriteLine("}");
 		register.Close();
+
+		Variant();
 	}
 
 	Documentation.Class? GetDocs(string name) {
@@ -600,6 +602,9 @@ public class Convert {
 		if (meth.isStatic || type == MethodType.Utility || isSingleton) {
 			header += "static ";
 		}
+		if (meth.isVirtual) {
+			header += "virtual ";
+		}
 		if (meth.name == "to_string") {
 			header += "new ";
 		}
@@ -994,6 +999,158 @@ public class Convert {
 			//file.WriteLine($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{c.name}\"); Singleton = new {c.name}(gdInterface.global_get_singleton((sbyte*)ptr)); Marshal.FreeHGlobal(ptr); }}");
 		}
 		file.WriteLine("\t}");
+		file.WriteLine("}");
+		file.Close();
+	}
+
+	void Variant() {
+		Api.Enum type = default;
+		Api.Enum operators = default;
+		foreach (var e in api.globalEnums) {
+			switch (e.name) {
+			case "Variant.Type":
+				type = e;
+				break;
+			case "Variant.Operator":
+				operators = e;
+				break;
+			}
+		}
+		type.name = "Type";
+		operators.name = "Operator";
+		var file = File.CreateText(dir + "/" + "Variant.cs");
+		file.WriteLine("namespace GDExtension;");
+		file.WriteLine();
+		file.WriteLine("public sealed unsafe partial class Variant {");
+		file.WriteLine();
+
+		var types = new string[type.values.Length - 1];
+
+		foreach (var e in new[] { type, operators }) {
+			var prefixLength = Fixer.SharedPrefixLength(e.values.Select(x => x.name).ToArray());
+
+			file.WriteLine($"\tpublic enum {Fixer.Type(e.name)} {{");
+			for (var i = 0; i < e.values.Length; i++) {
+				var v = e.values[i];
+
+				var name = Fixer.SnakeToPascal(v.name.Substring(prefixLength));
+				name = name switch {
+					"Aabb" => "AABB",
+					"Rid" => "RID",
+					_ => name,
+				};
+				if (i < types.Length && e == type) {
+					types[i] = name;
+				}
+				file.WriteLine($"\t\t{name} = {v.value},");
+			}
+			file.WriteLine("\t}");
+			file.WriteLine();
+		}
+
+		string VariantTypeToCSharpType(string t) {
+			return t switch {
+				"Bool" => "bool",
+				"Int" => "long",
+				"Float" => "double",
+				"String" => "string",
+				_ => t
+			};
+		}
+
+		for (var i = 1; i < types.Length; i++) {
+			var t = types[i];
+			if (t == "Object") { continue; }
+			file.Write("\tpublic static void SaveIntoPointer(");
+			file.Write(VariantTypeToCSharpType(t));
+			file.Write(" value, IntPtr ptr) => constructors[(int)Type.");
+			file.Write(t);
+			file.Write("].fromType(ptr, ");
+			if (t == "String") {
+				file.Write("StringMarshall.ToNative(value)");
+			} else if (objectTypes.Contains(t)) {
+				file.Write("value._internal_pointer");
+			} else {
+				file.Write("new IntPtr(&value)");
+			}
+			file.WriteLine(");");
+		}
+		file.WriteLine();
+
+		for (var i = 1; i < types.Length; i++) {
+			var t = types[i];
+			file.Write("\tpublic Variant(");
+			file.Write(VariantTypeToCSharpType(t));
+			file.WriteLine(" value) : this() => SaveIntoPointer(value, _internal_pointer);");
+		}
+		file.WriteLine();
+
+		for (var i = 1; i < types.Length; i++) {
+			var t = types[i];
+			if (t == "Object") { continue; }
+			file.Write("\tpublic static ");
+			file.Write(VariantTypeToCSharpType(t));
+			file.Write(" Get");
+			file.Write(t);
+			file.WriteLine("FromPointer(IntPtr ptr) {");
+			file.WriteLine("\t\t//todo: typecheck");
+			file.Write("\t\t");
+			if (t == "String") {
+				file.Write("IntPtr");
+			} else if (objectTypes.Contains(t)) {
+				file.Write(t);
+				file.Write(".InternalStruct");
+			} else {
+				file.Write(VariantTypeToCSharpType(t));
+			}
+			file.WriteLine(" res;");
+			file.Write("\t\tconstructors[(int)Type.");
+			file.Write(t);
+			file.WriteLine("].toType(new IntPtr(&res), ptr);");
+			file.Write("\t\treturn ");
+			if (t == "String") {
+				file.Write("StringMarshall.ToManaged(res)");
+			} else if (objectTypes.Contains(t)) {
+				file.Write("new ");
+				file.Write(t);
+				file.Write("(gdInterface.MoveToUnmanaged(res))");
+			} else {
+				file.Write("res");
+			}
+			file.WriteLine(";");
+			file.WriteLine("\t}");
+		}
+		file.WriteLine();
+
+		for (var i = 1; i < types.Length; i++) {
+			var t = types[i];
+			file.Write("\tpublic ");
+			file.Write(VariantTypeToCSharpType(t));
+			file.Write(" As");
+			file.Write(t);
+			file.Write("() => Get");
+			file.Write(t);
+			file.WriteLine("FromPointer(_internal_pointer);");
+		}
+		file.WriteLine();
+
+		for (var i = 1; i < types.Length; i++) {
+			var t = types[i];
+			file.Write("\tpublic static implicit operator Variant(");
+			file.Write(VariantTypeToCSharpType(t));
+			file.WriteLine(" value) => new Variant(value);");
+		}
+		file.WriteLine();
+
+		for (var i = 1; i < types.Length; i++) {
+			var t = types[i];
+			file.Write("\tpublic static explicit operator ");
+			file.Write(VariantTypeToCSharpType(t));
+			file.Write("(Variant value) => value.As");
+			file.Write(t);
+			file.WriteLine("();");
+		}
+		file.WriteLine();
 		file.WriteLine("}");
 		file.Close();
 	}

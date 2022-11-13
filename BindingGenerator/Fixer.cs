@@ -125,6 +125,11 @@ public static class Fixer {
 				res += w[0].ToString().ToUpper() + w.Substring(1).ToLower();
 			}
 		}
+		for (var i = 0; i < res.Length - 1; i++) {
+			if (char.IsDigit(res[i]) && res[i + 1] == 'd') {
+				res = res.Substring(0, i + 1) + 'D' + res.Substring(i + 2);
+			}
+		}
 		return res;
 	}
 

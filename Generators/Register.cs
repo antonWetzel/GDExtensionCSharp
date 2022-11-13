@@ -8,12 +8,25 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Generators {
 
 	public static class Register {
-		public static void Generate(GeneratorExecutionContext context, INamedTypeSymbol c, bool notification, SpecialBase sBase) {
 
-			var gdName = c.GetAttributes().
+		public enum Level {
+			Scene,
+			Editor,
+		}
+
+		public struct Data {
+			public string name;
+			public string godotName;
+			public string @base;
+			public string @namespace;
+			public Level level;
+		}
+
+		public static Data Generate(GeneratorExecutionContext context, INamedTypeSymbol c, bool notification, SpecialBase sBase) {
+			var gdName = (string)(c.GetAttributes().
 				SingleOrDefault(x => x.AttributeClass.Name == "RegisterAttribute").NamedArguments.
-				SingleOrDefault(x => x.Key == "name").Value.Value ?? c.Name;
-
+				SingleOrDefault(x => x.Key == "name").Value.Value ?? c.Name
+			);
 			var isRefCounted = sBase switch {
 				SpecialBase.Resource => true,
 				SpecialBase.RefCounted => true,
@@ -91,7 +104,24 @@ namespace Generators {
 				}
 			}
 			""";
+
 			context.AddSource($"{c.Name}.gen.cs", source);
+
+			var editorOnly = (bool)(c.GetAttributes().
+				SingleOrDefault(x => x.AttributeClass.Name == "RegisterAttribute").NamedArguments.
+				SingleOrDefault(x => x.Key == "editorOnly").Value.Value ?? false
+			);
+			var level = editorOnly switch {
+				true => Level.Editor,
+				false => Level.Scene,
+			};
+			return new Data() {
+				name = c.Name,
+				godotName = gdName,
+				@base = c.BaseType.Name,
+				@namespace = c.ContainingNamespace.ToString(),
+				level = level,
+			};
 		}
 	}
 }

@@ -6,23 +6,31 @@ namespace Generators {
 
 	public static class Entry {
 
-		public static void Execute(GeneratorExecutionContext context, List<INamedTypeSymbol> classes) {
+		public static void Execute(GeneratorExecutionContext context, List<Register.Data> classes) {
 			var registrations = "";
+			var editorRegistrations = "";
 			var unregistrations = "";
 			while (classes.Count > 0) {
 				for (var i = 0; i < classes.Count; i++) {
-					var b = classes[i].BaseType.Name;
+					var b = classes[i].@base;
 					var valid = true;
 					foreach (var o in classes) {
-						if (o.Name == b) {
+						if (o.name == b) {
 							valid = false;
 							break;
 						}
 					}
 					if (valid) {
 						var n = classes[i];
-						registrations += $"{n.ContainingNamespace}.{n.Name}.Register();\n\t\t\t";
-						unregistrations = $"{{ var ptr = Marshal.StringToHGlobalAnsi(\"{n.Name}\"); Native.gdInterface.classdb_unregister_extension_class(Native.gdLibrary, (sbyte*)ptr); Marshal.FreeHGlobal(ptr); }}\n\t\t\t" + unregistrations;
+						switch (n.level) {
+						case Register.Level.Scene:
+							registrations += $"{n.@namespace}.{n.name}.Register();\n\t\t\t";
+							break;
+						case Register.Level.Editor:
+							editorRegistrations += $"{n.@namespace}.{n.name}.Register();\n\t\t\t";
+							break;
+						}
+						unregistrations = $"{{ var ptr = Marshal.StringToHGlobalAnsi(\"{n.godotName}\"); Native.gdInterface.classdb_unregister_extension_class(Native.gdLibrary, (sbyte*)ptr); Marshal.FreeHGlobal(ptr); }}\n\t\t\t" + unregistrations;
 						classes[i] = classes.Last();
 						classes.RemoveAt(classes.Count - 1);
 						break;
@@ -66,7 +74,7 @@ namespace Generators {
 						{{registrations}}break;
 					case Native.InitializationLevel.Editor:
 						GDExtension.Register.RegisterEditor();
-						break;
+						{{editorRegistrations}}break;
 					}
 				}
 

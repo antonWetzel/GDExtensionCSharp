@@ -6,6 +6,10 @@ namespace Generators {
 
 		public static string ToSnake(string name) {
 			var res = "";
+			if (name.StartsWith("_")) {
+				res += "_";
+				name = name.Substring(1);
+			}
 			var upper = false;
 			var last = name[0];
 			for (var i = 1; i < name.Length; i++) {

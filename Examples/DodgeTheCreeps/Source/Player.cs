@@ -42,10 +42,8 @@ public unsafe partial class Player : Area2D {
 
 		position += velocity * delta;
 		position = new Vector2(
-			//GDExtension.Math.Clamp(position.x, 0.0, screenSize.x).AsFloat(), //does not work
-			//GDExtension.Math.Clamp(position.y, 0.0, screenSize.y).AsFloat()
-			System.Math.Clamp(position.x, 0.0, screenSize.x),
-			System.Math.Clamp(position.y, 0.0, screenSize.y)
+			Clampf(position.x, 0.0, screenSize.x),
+			Clampf(position.y, 0.0, screenSize.y)
 		);
 
 		if (velocity.x != 0f) {
