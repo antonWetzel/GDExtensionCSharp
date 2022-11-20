@@ -30,7 +30,7 @@ namespace Generators {
 							editorRegistrations += $"{n.@namespace}.{n.name}.Register();\n\t\t\t";
 							break;
 						}
-						unregistrations = $"{{ var ptr = Marshal.StringToHGlobalAnsi(\"{n.godotName}\"); Native.gdInterface.classdb_unregister_extension_class(Native.gdLibrary, (sbyte*)ptr); Marshal.FreeHGlobal(ptr); }}\n\t\t\t" + unregistrations;
+						unregistrations = $"Native.gdInterface.classdb_unregister_extension_class(Native.gdLibrary, {n.@namespace}.{n.name}.__godot_name._internal_pointer);\n\t\t\t" + unregistrations;
 						classes[i] = classes.Last();
 						classes.RemoveAt(classes.Count - 1);
 						break;
@@ -64,12 +64,12 @@ namespace Generators {
 				public static unsafe void Initialize(IntPtr userdata, Native.InitializationLevel level) {
 					switch (level) {
 					case Native.InitializationLevel.Core:
-						GDExtension.Register.RegisterBuiltin();
-						GDExtension.Register.RegisterUtility();
 						break;
 					case Native.InitializationLevel.Servers:
 						break;
 					case Native.InitializationLevel.Scene:
+						GDExtension.Register.RegisterBuiltin();
+						GDExtension.Register.RegisterUtility();
 						GDExtension.Register.RegisterCore();
 						{{registrations}}break;
 					case Native.InitializationLevel.Editor:

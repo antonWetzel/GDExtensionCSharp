@@ -30,16 +30,13 @@ namespace Generators {
 			public unsafe partial class {{c.Name}} : {{c.BaseType.Name}} {
 
 				static unsafe void RegisterExports() {
-					var namePtr = Marshal.StringToHGlobalAnsi("{{c.Name}}");
-					IntPtr setterPtr;
-					IntPtr getterPtr;
 
 			""";
 
 			for (var i = 0; i < members.Length; i++) {
 				var member = members[i];
 
-				code += $"\t\tvar __{member.name}Info = " + Methods.CreatePropertyInfo(member.type, member.name);
+				code += $"\t\tvar __{member.name}Info = " + Methods.CreatePropertyInfo(member.type, member.name, 2);
 
 				methods.AddMethod(new Methods.Info() {
 					name = member.setter,
@@ -54,26 +51,16 @@ namespace Generators {
 					property = member.name,
 				});
 				code += $$"""
-						setterPtr = Marshal.StringToHGlobalAnsi("{{Renamer.ToSnake(member.setter)}}");
-						getterPtr = Marshal.StringToHGlobalAnsi("{{Renamer.ToSnake(member.getter)}}");
 						Native.gdInterface.classdb_register_extension_class_property(
 							Native.gdLibrary,
-							(sbyte*)namePtr,
+							__godot_name._internal_pointer,
 							&__{{member.name}}Info,
-							(sbyte*)setterPtr,
-							(sbyte*)getterPtr
+							new StringName("{{Renamer.ToSnake(member.setter)}}")._internal_pointer,
+							new StringName("{{Renamer.ToSnake(member.getter)}}")._internal_pointer
 						);
-						Marshal.FreeHGlobal(setterPtr);
-						Marshal.FreeHGlobal(getterPtr);
-						if (__{{member.name}}Info.hint_string != null) {
-							Marshal.FreeHGlobal((IntPtr)__{{member.name}}Info.hint_string);
-						}
-						Marshal.FreeHGlobal((IntPtr)__{{member.name}}Info.name);
-
 				""";
 			}
 			code += """
-					Marshal.FreeHGlobal(namePtr);
 				}
 			}
 

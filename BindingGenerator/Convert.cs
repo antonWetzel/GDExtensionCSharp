@@ -130,7 +130,9 @@ public class Convert {
 		register.WriteLine("public static class Register {");
 		foreach (var (key, list) in registrations) {
 			register.WriteLine($"\tpublic static void Register{Fixer.SnakeToPascal(key)}() {{");
+			register.WriteLine($"\t\tStringName.Register();");
 			foreach (var r in list) {
+				if (r == "StringName") { continue; } //stringname needed to register methods
 				register.WriteLine($"\t\t{r}.Register();");
 			}
 			register.WriteLine("\t}");
@@ -342,8 +344,8 @@ public class Convert {
 
 		file.WriteLine("\tpublic static void Register() {");
 		foreach (var member in membersWithFunctions) {
-			file.WriteLine($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{member}\"); {member}_getter = gdInterface.variant_get_ptr_getter(Variant.Type.{Fixer.Type(c.name)}, (sbyte*)ptr); Marshal.FreeHGlobal(ptr); }}");
-			file.WriteLine($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{member}\"); {member}_setter = gdInterface.variant_get_ptr_setter(Variant.Type.{Fixer.Type(c.name)}, (sbyte*)ptr); Marshal.FreeHGlobal(ptr); }}");
+			file.WriteLine($"\t\t{member}_getter = gdInterface.variant_get_ptr_getter(Variant.Type.{Fixer.Type(c.name)}, new StringName(\"{member}\")._internal_pointer);");
+			file.WriteLine($"\t\t{member}_setter = gdInterface.variant_get_ptr_setter(Variant.Type.{Fixer.Type(c.name)}, new StringName(\"{member}\")._internal_pointer);");
 		}
 		for (var i = 0; i < constructorRegistrations.Count; i++) {
 			file.WriteLine(constructorRegistrations[i]);
@@ -668,15 +670,15 @@ public class Convert {
 				return;
 			}
 			m = $"__methodPointer_{methodRegistrations.Count}";
-			methodRegistrations.Add($"\t\t{{ var ptrClass = Marshal.StringToHGlobalAnsi(\"{className}\"); var ptrName = Marshal.StringToHGlobalAnsi(\"{meth.name}\"); {m} = gdInterface.classdb_get_method_bind((sbyte*)ptrClass, (sbyte*)ptrName, {meth.hash}); Marshal.FreeHGlobal(ptrClass); Marshal.FreeHGlobal(ptrName); }}");
+			methodRegistrations.Add($"\t\t{m} = gdInterface.classdb_get_method_bind(__godot_name._internal_pointer, new StringName(\"{meth.name}\")._internal_pointer, {meth.hash});");
 			break;
 		case MethodType.Native:
 			m = $"__methodPointer_{methodRegistrations.Count}";
-			methodRegistrations.Add($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{meth.name}\"); {m} = gdInterface.variant_get_ptr_builtin_method(Variant.Type.{className}, (sbyte*)ptr, {meth.hash}); Marshal.FreeHGlobal(ptr); }}");
+			methodRegistrations.Add($"\t\t{m} = gdInterface.variant_get_ptr_builtin_method(Variant.Type.{className}, new StringName(\"{meth.name}\")._internal_pointer, {meth.hash});");
 			break;
 		case MethodType.Utility:
 			m = $"__methodPointer_{methodRegistrations.Count}";
-			methodRegistrations.Add($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{meth.name}\"); {m} = gdInterface.variant_get_ptr_utility_function((sbyte*)ptr, {meth.hash}); Marshal.FreeHGlobal(ptr); }}");
+			methodRegistrations.Add($"\t\t{m} = gdInterface.variant_get_ptr_utility_function(new StringName(\"{meth.name}\")._internal_pointer, {meth.hash});");
 			break;
 		}
 		if (meth.isVararg) {
@@ -860,12 +862,7 @@ public class Convert {
 			//file.WriteLine($"\tpublic static {c.name} Singleton;");
 			//see note below
 			file.WriteLine($"\tpublic static {c.name} Singleton {{");
-			file.WriteLine("\t\tget {");
-			file.WriteLine($"\t\t\tvar ptr = Marshal.StringToHGlobalAnsi(\"{c.name}\");");
-			file.WriteLine($"\t\t\tvar s = new {c.name}(gdInterface.global_get_singleton((sbyte*)ptr));");
-			file.WriteLine("\t\t\tMarshal.FreeHGlobal(ptr);");
-			file.WriteLine("\t\t\treturn s;");
-			file.WriteLine("\t\t}");
+			file.WriteLine($"\t\tget => new {c.name}(gdInterface.global_get_singleton(__godot_name._internal_pointer));");
 			file.WriteLine("\t}");
 			file.WriteLine();
 		}
@@ -976,19 +973,21 @@ public class Convert {
 		EqualAndHash(c.name, file);
 
 		var content = c.name == "RefCounted" ? " Reference(); " : " ";
-		file.WriteLine($"\tpublic {c.name}() : base(\"{c.name}\") {{{content}}}");
-		file.WriteLine($"\tprotected {c.name}(string type) : base(type) {{{content}}}");
+		file.WriteLine($"\tpublic {c.name}() : base(__godot_name) {{{content}}}");
+		file.WriteLine($"\tprotected {c.name}(StringName type) : base(type) {{{content}}}");
 		file.WriteLine($"\tprotected {c.name}(IntPtr ptr) : base(ptr) {{{content}}}");
 		file.WriteLine($"\tprivate static {c.name} Construct(IntPtr ptr) => new {c.name}(ptr);");
 		file.WriteLine();
 
 		file.WriteLine("#pragma warning disable CS8625");
+		file.WriteLine("\tpublic static StringName __godot_name;");
 		for (var i = 0; i < methodRegistrations.Count; i++) {
 			file.WriteLine($"\tstatic IntPtr __methodPointer_{i};");
 		}
 		file.WriteLine("#pragma warning restore CS8625");
 		file.WriteLine();
 		file.WriteLine("\tpublic static new void Register() {");
+		file.WriteLine($"\t\t__godot_name = new StringName(\"{c.name}\");");
 		file.WriteLine($"\t\tObject.RegisterConstructor(\"{c.name}\", Construct);");
 		for (var i = 0; i < methodRegistrations.Count; i++) {
 			file.WriteLine(methodRegistrations[i]);
@@ -996,7 +995,7 @@ public class Convert {
 		if (isSingleton) {
 			//they are registered after every init level, cashing not possible
 			//https://github.com/godotengine/godot/pull/65018 (?)
-			//file.WriteLine($"\t\t{{ var ptr = Marshal.StringToHGlobalAnsi(\"{c.name}\"); Singleton = new {c.name}(gdInterface.global_get_singleton((sbyte*)ptr)); Marshal.FreeHGlobal(ptr); }}");
+			//file.WriteLine($"\t\tSingleton = new {c.name}(gdInterface.global_get_singleton(__godot_name);");
 		}
 		file.WriteLine("\t}");
 		file.WriteLine("}");

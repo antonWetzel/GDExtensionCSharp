@@ -55,53 +55,52 @@ namespace Generators {
 
 			public unsafe partial class {{c.Name}} : {{c.BaseType.Name}} {
 
-			""";
-
-			for (var i = 0; i < methods.Count; i++) {
-				var method = methods[i];
-				if (method.ret != null) {
-					code += $"static Native.PropertyInfo __{method.name}_returnInfo = {CreatePropertyInfo(method.ret, "return")}";
-				}
-				for (var j = 0; j < method.arguments.Length; j++) {
-					var arg = method.arguments[j];
-					code += $"static Native.PropertyInfo __{method.name}_{arg.Item2}Info = {CreatePropertyInfo(arg.Item1, arg.Item2)}";
-				}
-			}
-
-			code += $$"""
 				static unsafe void RegisterMethods() {
-					Native.ExtensionClassMethodInfo info;
-					var namePtr = Marshal.StringToHGlobalAnsi("{{c.Name}}");
 
 			""";
 
 			for (var i = 0; i < methods.Count; i++) {
+				code += "\t\t{\n";
 				var method = methods[i];
+				if (method.arguments.Length > 0) {
+					code += $"\t\t\tvar args = stackalloc Native.PropertyInfo[{method.arguments.Length}];\n";
+					code += $"\t\t\tvar args_meta = stackalloc Native.ExtensionClassMethodArgumentMetadata[{method.arguments.Length}];\n";
+					for (var j = 0; j < method.arguments.Length; j++) {
+						var arg = method.arguments[j];
+						code += $"\t\t\targs[{j}] = {CreatePropertyInfo(arg.Item1, arg.Item2, 3)}";
+						code += $"\t\t\targs_meta[{j}] = Native.ExtensionClassMethodArgumentMetadata.None;\n";
+					}
+				}
+				if (method.ret != null) {
+					code += $"\t\t\tvar ret = {CreatePropertyInfo(method.ret, "return", 3)}";
+				}
+
 				code += $$"""
-						info = new Native.ExtensionClassMethodInfo() {
-							name = (sbyte*)Marshal.StringToHGlobalAnsi("{{Renamer.ToSnake(method.name)}}"),
-							method_userdata = new IntPtr({{i}}),
-							call_func = &CallFunc,
-							ptrcall_func = &CallFuncPtr,
-							method_flags = Native.ExtensionClassMethodFlags.Default,
-							argument_count = {{method.arguments.Length}},
-							has_return_value = {{(method.ret != null ? "true" : "false")}},
-							get_argument_type_func = &ArgumentType,
-							get_argument_info_func = &ArgumentInfo,
-							get_argument_metadata_func = &ArgumentMetadata,
-							default_argument_count = 0,
-							default_arguments = null,
-						};
 
-						Native.gdInterface.classdb_register_extension_class_method(Native.gdLibrary, (sbyte*)namePtr, &info);
-						Marshal.FreeHGlobal((IntPtr)info.name);
+							var info = new Native.ExtensionClassMethodInfo() {
+								name = new StringName("{{Renamer.ToSnake(method.name)}}")._internal_pointer,
+								method_userdata = new IntPtr({{i}}),
+								call_func = &CallFunc,
+								ptrcall_func = &CallFuncPtr,
+								method_flags = Native.ExtensionClassMethodFlags.Default,
+								has_return_value = {{(method.ret != null ? "true" : "false")}},
+								return_value_info = {{(method.ret != null ? "&ret" : "null")}},
+								return_value_metadata = Native.ExtensionClassMethodArgumentMetadata.None,
 
+								argument_count = {{method.arguments.Length}},
+								arguments_info = {{(method.arguments.Length > 0 ? "args" : "null")}},
+								arguments_metadata = {{(method.arguments.Length > 0 ? "args_meta" : "null")}},
+
+								default_argument_count = 0,
+								default_arguments = null,
+							};
+							Native.gdInterface.classdb_register_extension_class_method(Native.gdLibrary, __godot_name._internal_pointer, &info);
 
 				""";
+				code += "\t\t}\n";
 			}
 
 			code += $$"""
-					Marshal.FreeHGlobal(namePtr);
 				}
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
@@ -200,55 +199,6 @@ namespace Generators {
 			code += $$"""
 					}
 				}
-
-				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static Variant.Type ArgumentType(IntPtr p_method_userdata, int p_argument) {
-					return (int)p_method_userdata switch {
-
-			""";
-			for (var i = 0; i < methods.Count; i++) {
-				var method = methods[i];
-				code += $"\t\t{i} => p_argument switch {{\n";
-				if (method.ret != null) {
-					code += $"\t\t\t-1 => Variant.Type.{TypeToVariantType(method.ret)},\n";
-				}
-				for (var j = 0; j < method.arguments.Length; j++) {
-					code += $"\t\t\t{j} => Variant.Type.{TypeToVariantType(method.arguments[j].Item1)},\n";
-				}
-				code += "\t\t\t_ => Variant.Type.Nil,\n\t\t},\n";
-			}
-			code += $$"""
-						_ => Variant.Type.Nil,
-					};
-				}
-
-				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static void ArgumentInfo(IntPtr p_method_userdata, int p_argument, Native.PropertyInfo* r_info) {
-					*r_info = (int)p_method_userdata switch {
-
-			""";
-
-			for (var i = 0; i < methods.Count; i++) {
-				var method = methods[i];
-				code += $"\t\t{i} =>  p_argument switch {{\n";
-				if (method.ret != null) {
-					code += $"\t\t\t-1 => __{method.name}_returnInfo,\n";
-				}
-				for (var j = 0; j < method.arguments.Length; j++) {
-					var arg = method.arguments[j];
-					code += $"\t\t\t{j} => __{method.name}_{arg.Item2}Info,\n";
-				}
-				code += "\t\t\t_ => default,\n\t\t},\n";
-			}
-			code += $$"""
-						_ => default,
-					};
-				}
-
-				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static Native.ExtensionClassMethodArgumentMetadata ArgumentMetadata(IntPtr p_method_userdata, int p_argument) {
-					return Native.ExtensionClassMethodArgumentMetadata.None;
-				}
 			}
 			""";
 
@@ -307,8 +257,8 @@ namespace Generators {
 
 		public static string TypeToHintString(ITypeSymbol type, SpecialBase sBase) {
 			return sBase switch {
-				SpecialBase.Node or SpecialBase.Resource => $"(sbyte*)Marshal.StringToHGlobalAnsi(\"{type.Name}\")",
-				SpecialBase.None => "null",
+				SpecialBase.Node or SpecialBase.Resource => $"StringMarshall.ToNative(\"{type.Name}\")",
+				SpecialBase.None => "StringMarshall.ToNative(\"\")",
 				_ => throw new Exception(),
 			};
 		}
@@ -322,18 +272,20 @@ namespace Generators {
 			};
 		}
 
-		public static string CreatePropertyInfo(ITypeSymbol type, string name) {
+		public static string CreatePropertyInfo(ITypeSymbol type, string name, int tabs) {
 			var sBase = Generators.GetSpecialBase(type);
+
+			var t = new String('\t', tabs);
 
 			return $$"""
 			new Native.PropertyInfo() {
-					type = Variant.Type.{{TypeToVariantType(type, sBase)}},
-					name = (sbyte*)Marshal.StringToHGlobalAnsi("{{Renamer.ToSnake(name)}}"),
-					class_name = null,
-					hint = {{TypeToHint(type, sBase)}},
-					hint_string = {{TypeToHintString(type, sBase)}},
-					usage = PropertyUsageFlags.Default,
-				};
+			{{t}}	type = Variant.Type.{{TypeToVariantType(type, sBase)}},
+			{{t}}	name = new StringName("{{Renamer.ToSnake(name)}}")._internal_pointer,
+			{{t}}	class_name = __godot_name._internal_pointer,
+			{{t}}	hint = {{TypeToHint(type, sBase)}},
+			{{t}}	hint_string = {{TypeToHintString(type, sBase)}},
+			{{t}}	usage = PropertyUsageFlags.Default,
+			{{t}}};
 
 			""";
 		}

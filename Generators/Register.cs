@@ -40,14 +40,17 @@ namespace Generators {
 			namespace {{c.ContainingNamespace}};
 
 			public unsafe partial class {{c.Name}} : {{c.BaseType.Name}} {
+
+			#pragma warning disable CS8618
+				public static new StringName __godot_name;
+			#pragma warning restore CS8618
+
 				private GCHandle handle;
 
 			#pragma warning disable CS8618
 				public {{c.Name}}() {
 					handle = GCHandle.Alloc(this {{(isRefCounted ? ", GCHandleType.Weak" : "")}});
-					var name = Marshal.StringToHGlobalAnsi("{{gdName}}");
-					Native.gdInterface.object_set_instance(_internal_pointer, (sbyte*)name, (IntPtr)this);
-					Marshal.FreeHGlobal(name);
+					Native.gdInterface.object_set_instance(_internal_pointer, __godot_name._internal_pointer, (IntPtr)this);
 				}
 			#pragma warning restore CS8618
 
@@ -60,6 +63,8 @@ namespace Generators {
 				}
 
 				public static unsafe new void Register() {
+					__godot_name = new StringName("{{gdName}}");
+
 					var info = new Native.ExtensionClassCreationInfo() {
 						is_virtual = false,
 						is_abstract = false,
@@ -79,11 +84,7 @@ namespace Generators {
 						//get_rid_func = &GetRid,
 						//class_userdata = IntPtr.Zero,
 					};
-					var ptrName = Marshal.StringToHGlobalAnsi("{{gdName}}");
-					var ptrBase = Marshal.StringToHGlobalAnsi("{{c.BaseType.Name}}");
-					Native.gdInterface.classdb_register_extension_class(Native.gdLibrary, (sbyte*)ptrName, (sbyte*)ptrBase, &info);
-					Marshal.FreeHGlobal(ptrName);
-					Marshal.FreeHGlobal(ptrBase);
+					Native.gdInterface.classdb_register_extension_class(Native.gdLibrary, __godot_name._internal_pointer, {{c.BaseType.Name}}.__godot_name._internal_pointer, &info);
 					RegisterMethods();
 					RegisterExports();
 					RegisterSignals();
@@ -93,14 +94,14 @@ namespace Generators {
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 				static unsafe IntPtr CreateObject(IntPtr userdata) {
-					var test = new {{c.Name}}();
-					return test._internal_pointer;
+					var instance = new {{c.Name}}();
+					return instance._internal_pointer;
 				}
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static unsafe void FreeObject(IntPtr userdata, IntPtr instance) {
-					var test = ({{c.Name}})instance;
-					test.handle.Free();
+				static unsafe void FreeObject(IntPtr userdata, IntPtr instancePtr) {
+					var instance = ({{c.Name}})instancePtr;
+					instance.handle.Free();
 				}
 			}
 			""";

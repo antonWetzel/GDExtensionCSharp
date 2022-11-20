@@ -4,10 +4,8 @@ public unsafe class Wrapped {
 
 	public IntPtr _internal_pointer;
 
-	protected Wrapped(string type) {
-		var ptr = Marshal.StringToHGlobalAnsi(type);
-		_internal_pointer = gdInterface.classdb_construct_object((sbyte*)ptr);
-		Marshal.FreeHGlobal(hglobal: ptr);
+	protected Wrapped(StringName type) {
+		_internal_pointer = gdInterface.classdb_construct_object(type._internal_pointer);
 	}
 	protected Wrapped(IntPtr data) => _internal_pointer = data;
 

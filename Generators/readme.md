@@ -11,6 +11,6 @@ C# source generators to create the glue for on the project
 ## To-do
 
 - clean-up
-- avoid name conflicts
+- avoid name conflicts (maybe class as visibility)
 - automatic manage `Process` enable / disable
 - ...

@@ -16,7 +16,7 @@
 				"${workspaceFolder}/Examples/DodgeTheCreeps/Build",
 			],
 			"problemMatcher": "$msCompile",
-			"dependsOn": "Update Nuget",
+			//"dependsOn": "Update Nuget",
 		},
 		{
 			"label": "build binding generator",

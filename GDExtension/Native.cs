@@ -41,25 +41,25 @@ public static unsafe partial class Native {
 	public partial struct PropertyInfo {
 		public Variant.Type type;
 
-		//[NativeTypeName("const char *")]
-		public sbyte* name;
+		//[NativeTypeName("GDNativeStringPtr")]
+		public IntPtr name;
 
-		//[NativeTypeName("const char *")]
-		public sbyte* class_name;
+		//[NativeTypeName("GDNativeStringPtr")]
+		public IntPtr class_name;
 
 		//[NativeTypeName("uint32_t")]
 		public PropertyHint hint;
 
-		//[NativeTypeName("const char *")]
-		public sbyte* hint_string;
+		//[NativeTypeName("GDNativeStringPtr")]
+		public IntPtr hint_string;
 
 		//[NativeTypeName("uint32_t")]
 		public PropertyUsageFlags usage;
 	}
 
 	public partial struct MethodInfo {
-		//[NativeTypeName("const char *")]
-		public sbyte* name;
+		//[NativeTypeName("GDNativeStringPtr")]
+		public IntPtr name;
 
 		public PropertyInfo return_value;
 
@@ -69,16 +69,17 @@ public static unsafe partial class Native {
 		//[NativeTypeName("int32_t")]
 		public int id;
 
-		public PropertyInfo* arguments;
 
 		//[NativeTypeName("uint32_t")]
 		public uint argument_count;
 
-		//[NativeTypeName("VariantPtr")]
-		public IntPtr default_arguments;
+		public PropertyInfo* arguments;
 
 		//[NativeTypeName("uint32_t")]
 		public uint default_argument_count;
+
+		//[NativeTypeName("VariantPtr")]
+		public IntPtr default_arguments;
 	}
 
 	public partial struct ExtensionClassCreationInfo {
@@ -110,7 +111,7 @@ public static unsafe partial class Native {
 		public delegate* unmanaged[Cdecl]<IntPtr, int, void> notification_func;
 
 		//[NativeTypeName ("ExtensionClassToString")]
-		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> to_string_func;
+		public delegate* unmanaged[Cdecl]<IntPtr, bool*, IntPtr, void> to_string_func;
 
 		//[NativeTypeName ("ExtensionClassReference")]
 		public delegate* unmanaged[Cdecl]<IntPtr, void> reference_func;
@@ -125,7 +126,7 @@ public static unsafe partial class Native {
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> free_instance_func;
 
 		//[NativeTypeName ("ExtensionClassGetVirtual")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, IntPtr, void>> get_virtual_func;
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, IntPtr, void>> get_virtual_func;
 
 		//[NativeTypeName ("ExtensionClassGetRID")]
 		public delegate* unmanaged[Cdecl]<IntPtr, ulong> get_rid_func;
@@ -158,8 +159,8 @@ public static unsafe partial class Native {
 	}
 
 	public partial struct ExtensionClassMethodInfo {
-		//[NativeTypeName ("const char *")]
-		public sbyte* name;
+		//[NativeTypeName ("GDNativeStringNamePtr")]
+		public IntPtr name;
 
 		public IntPtr method_userdata;
 
@@ -172,20 +173,19 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("uint32_t")]
 		public ExtensionClassMethodFlags method_flags;
 
-		//[NativeTypeName ("uint32_t")]
-		public uint argument_count;
-
 		//[NativeTypeName ("Bool")]
 		public bool has_return_value;
 
-		//[NativeTypeName ("ExtensionClassMethodGetArgumentType")]
-		public delegate* unmanaged[Cdecl]<IntPtr, int, Variant.Type> get_argument_type_func;
+		public PropertyInfo* return_value_info;
 
-		//[NativeTypeName ("ExtensionClassMethodGetArgumentInfo")]
-		public delegate* unmanaged[Cdecl]<IntPtr, int, PropertyInfo*, void> get_argument_info_func;
+		public ExtensionClassMethodArgumentMetadata return_value_metadata;
 
-		//[NativeTypeName ("ExtensionClassMethodGetArgumentMetadata")]
-		public delegate* unmanaged[Cdecl]<IntPtr, int, ExtensionClassMethodArgumentMetadata> get_argument_metadata_func;
+		//[NativeTypeName ("uint32_t")]
+		public uint argument_count;
+
+		public PropertyInfo* arguments_info;
+
+		public ExtensionClassMethodArgumentMetadata* arguments_metadata;
 
 		//[NativeTypeName ("uint32_t")]
 		public uint default_argument_count;
@@ -207,9 +207,6 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("ExtensionScriptInstanceFreePropertyList")]
 		public delegate* unmanaged[Cdecl]<IntPtr, PropertyInfo*, void> free_property_list_func;
 
-		//[NativeTypeName ("ExtensionScriptInstanceGetPropertyType")]
-		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, byte*, Variant.Type> get_property_type_func;
-
 		//[NativeTypeName ("ExtensionScriptInstancePropertyCanRevert")]
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, byte> property_can_revert_func;
 
@@ -228,6 +225,9 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("ExtensionScriptInstanceFreeMethodList")]
 		public delegate* unmanaged[Cdecl]<IntPtr, MethodInfo*, void> free_method_list_func;
 
+		//[NativeTypeName ("ExtensionScriptInstanceGetPropertyType")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, byte*, Variant.Type> get_property_type_func;
+
 		//[NativeTypeName ("ExtensionScriptInstanceHasMethod")]
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, byte> has_method_func;
 
@@ -238,7 +238,7 @@ public static unsafe partial class Native {
 		public delegate* unmanaged[Cdecl]<IntPtr, int, void> notification_func;
 
 		//[NativeTypeName ("ExtensionScriptInstanceToString")]
-		public delegate* unmanaged[Cdecl]<IntPtr, byte*, sbyte*> to_string_func;
+		public delegate* unmanaged[Cdecl]<IntPtr, bool*, IntPtr, void> to_string_func;
 
 		//[NativeTypeName ("ExtensionScriptInstanceRefCountIncremented")]
 		public delegate* unmanaged[Cdecl]<IntPtr, void> refcount_incremented_func;
@@ -296,8 +296,8 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("void (*)(const char *, const char *, const char *, int32_t)")]
 		public delegate* unmanaged[Cdecl]<sbyte*, sbyte*, sbyte*, int, void> print_script_error;
 
-		//[NativeTypeName ("uint64_t (*)(const char *)")]
-		public delegate* unmanaged[Cdecl]<sbyte*, ulong> get_native_struct_size;
+		//[NativeTypeName ("uint64_t (*)(const GDNativeStringPtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, ulong> get_native_struct_size;
 
 		//[NativeTypeName ("void (*)(VariantPtr, const VariantPtr)")]
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> variant_new_copy;
@@ -398,8 +398,8 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("PtrOperatorEvaluator (*)(Variant.Operator, Variant.Type, Variant.Type)")]
 		public delegate* unmanaged[Cdecl]<Variant.Operator, Variant.Type, Variant.Type, delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, void>> variant_get_ptr_operator_evaluator;
 
-		//[NativeTypeName ("PtrBuiltInMethod (*)(Variant.Type, const char *, Int)")]
-		public delegate* unmanaged[Cdecl]<Variant.Type, sbyte*, long, delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, IntPtr, int, void>> variant_get_ptr_builtin_method;
+		//[NativeTypeName ("PtrBuiltInMethod (*)(Variant.Type, const  GDNativeStringNamePtr, Int)")]
+		public delegate* unmanaged[Cdecl]<Variant.Type, IntPtr, long, delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, IntPtr, int, void>> variant_get_ptr_builtin_method;
 
 		//[NativeTypeName ("PtrConstructor (*)(Variant.Type, int32_t)")]
 		public delegate* unmanaged[Cdecl]<Variant.Type, int, delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, void>> variant_get_ptr_constructor;
@@ -410,11 +410,11 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("void (*)(Variant.Type, VariantPtr, const VariantPtr *, int32_t, CallError *)")]
 		public delegate* unmanaged[Cdecl]<Variant.Type, IntPtr, IntPtr*, int, CallError*, void> variant_construct;
 
-		//[NativeTypeName ("PtrSetter (*)(Variant.Type, const char *)")]
-		public delegate* unmanaged[Cdecl]<Variant.Type, sbyte*, delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void>> variant_get_ptr_setter;
+		//[NativeTypeName ("PtrSetter (*)(Variant.Type, GDNativeStringNamePtr)")]
+		public delegate* unmanaged[Cdecl]<Variant.Type, IntPtr, delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void>> variant_get_ptr_setter;
 
-		//[NativeTypeName ("PtrGetter (*)(Variant.Type, const char *)")]
-		public delegate* unmanaged[Cdecl]<Variant.Type, sbyte*, delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void>> variant_get_ptr_getter;
+		//[NativeTypeName ("PtrGetter (*)(Variant.Type, GDNativeStringNamePtr)")]
+		public delegate* unmanaged[Cdecl]<Variant.Type, IntPtr, delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void>> variant_get_ptr_getter;
 
 		//[NativeTypeName ("PtrIndexedSetter (*)(Variant.Type)")]
 		public delegate* unmanaged[Cdecl]<Variant.Type, delegate* unmanaged[Cdecl]<IntPtr, long, IntPtr, void>> variant_get_ptr_indexed_setter;
@@ -431,11 +431,11 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("PtrKeyedChecker (*)(Variant.Type)")]
 		public delegate* unmanaged[Cdecl]<Variant.Type, delegate* unmanaged[Cdecl]<IntPtr, IntPtr, uint>> variant_get_ptr_keyed_checker;
 
-		//[NativeTypeName ("void (*)(Variant.Type, const char *, VariantPtr)")]
-		public delegate* unmanaged[Cdecl]<Variant.Type, sbyte*, IntPtr, void> variant_get_constant_value;
+		//[NativeTypeName ("void (*)(Variant.Type, const GDNativeStringNamePtr, VariantPtr)")]
+		public delegate* unmanaged[Cdecl]<Variant.Type, IntPtr, IntPtr, void> variant_get_constant_value;
 
-		//[NativeTypeName ("PtrUtilityFunction (*)(const char *, Int)")]
-		public delegate* unmanaged[Cdecl]<sbyte*, long, delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, int, void>> variant_get_ptr_utility_function;
+		//[NativeTypeName ("PtrUtilityFunction (*)(GDNativeStringNamePtr, Int)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, long, delegate* unmanaged[Cdecl]<IntPtr, IntPtr*, int, void>> variant_get_ptr_utility_function;
 
 		//[NativeTypeName ("void (*)(StringPtr, const char *)")]
 		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, void> string_new_with_latin1_chars;
@@ -563,8 +563,8 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("void (*)(ObjectPtr)")]
 		public delegate* unmanaged[Cdecl]<IntPtr, void> object_destroy;
 
-		//[NativeTypeName ("ObjectPtr (*)(const char *)")]
-		public delegate* unmanaged[Cdecl]<sbyte*, IntPtr> global_get_singleton;
+		//[NativeTypeName ("ObjectPtr (*)(GDNativeStringNamePtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr> global_get_singleton;
 
 		//[NativeTypeName ("void *(*)(ObjectPtr, void *, const InstanceBindingCallbacks *)")]
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, InstanceBindingCallbacks*, IntPtr> object_get_instance_binding;
@@ -572,8 +572,8 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("void (*)(ObjectPtr, void *, void *, const InstanceBindingCallbacks *)")]
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, InstanceBindingCallbacks*, void> object_set_instance_binding;
 
-		//[NativeTypeName ("void (*)(ObjectPtr, const char *, GDExtensionClassInstancePtr)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, IntPtr, void> object_set_instance;
+		//[NativeTypeName ("void (*)(ObjectPtr, const GDNativeStringNamePtr, GDExtensionClassInstancePtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, void> object_set_instance;
 
 		//[NativeTypeName ("ObjectPtr (*)(const ObjectPtr, void *)")]
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr> object_cast_to;
@@ -587,38 +587,38 @@ public static unsafe partial class Native {
 		//[NativeTypeName ("ScriptInstancePtr (*)(const ExtensionScriptInstanceInfo *, ExtensionScriptInstanceDataPtr)")]
 		public delegate* unmanaged[Cdecl]<ExtensionScriptInstanceInfo*, IntPtr, IntPtr> script_instance_create;
 
-		//[NativeTypeName ("ObjectPtr (*)(const char *)")]
-		public delegate* unmanaged[Cdecl]<sbyte*, IntPtr> classdb_construct_object;
+		//[NativeTypeName ("ObjectPtr (*)(const GDNativeStringNamePtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr> classdb_construct_object;
 
-		//[NativeTypeName ("MethodBindPtr (*)(const char *, const char *, Int)")]
-		public delegate* unmanaged[Cdecl]<sbyte*, sbyte*, long, IntPtr> classdb_get_method_bind;
+		//[NativeTypeName ("MethodBindPtr (*)(const GDNativeStringNamePtr, const GDNativeStringNamePtr, Int)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, long, IntPtr> classdb_get_method_bind;
 
-		//[NativeTypeName ("void *(*)(const char *)")]
-		public delegate* unmanaged[Cdecl]<sbyte*, IntPtr> classdb_get_class_tag;
+		//[NativeTypeName ("void *(*)(const GDNativeStringNamePtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr> classdb_get_class_tag;
 
-		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const char *, const char *, const ExtensionClassCreationInfo *)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, sbyte*, ExtensionClassCreationInfo*, void> classdb_register_extension_class;
+		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const GDNativeStringNamePtr, const GDNativeStringNamePtr, const ExtensionClassCreationInfo *)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, ExtensionClassCreationInfo*, void> classdb_register_extension_class;
 
-		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const char *, const ExtensionClassMethodInfo *)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, ExtensionClassMethodInfo*, void> classdb_register_extension_class_method;
+		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const GDNativeStringNamePtr, const ExtensionClassMethodInfo *)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, ExtensionClassMethodInfo*, void> classdb_register_extension_class_method;
 
-		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const char *, const char *, const char *, Int, Bool)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, sbyte*, sbyte*, long, bool, void> classdb_register_extension_class_integer_constant;
+		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const GDNativeStringNamePtr, const GDNativeStringNamePtr, const GDNativeStringNamePtr, Int, Bool)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, IntPtr, long, bool, void> classdb_register_extension_class_integer_constant;
 
-		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const char *, const PropertyInfo *, const char *, const char *)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, PropertyInfo*, sbyte*, sbyte*, void> classdb_register_extension_class_property;
+		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const GDNativeStringNamePtr, const PropertyInfo *, const GDNativeStringNamePtr, const GDNativeStringNamePtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, PropertyInfo*, IntPtr, IntPtr, void> classdb_register_extension_class_property;
 
-		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const char *, const char *, const char *)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, sbyte*, sbyte*, void> classdb_register_extension_class_property_group;
+		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const GDNativeStringNamePtr, const GDNativeStringPtr, const GDNativeStringPtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, IntPtr, void> classdb_register_extension_class_property_group;
 
-		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const char *, const char *, const char *)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, sbyte*, sbyte*, void> classdb_register_extension_class_property_subgroup;
+		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const GDNativeStringNamePtr, const GDNativeStringPtr, const GDNativeStringPtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, IntPtr, void> classdb_register_extension_class_property_subgroup;
 
-		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const char *, const char *, const PropertyInfo *, Int)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, sbyte*, PropertyInfo*, long, void> classdb_register_extension_class_signal;
+		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const GDNativeStringNamePtr, const GDNativeStringNamePtr, const PropertyInfo *, Int)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, IntPtr, PropertyInfo*, long, void> classdb_register_extension_class_signal;
 
-		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const char *)")]
-		public delegate* unmanaged[Cdecl]<IntPtr, sbyte*, void> classdb_unregister_extension_class;
+		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, const GDNativeStringNamePtr)")]
+		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> classdb_unregister_extension_class;
 
 		//[NativeTypeName ("void (*)(const ExtensionClassLibraryPtr, StringPtr)")]
 		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> get_library_path;

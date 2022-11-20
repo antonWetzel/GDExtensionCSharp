@@ -10,6 +10,6 @@ public unsafe partial class StringName {
 		args[0] = from._internal_pointer;
 		IntPtr res;
 		constructor(new IntPtr(&res), args);
-		return StringMarshall.ToManaged(res);
+		return StringMarshall.ToManaged(new IntPtr(&res));
 	}
 }
