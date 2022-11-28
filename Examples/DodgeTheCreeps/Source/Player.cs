@@ -15,9 +15,6 @@ public unsafe partial class Player : Area2D {
 		SetProcess(true);
 		screenSize = GetViewportRect().size;
 		Hide();
-
-		var test = (string)(StringName)("test");
-		General.Prints(test);
 	}
 
 	[Notify(NotificationProcess, arguments = "GetProcessDeltaTime()")]

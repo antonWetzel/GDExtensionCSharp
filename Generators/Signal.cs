@@ -30,14 +30,16 @@ namespace Generators {
 				var ev = events[i];
 				var m = ev.DelegateInvokeMethod;
 
+				var infosName = "null";
 				if (m.Parameters.Length > 0) {
-					code += $"\t\tvar infos{ev.Name} = stackalloc Native.PropertyInfo[{m.Parameters.Length}];\n";
+					infosName = $"infos{ev.Name}";
+					code += $"\t\tvar {infosName} = stackalloc Native.PropertyInfo[{m.Parameters.Length}];\n";
 					for (var j = 0; j < m.Parameters.Length; j++) {
 						var p = m.Parameters[j];
 						code += $"\t\tinfos{ev.Name}[{j}] = {Methods.CreatePropertyInfo(p.Type, p.Name, 2)}\n";
 					}
 				}
-				code += $"\t\tNative.gdInterface.classdb_register_extension_class_signal(Native.gdLibrary, __godot_name._internal_pointer, new StringName(\"{Renamer.ToSnake(ev.Name)}\")._internal_pointer, {(m.Parameters.Length > 0 ? $"infos{ev.Name}" : "null")}, {m.Parameters.Length});\n";
+				code += $"\t\tNative.gdInterface.classdb_register_extension_class_signal(Native.gdLibrary, __godot_name._internal_pointer, new StringName(\"{Renamer.ToSnake(ev.Name)}\")._internal_pointer, {infosName}, {m.Parameters.Length});\n";
 			}
 			code += $$"""
 				}
