@@ -36,6 +36,7 @@ namespace Generators {
 			var source = $$"""
 			using System.Runtime.CompilerServices;
 			using System.Runtime.InteropServices;
+			using GDExtension.Native;
 
 			namespace {{c.ContainingNamespace}};
 
@@ -50,24 +51,24 @@ namespace Generators {
 			#pragma warning disable CS8618
 				public {{c.Name}}() {
 					handle = GCHandle.Alloc(this {{(isRefCounted ? ", GCHandleType.Weak" : "")}});
-					Native.gdInterface.object_set_instance(_internal_pointer, __godot_name._internal_pointer, (IntPtr)this);
+					GDExtensionInterface.gdInterface.object_set_instance(_internal_pointer, __godot_name._internal_pointer, (void*)this);
 				}
 			#pragma warning restore CS8618
 
-				public static explicit operator IntPtr({{c.Name}} instance) => GCHandle.ToIntPtr(instance.handle);
-				public static explicit operator {{c.Name}}(IntPtr ptr) => ({{c.Name}})(GCHandle.FromIntPtr(ptr).Target!);
+				public static explicit operator void*({{c.Name}} instance) => (void*)GCHandle.ToIntPtr(instance.handle);
+				public static explicit operator {{c.Name}}(void* ptr) => ({{c.Name}})(GCHandle.FromIntPtr(new IntPtr(ptr)).Target!);
 
-				public static {{c.Name}} Construct(IntPtr ptr) {
-					ptr = *(IntPtr*)(void*)(ptr + 16); //Did I miss the inverse function to 'object_set_instance'?, this only works if Godot.Object does not change
+				public static {{c.Name}} Construct(void* ptr) {
+					ptr = (void*)*(((IntPtr*)ptr) + 2); //Did I miss the inverse function to 'object_set_instance'?, this only works if Godot.Object does not change
 					return ({{c.Name}})ptr;
 				}
 
 				public static unsafe new void Register() {
 					__godot_name = new StringName("{{gdName}}");
 
-					var info = new Native.ExtensionClassCreationInfo() {
-						is_virtual = false,
-						is_abstract = false,
+					var info = new GDExtensionClassCreationInfo() {
+						is_virtual = System.Convert.ToByte(false),
+						is_abstract = System.Convert.ToByte(false),
 						//set_func = &SetFunc,
 						//get_func = &GetFunc,
 						//get_property_list_func = &GetPropertyList,
@@ -82,9 +83,8 @@ namespace Generators {
 						free_instance_func = &FreeObject,
 						//get_virtual_func = &GetVirtual,
 						//get_rid_func = &GetRid,
-						//class_userdata = IntPtr.Zero,
 					};
-					Native.gdInterface.classdb_register_extension_class(Native.gdLibrary, __godot_name._internal_pointer, {{c.BaseType.Name}}.__godot_name._internal_pointer, &info);
+					GDExtensionInterface.gdInterface.classdb_register_extension_class(GDExtensionInterface.gdLibrary, __godot_name._internal_pointer, {{c.BaseType.Name}}.__godot_name._internal_pointer, &info);
 					RegisterMethods();
 					RegisterExports();
 					RegisterSignals();
@@ -93,13 +93,13 @@ namespace Generators {
 				}
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static unsafe IntPtr CreateObject(IntPtr userdata) {
+				static unsafe void* CreateObject(void* userdata) {
 					var instance = new {{c.Name}}();
 					return instance._internal_pointer;
 				}
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static unsafe void FreeObject(IntPtr userdata, IntPtr instancePtr) {
+				static unsafe void FreeObject(void* userdata, void* instancePtr) {
 					var instance = ({{c.Name}})instancePtr;
 					instance.handle.Free();
 				}

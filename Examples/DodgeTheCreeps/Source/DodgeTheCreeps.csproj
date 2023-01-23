@@ -16,7 +16,7 @@
 
     <!-- uncomment to see / debug generators output -->
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>../Generated</CompilerGeneratedFilesOutputPath>
+    <CompilerGeneratedFilesOutputPath>.</CompilerGeneratedFilesOutputPath>
 
   </PropertyGroup>
 
@@ -25,4 +25,7 @@
     <PackageReference Include="GdExtensionCsharpMain" Version="0.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Generators\**" />
+  </ItemGroup>
 </Project>

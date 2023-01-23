@@ -20,3 +20,5 @@ Work maybe in Progress
 - Subproject specific to-dos
 - maybe move to-do/done to GitHub issues
 - Godot as submodule (is there an official build repository?)
+
+get_object pull

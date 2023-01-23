@@ -40,7 +40,7 @@ public record struct Api {
 		public string name { get; set; }
 		public string setter { get; set; }
 		public string getter { get; set; }
-		public int index { get; set; }
+		public int? index { get; set; }
 	}
 
 	public record struct Singleton {

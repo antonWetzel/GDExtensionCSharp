@@ -24,6 +24,7 @@ namespace Generators {
 			var code = $$"""
 			using System.Runtime.CompilerServices;
 			using System.Runtime.InteropServices;
+			using GDExtension.Native;
 
 			namespace {{c.ContainingNamespace}};
 
@@ -51,8 +52,8 @@ namespace Generators {
 					property = member.name,
 				});
 				code += $$"""
-						Native.gdInterface.classdb_register_extension_class_property(
-							Native.gdLibrary,
+						GDExtensionInterface.gdInterface.classdb_register_extension_class_property(
+							GDExtensionInterface.gdLibrary,
 							__godot_name._internal_pointer,
 							&__{{member.name}}Info,
 							new StringName("{{Renamer.ToSnake(member.setter)}}")._internal_pointer,

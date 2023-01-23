@@ -22,7 +22,7 @@
 			"name": "Dodge the Creeps",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.dev.x86_64.exe",
 			"args": [
 				"-e",
 			],
@@ -35,7 +35,7 @@
 			"name": "Run Dodge the Creeps",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.dev.x86_64.exe",
 			"args": [
 				"--verbose",
 			],
@@ -48,7 +48,7 @@
 			"name": "Summator",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.dev.x86_64.exe",
 			"args": [
 				"-e",
 			],
@@ -61,7 +61,7 @@
 			"name": "Run Summator",
 			"type": "cppvsdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.x86_64.exe",
+			"program": "${workspaceFolder}/../godot/bin/godot.windows.editor.dev.x86_64.exe",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}/Examples/Summator",

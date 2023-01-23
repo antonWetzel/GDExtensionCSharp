@@ -30,7 +30,7 @@ namespace Generators {
 							editorRegistrations += $"{n.@namespace}.{n.name}.Register();\n\t\t\t";
 							break;
 						}
-						unregistrations = $"Native.gdInterface.classdb_unregister_extension_class(Native.gdLibrary, {n.@namespace}.{n.name}.__godot_name._internal_pointer);\n\t\t\t" + unregistrations;
+						unregistrations = $"GDExtensionInterface.gdInterface.classdb_unregister_extension_class(GDExtensionInterface.gdLibrary, {n.@namespace}.{n.name}.__godot_name._internal_pointer);\n\t\t\t" + unregistrations;
 						classes[i] = classes.Last();
 						classes.RemoveAt(classes.Count - 1);
 						break;
@@ -43,16 +43,17 @@ namespace Generators {
 			using System.Runtime.CompilerServices;
 			using System.Runtime.InteropServices;
 			using GDExtension;
+			using GDExtension.Native;
 
 			public static class ExtensionEntry {
 
 				[UnmanagedCallersOnly(EntryPoint = "gd_extension_entry", CallConvs = new[] { typeof(CallConvCdecl) })]
-				public static unsafe bool EntryPoint(Native.Interface @interface, IntPtr library, Native.Initialization* init) {
-					Native.gdInterface = @interface;
-					Native.gdLibrary = library;
+				public static unsafe bool EntryPoint(GDExtensionInterface @interface, void* library, GDExtensionInitialization* init) {
+					GDExtensionInterface.gdInterface = @interface;
+					GDExtensionInterface.gdLibrary = library;
 
-					*init = new Native.Initialization() {
-						minimum_initialization_level = Native.InitializationLevel.Scene,
+					*init = new GDExtensionInitialization() {
+						minimum_initialization_level = GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_SCENE,
 						initialize = &Initialize,
 						deinitialize = &Deinitialize,
 					};
@@ -61,33 +62,33 @@ namespace Generators {
 				}
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				public static unsafe void Initialize(IntPtr userdata, Native.InitializationLevel level) {
+				public static unsafe void Initialize(void* userdata, GDExtensionInitializationLevel level) {
 					switch (level) {
-					case Native.InitializationLevel.Core:
+					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_CORE:
 						break;
-					case Native.InitializationLevel.Servers:
+					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_SERVERS:
 						break;
-					case Native.InitializationLevel.Scene:
+					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_SCENE:
 						GDExtension.Register.RegisterBuiltin();
 						GDExtension.Register.RegisterUtility();
 						GDExtension.Register.RegisterCore();
 						{{registrations}}break;
-					case Native.InitializationLevel.Editor:
+					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_EDITOR:
 						GDExtension.Register.RegisterEditor();
 						{{editorRegistrations}}break;
 					}
 				}
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				public static unsafe void Deinitialize(IntPtr userdata, Native.InitializationLevel level) {
+				public static unsafe void Deinitialize(void* userdata, GDExtensionInitializationLevel level) {
 					switch (level) {
-					case Native.InitializationLevel.Core:
+					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_CORE:
 						break;
-					case Native.InitializationLevel.Servers:
+					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_SERVERS:
 						break;
-					case Native.InitializationLevel.Scene:
+					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_SCENE:
 						{{unregistrations}}break;
-					case Native.InitializationLevel.Editor:
+					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_EDITOR:
 						break;
 					}
 				}

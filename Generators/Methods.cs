@@ -50,6 +50,7 @@ namespace Generators {
 			var code = $$"""
 			using System.Runtime.CompilerServices;
 			using System.Runtime.InteropServices;
+			using GDExtension.Native;
 
 			namespace {{c.ContainingNamespace}};
 
@@ -63,12 +64,12 @@ namespace Generators {
 				code += "\t\t{\n";
 				var method = methods[i];
 				if (method.arguments.Length > 0) {
-					code += $"\t\t\tvar args = stackalloc Native.PropertyInfo[{method.arguments.Length}];\n";
-					code += $"\t\t\tvar args_meta = stackalloc Native.ExtensionClassMethodArgumentMetadata[{method.arguments.Length}];\n";
+					code += $"\t\t\tvar args = stackalloc GDExtensionPropertyInfo[{method.arguments.Length}];\n";
+					code += $"\t\t\tvar args_meta = stackalloc GDExtensionClassMethodArgumentMetadata[{method.arguments.Length}];\n";
 					for (var j = 0; j < method.arguments.Length; j++) {
 						var arg = method.arguments[j];
 						code += $"\t\t\targs[{j}] = {CreatePropertyInfo(arg.Item1, arg.Item2, 3)}";
-						code += $"\t\t\targs_meta[{j}] = Native.ExtensionClassMethodArgumentMetadata.None;\n";
+						code += $"\t\t\targs_meta[{j}] = GDExtensionClassMethodArgumentMetadata.GDEXTENSION_METHOD_ARGUMENT_METADATA_NONE;\n";
 					}
 				}
 				if (method.ret != null) {
@@ -77,15 +78,15 @@ namespace Generators {
 
 				code += $$"""
 
-							var info = new Native.ExtensionClassMethodInfo() {
+							var info = new GDExtensionClassMethodInfo() {
 								name = new StringName("{{Renamer.ToSnake(method.name)}}")._internal_pointer,
-								method_userdata = new IntPtr({{i}}),
+								method_userdata = (void*)(new IntPtr({{i}})),
 								call_func = &CallFunc,
 								ptrcall_func = &CallFuncPtr,
-								method_flags = Native.ExtensionClassMethodFlags.Default,
-								has_return_value = {{(method.ret != null ? "true" : "false")}},
+								method_flags = (uint)GDExtensionClassMethodFlags.GDEXTENSION_METHOD_FLAGS_DEFAULT,
+								has_return_value = System.Convert.ToByte({{(method.ret != null ? "true" : "false")}}),
 								return_value_info = {{(method.ret != null ? "&ret" : "null")}},
-								return_value_metadata = Native.ExtensionClassMethodArgumentMetadata.None,
+								return_value_metadata = GDExtensionClassMethodArgumentMetadata.GDEXTENSION_METHOD_ARGUMENT_METADATA_NONE,
 
 								argument_count = {{method.arguments.Length}},
 								arguments_info = {{(method.arguments.Length > 0 ? "args" : "null")}},
@@ -94,7 +95,7 @@ namespace Generators {
 								default_argument_count = 0,
 								default_arguments = null,
 							};
-							Native.gdInterface.classdb_register_extension_class_method(Native.gdLibrary, __godot_name._internal_pointer, &info);
+							GDExtensionInterface.gdInterface.classdb_register_extension_class_method(GDExtensionInterface.gdLibrary, __godot_name._internal_pointer, &info);
 
 				""";
 				code += "\t\t}\n";
@@ -104,7 +105,7 @@ namespace Generators {
 				}
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static void CallFuncPtr(IntPtr method_userdata, IntPtr p_instance, IntPtr* p_args, IntPtr r_ret) {
+				static void CallFuncPtr(void* method_userdata, void* p_instance, void** p_args, void* r_ret) {
 					var instance = ({{c.Name}})p_instance;
 					switch ((int)method_userdata) {
 
@@ -117,9 +118,9 @@ namespace Generators {
 					if (arg.Item1.Name == "String") {
 						args += $"StringMarshall.ToManaged(p_args[{j}])";
 					} else if (TypeToVariantType(arg.Item1) == "Object") {
-						args += $"({arg.Item1})GDExtension.Object.ConstructUnknown(*(IntPtr*)(void*)p_args[{j}])";
+						args += $"({arg.Item1})GDExtension.Object.ConstructUnknown(p_args[{j}])"; //note: changed
 					} else {
-						args += $"*({arg.Item1}*)(void*)p_args[{j}]";
+						args += $"*({arg.Item1}*)p_args[{j}]";
 					}
 					if (j < method.arguments.Length - 1) {
 						args += ", ";
@@ -152,14 +153,14 @@ namespace Generators {
 
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
 				static void CallFunc(
-					IntPtr method_userdata,
-					IntPtr p_instance,
-					IntPtr* p_args,
+					void* method_userdata,
+					void* p_instance,
+					void** p_args,
 					long p_argument_count,
-					IntPtr r_return,
-					Native.CallError* r_error
+					void* r_return,
+					GDExtensionCallError* r_error
 				) {
-					Native.gdInterface.variant_new_nil(r_return); //no clue why this is needed
+					GDExtensionInterface.gdInterface.variant_new_nil(r_return); //no clue why this is needed
 					var instance = ({{c.Name}})p_instance;
 					switch ((int)method_userdata) {
 
@@ -278,13 +279,13 @@ namespace Generators {
 			var t = new String('\t', tabs);
 
 			return $$"""
-			new Native.PropertyInfo() {
-			{{t}}	type = Variant.Type.{{TypeToVariantType(type, sBase)}},
+			new GDExtensionPropertyInfo() {
+			{{t}}	type = (GDExtensionVariantType)Variant.Type.{{TypeToVariantType(type, sBase)}},
 			{{t}}	name = new StringName("{{Renamer.ToSnake(name)}}")._internal_pointer,
 			{{t}}	class_name = __godot_name._internal_pointer,
-			{{t}}	hint = {{TypeToHint(type, sBase)}},
+			{{t}}	hint = (uint){{TypeToHint(type, sBase)}},
 			{{t}}	hint_string = {{TypeToHintString(type, sBase)}},
-			{{t}}	usage = PropertyUsageFlags.Default,
+			{{t}}	usage = (uint)PropertyUsageFlags.Default,
 			{{t}}};
 
 			""";

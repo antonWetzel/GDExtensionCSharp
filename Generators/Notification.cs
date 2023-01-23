@@ -63,7 +63,7 @@ namespace Generators {
 			}
 			code += $$"""
 				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				public static unsafe new void __Notification(IntPtr instance, int what) {
+				public static unsafe new void __Notification(void* instance, int what) {
 					var inst = ({{c.Name}})instance;
 					{{c.BaseType.Name}}.__Notification(instance, what);
 					inst.{{notificationName}}(what);

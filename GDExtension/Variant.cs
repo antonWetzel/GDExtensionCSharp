@@ -3,8 +3,8 @@ namespace GDExtension;
 public sealed unsafe partial class Variant {
 
 	struct Constructor {
-		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> fromType;
-		public delegate* unmanaged[Cdecl]<IntPtr, IntPtr, void> toType;
+		public delegate* unmanaged[Cdecl]<void*, void*, void> fromType;
+		public delegate* unmanaged[Cdecl]<void*, void*, void> toType;
 	}
 
 	static Constructor[] constructors = new Constructor[(int)Type.Max];
@@ -12,30 +12,30 @@ public sealed unsafe partial class Variant {
 	public static void Register() {
 		for (var i = 1; i < (int)Type.Max; i++) {
 			constructors[i] = new Constructor() {
-				fromType = gdInterface.get_variant_from_type_constructor((Type)i),
-				toType = gdInterface.get_variant_to_type_constructor((Type)i),
+				fromType = gdInterface.get_variant_from_type_constructor((GDExtensionVariantType)i),
+				toType = gdInterface.get_variant_to_type_constructor((GDExtensionVariantType)i),
 			};
 		}
 	}
 
-	public static void SaveIntoPointer(Object value, IntPtr ptr) {
-		var objectPtr = value != null ? value._internal_pointer : IntPtr.Zero;
-		constructors[(int)Variant.Type.Object].fromType(ptr, new IntPtr(&objectPtr));
+	public static void SaveIntoPointer(Object value, void* ptr) {
+		var objectPtr = value != null ? value._internal_pointer : null;
+		constructors[(int)Variant.Type.Object].fromType(ptr, &objectPtr);
 	}
 
-	public static Object GetObjectFromPointer(IntPtr ptr) {
-		IntPtr res;
-		constructors[(int)Type.Object].toType(new IntPtr(&res), ptr);
+	public static Object GetObjectFromPointer(void* ptr) {
+		void* res;
+		constructors[(int)Type.Object].toType(&res, ptr);
 		return Object.ConstructUnknown(res);
 	}
 
-	internal IntPtr _internal_pointer;
+	internal void* _internal_pointer;
 
-	public Variant.Type type => gdInterface.variant_get_type(_internal_pointer);
+	public Type type => (Type)gdInterface.variant_get_type(_internal_pointer);
 
 	private Variant() => _internal_pointer = gdInterface.mem_alloc(24);
 
-	internal Variant(IntPtr data) {
+	internal Variant(void* data) {
 		_internal_pointer = data;
 		GC.SuppressFinalize(this);
 	}
