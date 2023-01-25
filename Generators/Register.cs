@@ -81,7 +81,7 @@ namespace Generators {
 						//unreference_func = &Unreference,
 						create_instance_func = &CreateObject,
 						free_instance_func = &FreeObject,
-						//get_virtual_func = &GetVirtual,
+						get_virtual_func = &GetVirtualFunc,
 						//get_rid_func = &GetRid,
 					};
 					GDExtensionInterface.gdInterface.classdb_register_extension_class(GDExtensionInterface.gdLibrary, __godot_name._internal_pointer, {{c.BaseType.Name}}.__godot_name._internal_pointer, &info);

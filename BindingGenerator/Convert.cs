@@ -1,6 +1,7 @@
 public class Convert {
 
 	HashSet<string> objectTypes = new() { "Variant" };
+	Dictionary<string, string> variantTypes = new();
 
 	HashSet<string> builtinObjectTypes = new() {
 		"Array",
@@ -53,6 +54,7 @@ public class Convert {
 			objectTypes.Add(c.name);
 		}
 
+		Variant();
 		BuiltinClasses();
 		Classes();
 
@@ -74,7 +76,7 @@ public class Convert {
 				if (name.Contains("*")) {
 					type = "void*"; //pointer to `'Object', which is managed in bindings
 					name = name.Replace("*", "");
-				} else if (builtinObjectTypes.Contains(type)) {
+				} else if (builtinObjectTypes.Contains(type) || type.Contains("TypedArray")) {
 					type = "void*";
 				}
 				if (name.Contains("[")) {
@@ -138,7 +140,6 @@ public class Convert {
 		register.WriteLine("}");
 		register.Close();
 
-		Variant();
 	}
 
 	Documentation.Class? GetDocs(string name) {
@@ -529,7 +530,7 @@ public class Convert {
 		var f = Fixer.Type(type);
 		if (type == "String") {
 			return $"StringMarshall.ToNative({name})";
-		} else if (objectTypes.Contains(type) || builtinObjectTypes.Contains(f)) {
+		} else if (objectTypes.Contains(type) || builtinObjectTypes.Contains(f) || f.Contains("TypedArray")) {
 			return $"{name}._internal_pointer";
 		} else {
 			return $"&{Fixer.Name(name)}";
@@ -538,7 +539,7 @@ public class Convert {
 
 	string ReturnLocationType(string type, string name) {
 		var f = Fixer.Type(type);
-		if (builtinObjectTypes.Contains(f)) {
+		if (builtinObjectTypes.Contains(f) || f.Contains("TypedArray")) {
 			return $"{f}.InternalStruct {name}";
 		} else if (objectTypes.Contains(type) || type == "String") {
 			return $"void* {name}";
@@ -555,6 +556,14 @@ public class Convert {
 			return "new Variant(__res)";
 		} else if (builtinObjectTypes.Contains(f)) {
 			return $"new {f}(gdInterface.MoveToUnmanaged(__res))";
+		} else if (f.Contains("TypedArray")) {
+			var t = Fixer.Type(type.Split("::")[1]);
+			if (variantTypes.TryGetValue(t, out var vt)) {
+				t = $"Variant.Type.{vt}";
+			} else {
+				t = $"\"{t}\"";
+			}
+			return $"new {f}({t}, gdInterface.MoveToUnmanaged(__res))";
 		} else if (objectTypes.Contains(type)) {
 			return $"({type})Object.ConstructUnknown(__res)";
 		} else {
@@ -579,16 +588,6 @@ public class Convert {
 		return true;
 	}
 
-	string FixDefaultValue(string value, string type) {
-		if (value.Contains('(')) { return $"new {value}"; }
-		if (value == "{}") { return "new Dictionary()"; }
-		if (value == "[]") { return "new Array()"; }
-		if (value.Contains('&')) { return $"new StringName({value.Substring(1)})"; }
-		if (value == "") { return $"new {type}()"; }
-		if (type == "Variant" && value == "null") { return "Variant.Nil"; }
-		if (value == "null") { return "null!"; }
-		return $"({Fixer.Type(type)}){value}";
-	}
 
 	void Method(Api.Method meth, string className, StreamWriter file, MethodType type, List<string> methodRegistrations, Documentation.Method? doc, bool isSingleton = false, bool isBuiltinPointer = false) {
 		var header = "";
@@ -625,14 +624,14 @@ public class Convert {
 						validDefault &= IsValidDefaultValue(meth.arguments[j].defaultValue!, meth.arguments[j].type);
 					}
 					if (validDefault) {
-						suffix = $" = {FixDefaultValue(arg.defaultValue, arg.type)}";
+						suffix = $" = {Fixer.DefaultValue(arg.defaultValue, arg.type, variantTypes)}";
 					} else {
 						file.Write(header + $") => {Fixer.MethodName(meth.name)}(");
 						for (var j = 0; j < i; j++) {
 							file.Write($"{Fixer.Name(meth.arguments[j].name)}, ");
 						}
 						for (var j = i; j < meth.arguments.Length; j++) {
-							file.Write($"{FixDefaultValue(meth.arguments[j].defaultValue!, meth.arguments[j].type)}");
+							file.Write($"{Fixer.DefaultValue(meth.arguments[j].defaultValue!, meth.arguments[j].type, variantTypes)}");
 							if (j < meth.arguments.Length - 1) {
 								file.Write(", ");
 							}
@@ -854,7 +853,6 @@ public class Convert {
 		file.WriteLine($"partial class {c.name} : {(c.inherits == null ? "Wrapped" : c.inherits)} {{");
 		file.WriteLine();
 
-
 		var isSingleton = api.singletons.Any(x => x.type == c.name);
 		if (isSingleton) {
 			//file.WriteLine($"\tpublic static {c.name} Singleton;");
@@ -973,10 +971,10 @@ public class Convert {
 
 		EqualAndHash(c.name, file);
 
-		var content = c.name == "RefCounted" ? " Reference(); " : " ";
+		var content = c.name == "RefCounted" ? " if (_internal_pointer != null) { Reference(); } " : " ";
 		file.WriteLine($"\tpublic {c.name}() : base(__godot_name) {{{content}}}");
 		file.WriteLine($"\tprotected {c.name}(StringName type) : base(type) {{{content}}}");
-		file.WriteLine($"\tprotected {c.name}(void* ptr) : base(ptr) {{{content}}}");
+		file.WriteLine($"\tpublic {c.name}(void* ptr) : base(ptr) {{{content}}}");
 		file.WriteLine($"\tprivate static {c.name} Construct(void* ptr) => new {c.name}(ptr);");
 		file.WriteLine();
 
@@ -1060,9 +1058,11 @@ public class Convert {
 
 		for (var i = 1; i < types.Length; i++) {
 			var t = types[i];
+			var ct = VariantTypeToCSharpType(t);
+			variantTypes[ct] = t;
 			if (t == "Object") { continue; }
 			file.Write("\tpublic static void SaveIntoPointer(");
-			file.Write(VariantTypeToCSharpType(t));
+			file.Write(ct);
 			file.Write(" value, void* ptr) => constructors[(int)Type.");
 			file.Write(t);
 			file.Write("].fromType(ptr, ");

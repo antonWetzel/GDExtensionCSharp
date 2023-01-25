@@ -1,6 +1,8 @@
 namespace GDExtension;
 
-public unsafe partial class PackedStringArray {
+using System.Collections;
+
+public unsafe partial class PackedStringArray : IEnumerable {
 
 	public string this[int index] {
 		get => this[(long)index];
@@ -12,4 +14,27 @@ public unsafe partial class PackedStringArray {
 			return StringMarshall.ToManaged(res);
 		}
 	}
+	public IEnumerator GetEnumerator() => new PackedStringArrayEnumerator(this);
+
+	public void Add(string value) => Append(value);
+}
+
+public class PackedStringArrayEnumerator : IEnumerator {
+	PackedStringArray array;
+	int current;
+
+	public PackedStringArrayEnumerator(PackedStringArray array) {
+		this.array = array;
+		current = 0;
+	}
+
+	public bool MoveNext() {
+		current += 1;
+		return current < array.Size();
+	}
+
+	public void Reset() {
+		current = 0;
+	}
+	public object Current => array[current];
 }

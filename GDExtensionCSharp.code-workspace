@@ -1,0 +1,181 @@
+{
+	"folders": [
+		{
+			"path": ".",
+			"name": "All",
+		},
+		{
+			"path": "BindingGenerator",
+			"name": "Bindings Generator",
+		},
+		{
+			"path": "GDExtension",
+			"name": "GDExtension",
+		},
+		{
+			"path": "Generators",
+			"name": "Generators",
+		},
+		{
+			"path": "Examples/DodgeTheCreeps",
+			"name": "Dodge the Creeps",
+		},
+		{
+			"path": "scripts",
+			"name": "Scripts",
+		},
+		{
+			"path": "../godot/bin",
+			"name": "Godot Binaries",
+		},
+	],
+	"settings": {
+		"omnisharp.enableRoslynAnalyzers": false,
+		"files.exclude": {
+			//git
+			"**/.git": true,
+			//csharp
+			"**/bin": true,
+			"**/obj": true,
+			//godot
+			"**/.godot": true,
+			"**/*.import": true,
+		},
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Generate Bindings",
+				"type": "coreclr",
+				"request": "launch",
+				"preLaunchTask": "build binding generator",
+				"program": "${workspaceFolder:Bindings Generator}/bin/Debug/net7.0/BindingGenerator.dll",
+				"args": [],
+				"cwd": "${workspaceFolder:All}",
+				"stopAtEntry": false,
+				"console": "internalConsole",
+				"logging": {
+					"moduleLoad": false,
+				}
+			},
+			{
+				"name": "Dodge the Creeps",
+				"type": "cppvsdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:Godot Binaries}/godot.windows.editor.dev.x86_64.exe",
+				"args": [
+					"-e",
+				],
+				"stopAtEntry": false,
+				"cwd": "${workspaceFolder:Dodge the Creeps}",
+				"console": "integratedTerminal",
+				"preLaunchTask": "build Dodge the Creeps",
+			},
+			{
+				"name": "Run Dodge the Creeps",
+				"type": "cppvsdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:Godot Binaries}/godot.windows.editor.dev.x86_64.exe",
+				"args": [
+					"--verbose",
+				],
+				"stopAtEntry": false,
+				"cwd": "${workspaceFolder:Dodge the Creeps}",
+				"console": "integratedTerminal",
+				"preLaunchTask": "build Dodge the Creeps",
+			},
+			{
+				"name": "Summator",
+				"type": "cppvsdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:Godot Binaries}/godot.windows.editor.dev.x86_64.exe",
+				"args": [
+					"-e",
+				],
+				"stopAtEntry": false,
+				"cwd": "${workspaceFolder:Summator}",
+				"console": "integratedTerminal",
+				"preLaunchTask": "build Summator",
+			},
+			{
+				"name": "Run Summator",
+				"type": "cppvsdbg",
+				"request": "launch",
+				"program": "${workspaceFolder:Godot Binaries}/godot.windows.editor.dev.x86_64.exe",
+				"args": [],
+				"stopAtEntry": false,
+				"cwd": "${workspaceFolder:Summator}",
+				"console": "integratedTerminal",
+				"preLaunchTask": "build Summator",
+			},
+		],
+		"compounds": []
+	},
+	"tasks": {
+		"version": "2.0.0",
+		"tasks": [
+			{
+				"label": "build Dodge the Creeps",
+				"command": "dotnet",
+				"type": "process",
+				"args": [
+					"publish",
+					"${workspaceFolder:Dodge the Creeps}/Source/DodgeTheCreeps.csproj",
+					"-property:GenerateFullPaths=true",
+					"-consoleloggerparameters:NoSummary",
+					"-p:NativeLib=Shared",
+					"--use-current-runtime",
+					"-o",
+					"${workspaceFolder:Dodge the Creeps}/Build",
+				],
+				"problemMatcher": "$msCompile",
+				//"dependsOn": "Update Nuget",
+			},
+			{
+				"label": "build binding generator",
+				"command": "dotnet",
+				"type": "process",
+				"args": [
+					"build",
+					"${workspaceFolder:Bindings Generator}/BindingGenerator.csproj"
+				],
+				"problemMatcher": "$msCompile"
+			},
+			{
+				"label": "build Summator",
+				"command": "dotnet",
+				"type": "process",
+				"args": [
+					"publish",
+					"${workspaceFolder:Summator}/Source/Summator.csproj",
+					"-property:GenerateFullPaths=true",
+					"-consoleloggerparameters:NoSummary",
+					"-p:NativeLib=Shared",
+					"--use-current-runtime",
+					"-o",
+					"${workspaceFolder:Summator}/Build",
+				],
+				"problemMatcher": "$msCompile",
+				"dependsOn": "Update Nuget",
+			},
+			{
+				"label": "Update Api Dump",
+				"type": "shell",
+				"command": "python",
+				"args": [
+					"Scripts/update_dump.py"
+				],
+				"problemMatcher": []
+			},
+			{
+				"label": "Update Nuget",
+				"type": "shell",
+				"command": "python",
+				"args": [
+					"Scripts/update_nuget.py"
+				]
+			}
+		]
+	}
+}

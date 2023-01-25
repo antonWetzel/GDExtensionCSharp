@@ -72,7 +72,9 @@ namespace Generators {
 						GDExtension.Register.RegisterBuiltin();
 						GDExtension.Register.RegisterUtility();
 						GDExtension.Register.RegisterCore();
-						{{registrations}}break;
+						{{registrations}}
+						DodgeTheCreeps.Test.Register();
+						break;
 					case GDExtensionInitializationLevel.GDEXTENSION_INITIALIZATION_EDITOR:
 						GDExtension.Register.RegisterEditor();
 						{{editorRegistrations}}break;

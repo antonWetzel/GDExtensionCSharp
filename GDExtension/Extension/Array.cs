@@ -12,4 +12,5 @@ public unsafe partial class Array {
 			return new Variant(res);
 		}
 	}
+
 }

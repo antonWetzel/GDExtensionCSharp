@@ -14,6 +14,7 @@ namespace Generators {
 			public (ITypeSymbol, string)[] arguments;
 			public ITypeSymbol ret;
 			public string property;
+			public bool overwritten;
 		}
 
 		List<Info> methods;
@@ -39,6 +40,7 @@ namespace Generators {
 					arguments = method.Parameters.Select(x => (x.Type, x.Name)).ToArray(),
 					ret = method.ReturnsVoid ? null : method.ReturnType,
 					property = null,
+					overwritten = method.OverriddenMethod != null,
 				};
 				AddMethod(info);
 			}
@@ -77,12 +79,11 @@ namespace Generators {
 				}
 
 				code += $$"""
-
 							var info = new GDExtensionClassMethodInfo() {
 								name = new StringName("{{Renamer.ToSnake(method.name)}}")._internal_pointer,
-								method_userdata = (void*)(new IntPtr({{i}})),
-								call_func = &CallFunc,
-								ptrcall_func = &CallFuncPtr,
+								//method_userdata = (void*)(new IntPtr({{i}})),
+								call_func = &CallFunc_{{method.name}},
+								ptrcall_func = &FullCallFuncPtr_{{method.name}},
 								method_flags = (uint)GDExtensionClassMethodFlags.GDEXTENSION_METHOD_FLAGS_DEFAULT,
 								has_return_value = System.Convert.ToByte({{(method.ret != null ? "true" : "false")}}),
 								return_value_info = {{(method.ret != null ? "&ret" : "null")}},
@@ -104,21 +105,30 @@ namespace Generators {
 			code += $$"""
 				}
 
-				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static void CallFuncPtr(void* method_userdata, void* p_instance, void** p_args, void* r_ret) {
-					var instance = ({{c.Name}})p_instance;
-					switch ((int)method_userdata) {
-
 			""";
+
 			for (var i = 0; i < methods.Count; i++) {
 				var method = methods[i];
 				var args = "";
+
+				code += $$"""
+
+					[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+					static void FullCallFuncPtr_{{method.name}}(void* method_userdata, void* p_instance, void** p_args, void* r_ret) => CallFuncPtrCode_{{method.name}}(p_instance, p_args, r_ret);
+
+					[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+					static void CallFuncPtr_{{method.name}}(void* p_instance, void** p_args, void* r_ret) => CallFuncPtrCode_{{method.name}}(p_instance, p_args, r_ret);
+
+					static void CallFuncPtrCode_{{method.name}}(void* p_instance, void** p_args, void* r_ret) {
+						var instance = ({{c.Name}})p_instance;
+
+				""";
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
 					if (arg.Item1.Name == "String") {
 						args += $"StringMarshall.ToManaged(p_args[{j}])";
 					} else if (TypeToVariantType(arg.Item1) == "Object") {
-						args += $"({arg.Item1})GDExtension.Object.ConstructUnknown(p_args[{j}])"; //note: changed
+						args += $"({arg.Item1})GDExtension.Object.ConstructUnknown(p_args[{j}])"; //note: may be one depointer/pointer wrong
 					} else {
 						args += $"*({arg.Item1}*)p_args[{j}]";
 					}
@@ -126,48 +136,54 @@ namespace Generators {
 						args += ", ";
 					}
 				}
-				code += $"\t\tcase {i}:\n\t\t\t";
+				code += $"\t\t";
 				if (method.ret != null) {
-					if (TypeToVariantType(method.ret) == "Object") {
-						code += "throw new NotImplementedException();\n";
-						continue;
+					if (method.ret.Name == "String") {
+						code += "*(IntPtr*)r_ret = *(IntPtr*)StringMarshall.ToNative(";
+					} else if (VariantTypeManaged(method.ret)) {
+						code += "*(void**)r_ret = ";
 					} else {
 						code += $"*({method.ret}*)r_ret = ";
 					}
 				}
 				if (method.property != null) {
 					if (method.ret != null) {
-						code += $"instance.{method.property};\n";
+						code += $"instance.{method.property}";
 					} else {
-						code += $"instance.{method.property} = {args};\n";
+						code += $"instance.{method.property} = {args}";
 					}
 				} else {
-					code += $"instance.{method.name}({args});\n";
+					code += $"instance.{method.name}({args})";
 				}
-				code += $"\t\t\tbreak;\n";
-			}
 
-			code += $$"""
+				if (method.ret != null) {
+					if (method.ret.Name == "String") {
+						code += ");";
+					} else if (VariantTypeManaged(method.ret)) {
+						code += "._internal_pointer;\n";
+					} else {
+						code += ";\n";
 					}
+				} else {
+					code += ";\n";
 				}
+				code += $$"""
+					}
 
-				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
-				static void CallFunc(
-					void* method_userdata,
-					void* p_instance,
-					void** p_args,
-					long p_argument_count,
-					void* r_return,
-					GDExtensionCallError* r_error
-				) {
-					GDExtensionInterface.gdInterface.variant_new_nil(r_return); //no clue why this is needed
-					var instance = ({{c.Name}})p_instance;
-					switch ((int)method_userdata) {
+					[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+					static void CallFunc_{{method.name}}(
+						void* method_userdata,
+						void* p_instance,
+						void** p_args,
+						long p_argument_count,
+						void* r_return,
+						GDExtensionCallError* r_error
+					) {
+						var instance = ({{c.Name}})p_instance;
 
-			""";
-			for (var i = 0; i < methods.Count; i++) {
-				var method = methods[i];
-				var args = "";
+				""";
+
+				args = "";
 				for (var j = 0; j < method.arguments.Length; j++) {
 					var arg = method.arguments[j];
 					var t = TypeToVariantType(arg.Item1);
@@ -176,7 +192,7 @@ namespace Generators {
 						args += ", ";
 					}
 				}
-				code += $"\t\tcase {i}: {{\n\t\t\t";
+				code += "\t\t";
 				if (method.ret != null) {
 					code += "var res = ";
 				}
@@ -192,17 +208,32 @@ namespace Generators {
 				if (method.ret != null) {
 					var t = TypeToVariantType(method.ret);
 					code += $"\t\t\tVariant.SaveIntoPointer(res, r_return);\n";
+				} else {
+					code += "\t\t\tGDExtensionInterface.gdInterface.variant_new_nil(r_return);\n";
 				}
-				code += $"\t\t\tbreak;\n";
-				code += "\t\t\t}\n";
+				code += "\n\t}\n";
 			}
 
 			code += $$"""
-					}
+
+				[UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
+				static delegate* unmanaged[Cdecl]<void*, void**, void*, void> GetVirtualFunc(void* userdata, void* namePointer) {
+					return (string)new StringName(namePointer) switch {
+
+			""";
+			for (var i = 0; i < methods.Count; i++) {
+				var method = methods[i];
+				if (method.overwritten) {
+					code += $"\t\t\t\"{Renamer.ToSnake(method.name)}\" => &CallFuncPtr_{method.name},\n";
 				}
 			}
-			""";
+			code += $$"""
+						_ => null,
+					};
+				}
+			}
 
+			""";
 			context.AddSource($"{c.Name}.methods.gen.cs", code);
 		}
 
@@ -211,6 +242,13 @@ namespace Generators {
 		}
 
 		public static string TypeToVariantType(ITypeSymbol type, SpecialBase sBase) {
+			string MaybeTypedArray(string name) {
+				if (name.Contains("TypedArray")) {
+					return "Array";
+				}
+				throw new Exception($"Unknown type: {type.Name}");
+			}
+
 			return sBase switch {
 				SpecialBase.Node => "Object",
 				SpecialBase.Resource => "Object",
@@ -251,7 +289,37 @@ namespace Generators {
 					"PackedVector2Array" => "PackedVector2Array",
 					"PackedVector3Array" => "PackedVector3Array",
 					"PackedColorArray" => "PackedColorArray",
-					_ => throw new Exception($"Unknown type: {type.Name}"),
+					_ => MaybeTypedArray(type.Name),
+				},
+			};
+		}
+
+		public static bool VariantTypeManaged(ITypeSymbol type) {
+			return VariantTypeManaged(type, Generators.GetSpecialBase(type));
+		}
+
+		public static bool VariantTypeManaged(ITypeSymbol type, SpecialBase sBase) {
+			return sBase switch {
+				SpecialBase.Node => true,
+				SpecialBase.Resource => true,
+				_ => type.Name switch {
+					"String" => true,
+					"StringName" => true,
+					"NodePath" => true,
+					"Callable" => true,
+					"Signal" => true,
+					"Dictionary" => true,
+					"Array" => true,
+					"PackedByteArray" => true,
+					"PackedInt32Array" => true,
+					"PackedInt64Array" => true,
+					"PackedFloat32Array" => true,
+					"PackedFloat64Array" => true,
+					"PackedStringArray" => true,
+					"PackedVector2Array" => true,
+					"PackedVector3Array" => true,
+					"PackedColorArray" => true,
+					_ => false
 				},
 			};
 		}

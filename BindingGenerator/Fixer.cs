@@ -6,13 +6,13 @@ public static class Fixer {
 		}
 		name = name.Replace("const ", "");
 		if (name.Contains("typedarray::")) {
-			return "Array";
+			return $"TypedArray<{Type(name.Split("::")[1])}>";
 		}
 		name = name.Replace("::", ".");
 		if (name.Contains("VariantType.")) {
 			return "Variant";
 		}
-		if (name.StartsWith("bitfield.")) { name = name.Replace("bitfield.", ""); }
+		if (name.StartsWith("bitfield.")) { name = name.Replace(oldValue: "bitfield.", ""); }
 		if (name.StartsWith("uint64_t")) { name = name.Replace("uint64_t", "UInt64"); }
 		if (name.StartsWith("uint16_t")) { name = name.Replace("uint16_t", "UInt16"); }
 		if (name.StartsWith("uint8_t")) { name = name.Replace("uint8_t", "byte"); }
@@ -62,6 +62,31 @@ public static class Fixer {
 			"bool" => "@bool",
 			_ => name,
 		};
+	}
+
+
+	public static string DefaultValue(string value, string type, Dictionary<string, string> variantTypes) {
+		if (value.Contains('(')) { return $"new {value}"; }
+		if (value == "{}") { return "new Dictionary()"; }
+		if (value == "[]") {
+			type = Type(type);
+			if (type.Contains("TypedArray")) {
+				var t = type.Split(new char[] { '<', '>' })[1];
+				if (variantTypes.TryGetValue(t, out var vt)) {
+					t = $"Variant.Type.{vt}";
+				} else {
+					t = $"\"t\"";
+				}
+				return $"new {type}({t})";
+			} else {
+				return $"new {type}()";
+			}
+		}
+		if (value.Contains('&')) { return $"new StringName({value.Substring(1)})"; }
+		if (value == "") { return $"new {type}()"; }
+		if (type == "Variant" && value == "null") { return "Variant.Nil"; }
+		if (value == "null") { return "null!"; }
+		return $"({Fixer.Type(type)}){value}";
 	}
 
 	public static string VariantOperator(string type) {
