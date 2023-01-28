@@ -9,6 +9,11 @@ public sealed unsafe partial class Variant {
 
 	static Constructor[] constructors = new Constructor[(int)Type.Max];
 
+	public static void SaveIntoPointer(Variant variant, void* ptr) {
+		*(void**)ptr = variant._internal_pointer;
+		GC.SuppressFinalize(variant);
+	}
+
 	public static void Register() {
 		for (var i = 1; i < (int)Type.Max; i++) {
 			constructors[i] = new Constructor() {

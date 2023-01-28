@@ -128,7 +128,9 @@ namespace Generators {
 					if (arg.Item1.Name == "String") {
 						args += $"StringMarshall.ToManaged(p_args[{j}])";
 					} else if (TypeToVariantType(arg.Item1) == "Object") {
-						args += $"({arg.Item1})GDExtension.Object.ConstructUnknown(p_args[{j}])"; //note: may be one depointer/pointer wrong
+						args += $"({arg.Item1})GDExtension.Object.ConstructUnknown(*(void**)p_args[{j}])";
+					} else if (VariantTypeManaged(arg.Item1)) {
+						args += $"new {arg.Item1}(p_args[{j}])";
 					} else {
 						args += $"*({arg.Item1}*)p_args[{j}]";
 					}
@@ -289,6 +291,9 @@ namespace Generators {
 					"PackedVector2Array" => "PackedVector2Array",
 					"PackedVector3Array" => "PackedVector3Array",
 					"PackedColorArray" => "PackedColorArray",
+
+					"Variant" => "Nil",
+
 					_ => MaybeTypedArray(type.Name),
 				},
 			};
@@ -319,7 +324,7 @@ namespace Generators {
 					"PackedVector2Array" => true,
 					"PackedVector3Array" => true,
 					"PackedColorArray" => true,
-					_ => false
+					_ => type.Name.Contains("TypedArray"),
 				},
 			};
 		}

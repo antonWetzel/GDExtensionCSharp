@@ -25,8 +25,8 @@
 			"name": "Scripts",
 		},
 		{
-			"path": "../godot/bin",
-			"name": "Godot Binaries",
+			"path": "../godot",
+			"name": "Godot",
 		},
 	],
 	"settings": {
@@ -40,6 +40,29 @@
 			//godot
 			"**/.godot": true,
 			"**/*.import": true,
+		},
+		"files.associations": {
+			"*.inc": "cpp",
+			"algorithm": "cpp",
+			"chrono": "cpp",
+			"xstring": "cpp",
+			"xutility": "cpp",
+			"bitset": "cpp",
+			"charconv": "cpp",
+			"filesystem": "cpp",
+			"fstream": "cpp",
+			"memory": "cpp",
+			"random": "cpp",
+			"sstream": "cpp",
+			"vector": "cpp",
+			"xlocale": "cpp",
+			"xlocmon": "cpp",
+			"xlocnum": "cpp",
+			"xloctime": "cpp",
+			"xmemory": "cpp",
+			"ios": "cpp",
+			"string": "cpp",
+			"xlocbuf": "cpp"
 		},
 	},
 	"launch": {
@@ -63,7 +86,7 @@
 				"name": "Dodge the Creeps",
 				"type": "cppvsdbg",
 				"request": "launch",
-				"program": "${workspaceFolder:Godot Binaries}/godot.windows.editor.dev.x86_64.exe",
+				"program": "${workspaceFolder:Godot}/bin/godot.windows.editor.dev.x86_64.exe",
 				"args": [
 					"-e",
 				],
@@ -76,7 +99,7 @@
 				"name": "Run Dodge the Creeps",
 				"type": "cppvsdbg",
 				"request": "launch",
-				"program": "${workspaceFolder:Godot Binaries}/godot.windows.editor.dev.x86_64.exe",
+				"program": "${workspaceFolder:Godot}/bin/godot.windows.editor.dev.x86_64.exe",
 				"args": [
 					"--verbose",
 				],
@@ -89,7 +112,7 @@
 				"name": "Summator",
 				"type": "cppvsdbg",
 				"request": "launch",
-				"program": "${workspaceFolder:Godot Binaries}/godot.windows.editor.dev.x86_64.exe",
+				"program": "${workspaceFolder:Godot}/bin/godot.windows.editor.dev.x86_64.exe",
 				"args": [
 					"-e",
 				],
@@ -102,7 +125,7 @@
 				"name": "Run Summator",
 				"type": "cppvsdbg",
 				"request": "launch",
-				"program": "${workspaceFolder:Godot Binaries}/godot.windows.editor.dev.x86_64.exe",
+				"program": "${workspaceFolder:Godot}/bin/godot.windows.editor.dev.x86_64.exe",
 				"args": [],
 				"stopAtEntry": false,
 				"cwd": "${workspaceFolder:Summator}",

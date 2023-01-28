@@ -7,8 +7,8 @@ public unsafe partial class Mob : RigidBody2D {
 
 	[Notify(NotificationReady)]
 	void Ready() {
-		animSprite2D.playing = true;
-		var mobTypes = animSprite2D.frames.GetAnimationNames();
+		animSprite2D.Play();
+		var mobTypes = animSprite2D.sprite_frames.GetAnimationNames();
 		animSprite2D.animation = mobTypes[Randi() % mobTypes.Size()];
 	}
 
